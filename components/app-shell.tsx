@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { CreditCard, LayoutDashboard, ShieldCheck, UserCircle2 } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
 import type { Role, UserProfile } from "@/lib/types";
@@ -22,13 +25,12 @@ const navItems: Record<
 
 export function AppShell({
   profile,
-  pathname,
   children,
 }: {
   profile: UserProfile;
-  pathname: string;
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const items = navItems[profile.role];
 
   return (

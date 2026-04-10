@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AuthPanel } from "@/components/auth-panel";
 import { getCurrentUserProfile } from "@/lib/data";
 import { loginAction } from "@/lib/actions";
 
@@ -31,19 +32,8 @@ export default async function LoginPage({
             approve each submission from one mobile-first dashboard.
           </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-3xl bg-emerald-50 p-4">
-              <p className="text-sm font-semibold text-emerald-700">Paid</p>
-              <p className="mt-2 text-sm text-emerald-900">Verified and complete</p>
-            </div>
-            <div className="rounded-3xl bg-amber-50 p-4">
-              <p className="text-sm font-semibold text-amber-700">Pending</p>
-              <p className="mt-2 text-sm text-amber-900">Waiting for committee approval</p>
-            </div>
-            <div className="rounded-3xl bg-rose-50 p-4">
-              <p className="text-sm font-semibold text-rose-700">Unpaid</p>
-              <p className="mt-2 text-sm text-rose-900">Action needed this month</p>
-            </div>
+          <div className="mt-8">
+            <AuthPanel />
           </div>
         </section>
 

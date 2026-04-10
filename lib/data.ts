@@ -90,11 +90,24 @@ export async function getUserDashboardData() {
   const signedProof = currentPayment?.proof_url
     ? await getSignedReceiptUrl(currentPayment.proof_url)
     : null;
+  const resolvedCurrentPayment =
+    (currentPayment as PaymentRecord | null) ?? {
+      id: `${profile.id}-${currentMonth}`,
+      user_id: profile.id,
+      month: currentMonth,
+      status: "unpaid",
+      proof_url: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      reviewed_at: null,
+      payment_method: "online",
+      notes: null,
+    };
 
   return {
     currentMonth,
     currentMonthLabel: formatMonthLabel(currentMonth),
-    currentPayment: (currentPayment as PaymentRecord | null) ?? null,
+    currentPayment: resolvedCurrentPayment,
     currentProofUrl: signedProof,
     history: (history as PaymentRecord[] | null) ?? [],
     profile,
@@ -136,7 +149,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
       .limit(12),
     supabase
       .from("users")
-      .select("id, house_number, name, address, role")
+      .select("id, house_number, name, address, role, must_change_password")
       .eq("role", "user")
       .order("house_number", { ascending: true }),
     supabase

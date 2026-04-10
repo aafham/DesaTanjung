@@ -1,0 +1,23 @@
+[
+  {
+    "house_number": "admin",
+    "name": "Community Admin",
+    "address": "Committee Office",
+    "role": "admin",
+    "password": "passwordadmin"
+  },
+  {
+    "house_number": "A-12",
+    "name": "Nur Aisyah",
+    "address": "Jalan Tanjung 1",
+    "role": "user",
+    "password": "password"
+  },
+  {
+    "house_number": "B-08",
+    "name": "Farid Iskandar",
+    "address": "Jalan Tanjung 2",
+    "role": "user",
+    "password": "password"
+  }
+]

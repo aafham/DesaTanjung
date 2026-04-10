@@ -17,12 +17,10 @@ export function identifierToEmail(identifier: string) {
 }
 
 export function getMonthKey(date = new Date()) {
-  return new Intl.DateTimeFormat("en-CA", {
-    month: "2-digit",
-    year: "numeric",
-  })
-    .format(date)
-    .replace("/", "-");
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `${year}-${month}`;
 }
 
 export function formatMonthLabel(monthKey: string) {
