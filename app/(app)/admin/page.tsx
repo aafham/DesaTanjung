@@ -20,6 +20,12 @@ export default async function AdminDashboardPage({
     (resident) => resident.currentPayment?.status === "pending",
   ).length;
   const unpaidCount = residents.length - paidCount - pendingCount;
+  const needsAttentionResidents = residents.filter(
+    (resident) =>
+      !resident.currentPayment ||
+      resident.currentPayment.status === "unpaid" ||
+      resident.currentPayment.status === "rejected",
+  );
 
   return (
     <div className="space-y-6">
@@ -89,42 +95,89 @@ export default async function AdminDashboardPage({
           </div>
         </Card>
 
-        <Card>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm uppercase tracking-[0.18em] text-primary">Approval queue</p>
-              <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">
-                Pending review
-              </h3>
-            </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-              {pendingPayments.length} items
-            </span>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {pendingPayments.length === 0 ? (
-              <div className="rounded-3xl bg-slate-50 px-4 py-6 text-sm text-muted">
-                No pending or rejected submissions for this month.
+        <div className="grid gap-4">
+          <Card>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm uppercase tracking-[0.18em] text-primary">Pending</p>
+                <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">
+                  Uploaded payment proofs
+                </h3>
               </div>
-            ) : (
-              pendingPayments.map((payment) => (
-                <div
-                  key={payment.id}
-                  className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-900">{payment.users.house_number}</p>
-                      <p className="text-sm text-muted">{payment.users.name}</p>
-                    </div>
-                    <StatusBadge status={payment.status} />
-                  </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+                {pendingPayments.length} items
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {pendingPayments.length === 0 ? (
+                <div className="rounded-3xl bg-slate-50 px-4 py-6 text-sm text-muted">
+                  No uploaded payment proofs are waiting for review this month.
                 </div>
-              ))
-            )}
-          </div>
-        </Card>
+              ) : (
+                pendingPayments.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-slate-900">{payment.users.house_number}</p>
+                        <p className="text-sm text-muted">{payment.users.name}</p>
+                        <p className="mt-2 text-xs uppercase tracking-[0.18em] text-muted">
+                          Uploaded for {currentMonthLabel}
+                        </p>
+                      </div>
+                      <StatusBadge status={payment.status} />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm uppercase tracking-[0.18em] text-primary">Needs attention</p>
+                <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">
+                  Residents not settled yet
+                </h3>
+              </div>
+              <span className="rounded-full bg-rose-100 px-3 py-1 text-sm font-semibold text-rose-700">
+                {needsAttentionResidents.length} houses
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {needsAttentionResidents.length === 0 ? (
+                <div className="rounded-3xl bg-emerald-50 px-4 py-6 text-sm text-emerald-700">
+                  All residents are settled for this month.
+                </div>
+              ) : (
+                needsAttentionResidents.map((resident) => (
+                  <div
+                    key={resident.id}
+                    className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-slate-900">{resident.house_number}</p>
+                        <p className="text-sm text-muted">{resident.name}</p>
+                        <p className="mt-2 text-xs uppercase tracking-[0.18em] text-muted">
+                          {resident.currentPayment?.status === "rejected"
+                            ? "Proof rejected, waiting for new upload"
+                            : "No payment recorded yet"}
+                        </p>
+                      </div>
+                      <StatusBadge status={resident.currentPayment?.status ?? "unpaid"} />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+        </div>
       </section>
     </div>
   );
