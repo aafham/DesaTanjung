@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CreditCard, LayoutDashboard, ShieldCheck, UserCircle2, Users } from "lucide-react";
+import { SidebarCalendar } from "@/components/sidebar-calendar";
 import { SignOutButton } from "@/components/sign-out-button";
 import type { Role, UserProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -81,6 +82,8 @@ export function AppShell({
                 : "Upload your receipt after each transfer so the committee can verify it quickly."}
             </p>
           </div>
+
+          <SidebarCalendar />
 
           <div className="mt-6">
             <SignOutButton />
