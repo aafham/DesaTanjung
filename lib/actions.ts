@@ -199,7 +199,7 @@ export async function createManagedUserAction(formData: FormData) {
     redirectWithError("/admin/users", error?.message ?? "Unable to create user.");
   }
 
-  const createdUser = data.user;
+  const createdUser = data.user!;
 
   const { error: upsertError } = await adminClient.from("users").upsert({
     id: createdUser.id,
