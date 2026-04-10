@@ -182,7 +182,7 @@ export async function createManagedUserAction(formData: FormData) {
 
   const adminClient = createAdminClient();
   const email = identifierToEmail(houseNumber);
-  const defaultPassword = role === "admin" ? DEFAULT_ADMIN_PASSWORD : DEFAULT_USER_PASSWORD;
+  const defaultPassword = DEFAULT_USER_PASSWORD;
 
   const { data, error } = await adminClient.auth.admin.createUser({
     email,
