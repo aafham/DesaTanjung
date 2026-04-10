@@ -5,6 +5,7 @@ export type PaymentStatus = "unpaid" | "pending" | "paid" | "rejected";
 export type UserProfile = {
   id: string;
   house_number: string;
+  email?: string;
   name: string;
   address: string;
   role: Role;
@@ -30,5 +31,10 @@ export type NotificationRecord = {
   payment_id: string | null;
   message: string;
   is_read: boolean;
+  created_at: string;
+};
+
+export type ManagedUser = UserProfile & {
+  email: string;
   created_at: string;
 };

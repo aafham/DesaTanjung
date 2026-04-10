@@ -1,7 +1,12 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { PAYMENT_BUCKET } from "@/lib/constants";
-import type { NotificationRecord, PaymentRecord, UserProfile } from "@/lib/types";
+import type {
+  ManagedUser,
+  NotificationRecord,
+  PaymentRecord,
+  UserProfile,
+} from "@/lib/types";
 import { formatMonthLabel, getMonthKey } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 
@@ -191,6 +196,30 @@ export async function getAdminDashboardData(filterMonth?: string) {
     pendingPayments: pendingWithReceipts,
     notifications: (notifications as NotificationRecord[] | null) ?? [],
     residents: residentRows,
+  };
+}
+
+export async function getAdminUserManagementData() {
+  const profile = await requireUserProfile();
+
+  if (profile.role !== "admin") {
+    redirect("/dashboard");
+  }
+
+  if (profile.must_change_password) {
+    redirect("/change-password");
+  }
+
+  const supabase = await createClient();
+  const { data: users } = await supabase
+    .from("users")
+    .select("id, house_number, email, name, address, role, must_change_password, created_at")
+    .order("role", { ascending: false })
+    .order("house_number", { ascending: true });
+
+  return {
+    profile,
+    users: (users as ManagedUser[] | null) ?? [],
   };
 }
 

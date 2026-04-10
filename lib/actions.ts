@@ -2,12 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ensureCurrentMonthPayment, requireUserProfile } from "@/lib/data";
-import { formatMonthLabel, getMonthKey, identifierToEmail } from "@/lib/utils";
+import {
+  formatMonthLabel,
+  getMonthKey,
+  identifierToEmail,
+  slugifyHouseNumber,
+} from "@/lib/utils";
+import { DEFAULT_ADMIN_PASSWORD, DEFAULT_USER_PASSWORD } from "@/lib/constants";
 
 function redirectWithError(path: string, message: string) {
   redirect(`${path}?error=${encodeURIComponent(message)}`);
+}
+
+function redirectWithMessage(path: string, message: string) {
+  redirect(`${path}?message=${encodeURIComponent(message)}`);
 }
 
 export async function loginAction(formData: FormData) {
@@ -148,4 +159,178 @@ export async function submitPaymentProofAction(
   revalidatePath("/admin");
   revalidatePath("/dashboard");
   revalidatePath("/payments");
+}
+
+function requireAdmin(profile: Awaited<ReturnType<typeof requireUserProfile>>) {
+  if (profile.role !== "admin") {
+    redirect("/dashboard");
+  }
+}
+
+export async function createManagedUserAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const houseNumber = String(formData.get("house_number") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const role = "user";
+
+  if (!houseNumber || !name || !address) {
+    redirectWithError("/admin/users", "Please fill in all user fields correctly.");
+  }
+
+  const adminClient = createAdminClient();
+  const email = identifierToEmail(houseNumber);
+  const defaultPassword = role === "admin" ? DEFAULT_ADMIN_PASSWORD : DEFAULT_USER_PASSWORD;
+
+  const { data, error } = await adminClient.auth.admin.createUser({
+    email,
+    password: defaultPassword,
+    email_confirm: true,
+    user_metadata: {
+      house_number: houseNumber,
+      role,
+      slug: slugifyHouseNumber(houseNumber),
+    },
+  });
+
+  if (error || !data.user) {
+    redirectWithError("/admin/users", error?.message ?? "Unable to create user.");
+  }
+
+  const { error: upsertError } = await adminClient.from("users").upsert({
+    id: data.user.id,
+    house_number: houseNumber,
+    email,
+    name,
+    address,
+    role,
+    must_change_password: true,
+  });
+
+  if (upsertError) {
+    await adminClient.auth.admin.deleteUser(data.user.id);
+    redirectWithError("/admin/users", upsertError.message);
+  }
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/residents");
+  redirectWithMessage("/admin/users", `User ${houseNumber} created successfully.`);
+}
+
+export async function updateManagedUserAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const userId = String(formData.get("user_id") ?? "").trim();
+  const houseNumber = String(formData.get("house_number") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const role = String(formData.get("role") ?? "user").trim();
+
+  if (!userId || !houseNumber || !name || !address || !["user", "admin"].includes(role)) {
+    redirectWithError("/admin/users", "Please fill in all user fields correctly.");
+  }
+
+  const adminClient = createAdminClient();
+  const email = identifierToEmail(houseNumber);
+
+  const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
+    email,
+    user_metadata: {
+      house_number: houseNumber,
+      role,
+      slug: slugifyHouseNumber(houseNumber),
+    },
+  });
+
+  if (authError) {
+    redirectWithError("/admin/users", authError.message);
+  }
+
+  const { error: profileError } = await adminClient
+    .from("users")
+    .update({
+      house_number: houseNumber,
+      email,
+      name,
+      address,
+      role,
+    })
+    .eq("id", userId);
+
+  if (profileError) {
+    redirectWithError("/admin/users", profileError.message);
+  }
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/residents");
+  redirectWithMessage("/admin/users", `User ${houseNumber} updated successfully.`);
+}
+
+export async function resetManagedUserPasswordAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const userId = String(formData.get("user_id") ?? "").trim();
+  const role = String(formData.get("role") ?? "user").trim();
+  const houseNumber = String(formData.get("house_number") ?? "").trim();
+
+  if (!userId || !["user", "admin"].includes(role)) {
+    redirectWithError("/admin/users", "Invalid user for password reset.");
+  }
+
+  const defaultPassword = role === "admin" ? DEFAULT_ADMIN_PASSWORD : DEFAULT_USER_PASSWORD;
+  const adminClient = createAdminClient();
+
+  const { error: resetError } = await adminClient.auth.admin.updateUserById(userId, {
+    password: defaultPassword,
+  });
+
+  if (resetError) {
+    redirectWithError("/admin/users", resetError.message);
+  }
+
+  const { error: profileError } = await adminClient
+    .from("users")
+    .update({ must_change_password: true })
+    .eq("id", userId);
+
+  if (profileError) {
+    redirectWithError("/admin/users", profileError.message);
+  }
+
+  revalidatePath("/admin/users");
+  redirectWithMessage(
+    "/admin/users",
+    `Password for ${houseNumber} was reset to the default password.`,
+  );
+}
+
+export async function deleteManagedUserAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const userId = String(formData.get("user_id") ?? "").trim();
+  const houseNumber = String(formData.get("house_number") ?? "").trim();
+
+  if (!userId) {
+    redirectWithError("/admin/users", "Invalid user selected for deletion.");
+  }
+
+  if (userId === profile.id) {
+    redirectWithError("/admin/users", "You cannot delete the currently signed-in admin.");
+  }
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient.auth.admin.deleteUser(userId);
+
+  if (error) {
+    redirectWithError("/admin/users", error.message);
+  }
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/residents");
+  redirectWithMessage("/admin/users", `User ${houseNumber} deleted successfully.`);
 }
