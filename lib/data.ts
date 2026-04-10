@@ -5,6 +5,11 @@ import type { NotificationRecord, PaymentRecord, UserProfile } from "@/lib/types
 import { formatMonthLabel, getMonthKey } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 
+type PendingApprovalPayment = PaymentRecord & {
+  status: "pending" | "rejected";
+  users: Pick<UserProfile, "house_number" | "name" | "address">;
+};
+
 export const getCurrentUserProfile = cache(async () => {
   const supabase = await createClient();
   const {
@@ -170,7 +175,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
 
   const pendingWithReceipts = await Promise.all(
     (((pendingPayments as Array<
-      PaymentRecord & { users: Pick<UserProfile, "house_number" | "name" | "address"> }
+      PendingApprovalPayment
     > | null) ?? [])).map(async (payment) => ({
       ...payment,
       signedProofUrl: payment.proof_url
