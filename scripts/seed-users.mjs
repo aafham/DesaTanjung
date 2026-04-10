@@ -28,7 +28,16 @@ function identifierToEmail(identifier) {
 }
 
 const seedPath = resolve(process.cwd(), "scripts", "seed-users.json");
-const raw = await readFile(seedPath, "utf8");
+let raw;
+
+try {
+  raw = await readFile(seedPath, "utf8");
+} catch {
+  throw new Error(
+    "Missing scripts/seed-users.json. Copy scripts/seed-users.json.example to scripts/seed-users.json first.",
+  );
+}
+
 const users = JSON.parse(raw);
 
 const { data: listedUsers, error: listError } = await supabase.auth.admin.listUsers({

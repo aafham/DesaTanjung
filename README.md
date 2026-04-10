@@ -95,11 +95,19 @@ NEXT_PUBLIC_PAYMENT_QR_URL=https://placehold.co/600x600/png?text=Upload+Your+QR
 
 4. Copy `scripts/seed-users.json.example` to `scripts/seed-users.json`, then adjust the resident/admin list.
 
+Default local seed file included for quick testing:
+
+- `admin` / `passwordadmin`
+- `A-12` / `password`
+- `B-08` / `password`
+
 5. Seed auth users and profile rows.
 
 ```bash
 npm run seed:users
 ```
+
+If you get a missing file error, create `scripts/seed-users.json` first based on the example file.
 
 6. Start the app.
 
