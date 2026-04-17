@@ -75,6 +75,7 @@ export async function approvePaymentAction(formData: FormData) {
 
   const paymentId = String(formData.get("payment_id") ?? "");
   const notes = String(formData.get("notes") ?? "").trim();
+  const month = String(formData.get("month") ?? getMonthKey());
   const supabase = await createClient();
 
   await supabase.rpc("admin_review_payment", {
@@ -88,6 +89,10 @@ export async function approvePaymentAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
   revalidatePath("/admin/residents");
+  redirectWithMessage(
+    `/admin/approvals?month=${month}`,
+    "Payment approved successfully.",
+  );
 }
 
 export async function rejectPaymentAction(formData: FormData) {
@@ -100,6 +105,7 @@ export async function rejectPaymentAction(formData: FormData) {
   const paymentId = String(formData.get("payment_id") ?? "");
   const rejectReason = String(formData.get("reject_reason") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
+  const month = String(formData.get("month") ?? getMonthKey());
   const supabase = await createClient();
 
   await supabase.rpc("admin_review_payment", {
@@ -112,6 +118,10 @@ export async function rejectPaymentAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
   revalidatePath("/admin/residents");
+  redirectWithMessage(
+    `/admin/approvals?month=${month}`,
+    "Payment proof rejected with reason saved.",
+  );
 }
 
 export async function markAllNotificationsReadAction() {
@@ -122,6 +132,7 @@ export async function markAllNotificationsReadAction() {
   await supabase.from("notifications").update({ is_read: true }).eq("is_read", false);
 
   revalidatePath("/admin");
+  redirectWithMessage("/admin", "All notifications marked as read.");
 }
 
 export async function markCashPaymentAction(formData: FormData) {
@@ -142,6 +153,7 @@ export async function markCashPaymentAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
+  redirectWithMessage(`/admin/residents?month=${month}`, "Cash payment marked successfully.");
 }
 
 export async function bulkMarkCashPaymentAction(formData: FormData) {
@@ -201,6 +213,7 @@ export async function updatePaymentNotesAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
+  redirectWithMessage("/admin/residents", "Payment note updated.");
 }
 
 export async function updateAppSettingsAction(formData: FormData) {

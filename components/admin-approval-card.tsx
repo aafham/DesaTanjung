@@ -2,6 +2,7 @@ import Image from "next/image";
 import { approvePaymentAction, rejectPaymentAction } from "@/lib/actions";
 import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 
@@ -56,7 +57,11 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
       </div>
 
       {payment.signedProofUrl ? (
-        <div className="overflow-hidden rounded-4xl border border-line">
+        <div className="relative overflow-hidden rounded-4xl border border-line">
+          <ReceiptPreviewModal
+            src={payment.signedProofUrl}
+            alt={`Receipt from ${payment.users.house_number}`}
+          />
           <Image
             src={payment.signedProofUrl}
             alt={`Receipt from ${payment.users.house_number}`}
@@ -74,6 +79,7 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
       <div className="grid gap-3 sm:grid-cols-2">
         <form action={approvePaymentAction}>
           <input type="hidden" name="payment_id" value={payment.id} />
+          <input type="hidden" name="month" value={payment.month} />
           <label
             htmlFor={`approve-notes-${payment.id}`}
             className="mb-2 block text-base font-bold text-slate-950"
@@ -96,6 +102,7 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
         </form>
         <form action={rejectPaymentAction}>
           <input type="hidden" name="payment_id" value={payment.id} />
+          <input type="hidden" name="month" value={payment.month} />
           <label
             htmlFor={`reject-reason-${payment.id}`}
             className="mb-2 block text-base font-bold text-slate-950"

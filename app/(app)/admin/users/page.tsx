@@ -2,6 +2,7 @@ import {
   createManagedUserAction,
 } from "@/lib/actions";
 import { AdminUsersManager } from "@/components/admin-users-manager";
+import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { getAdminUserManagementData } from "@/lib/data";
 
@@ -17,6 +18,7 @@ export default async function AdminUsersPage({
 
   return (
     <div className="space-y-6">
+      <PageToast message={params.message} error={params.error} />
       <section className="flex flex-col gap-3">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">User management</p>
@@ -24,16 +26,6 @@ export default async function AdminUsersPage({
             Add, edit, delete, and reset user accounts
           </h2>
         </div>
-        {params.error ? (
-          <div className="rounded-3xl bg-rose-50 px-4 py-3 text-base font-bold text-rose-800">
-            {decodeURIComponent(params.error)}
-          </div>
-        ) : null}
-        {params.message ? (
-          <div className="rounded-3xl bg-emerald-50 px-4 py-3 text-base font-bold text-emerald-800">
-            {decodeURIComponent(params.message)}
-          </div>
-        ) : null}
       </section>
 
       <Card>

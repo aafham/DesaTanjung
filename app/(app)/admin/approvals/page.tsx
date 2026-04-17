@@ -1,13 +1,14 @@
 import { AdminApprovalCard } from "@/components/admin-approval-card";
 import { LiveRefresh } from "@/components/live-refresh";
 import { MonthFilter } from "@/components/month-filter";
+import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { getAdminDashboardData } from "@/lib/data";
 
 export default async function AdminApprovalsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; message?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const { currentMonth, currentMonthLabel, pendingPayments } = await getAdminDashboardData(
@@ -18,6 +19,7 @@ export default async function AdminApprovalsPage({
 
   return (
     <div className="space-y-6">
+      <PageToast message={params.message} error={params.error} />
       <LiveRefresh />
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>

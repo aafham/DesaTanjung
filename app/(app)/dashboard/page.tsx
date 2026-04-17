@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Clock3, Home, Info, Wallet } from "lucide-react";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentHistoryTable } from "@/components/payment-history-table";
+import { PaymentTimeline } from "@/components/payment-timeline";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getUserDashboardData } from "@/lib/data";
@@ -100,18 +101,7 @@ export default async function DashboardPage() {
           </h3>
         </div>
         <Card>
-          <div className="space-y-3">
-            {auditLogs.length === 0 ? (
-              <p className="text-base text-muted">No activity yet.</p>
-            ) : (
-              auditLogs.map((log) => (
-                <div key={log.id} className="rounded-3xl bg-slate-50 px-4 py-3">
-                  <p className="text-base font-bold text-slate-950">{log.message}</p>
-                  <p className="mt-1 text-sm text-muted">{new Date(log.created_at).toLocaleString()}</p>
-                </div>
-              ))
-            )}
-          </div>
+          <PaymentTimeline payment={currentPayment} auditLogs={auditLogs} />
         </Card>
       </section>
 

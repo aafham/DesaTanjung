@@ -12,6 +12,7 @@ import { markAllNotificationsReadAction } from "@/lib/actions";
 import { AdminReminderTools } from "@/components/admin-reminder-tools";
 import { LiveRefresh } from "@/components/live-refresh";
 import { MonthFilter } from "@/components/month-filter";
+import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getAdminDashboardData } from "@/lib/data";
@@ -20,7 +21,7 @@ import { formatTimestamp } from "@/lib/utils";
 export default async function AdminDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; message?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const { currentMonth, currentMonthLabel, notifications, pendingPayments, residents } =
@@ -44,6 +45,7 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="space-y-6">
+      <PageToast message={params.message} error={params.error} />
       <LiveRefresh />
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
