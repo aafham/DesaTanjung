@@ -76,8 +76,24 @@ create table if not exists public.app_settings (
   bank_account_number text not null default '1234567890',
   payment_qr_url text not null default 'https://placehold.co/600x600/png?text=QR+Payment',
   monthly_fee numeric(10, 2),
+  due_day integer not null default 7 check (due_day between 1 and 28),
   updated_at timestamptz not null default timezone('utc', now()),
   constraint app_settings_single_row check (id = true)
+);
+
+alter table public.app_settings
+add column if not exists due_day integer not null default 7;
+
+create table if not exists public.announcements (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  body text not null,
+  audience text not null default 'all' check (audience in ('all', 'residents', 'admins')),
+  is_pinned boolean not null default false,
+  created_by uuid references public.users (id) on delete set null,
+  published_at timestamptz not null default timezone('utc', now()),
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
 );
 
 insert into public.app_settings (id)
@@ -109,6 +125,12 @@ execute function public.handle_updated_at();
 drop trigger if exists app_settings_handle_updated_at on public.app_settings;
 create trigger app_settings_handle_updated_at
 before update on public.app_settings
+for each row
+execute function public.handle_updated_at();
+
+drop trigger if exists announcements_handle_updated_at on public.announcements;
+create trigger announcements_handle_updated_at
+before update on public.announcements
 for each row
 execute function public.handle_updated_at();
 
@@ -249,6 +271,7 @@ alter table public.payments enable row level security;
 alter table public.notifications enable row level security;
 alter table public.payment_audit_logs enable row level security;
 alter table public.app_settings enable row level security;
+alter table public.announcements enable row level security;
 
 drop policy if exists "Users can view own profile or admins can view all" on public.users;
 create policy "Users can view own profile or admins can view all"
@@ -344,6 +367,35 @@ on public.app_settings
 for insert
 to authenticated
 with check (public.is_admin());
+
+drop policy if exists "Authenticated users can view announcements" on public.announcements;
+create policy "Authenticated users can view announcements"
+on public.announcements
+for select
+to authenticated
+using (true);
+
+drop policy if exists "Admins can insert announcements" on public.announcements;
+create policy "Admins can insert announcements"
+on public.announcements
+for insert
+to authenticated
+with check (public.is_admin());
+
+drop policy if exists "Admins can update announcements" on public.announcements;
+create policy "Admins can update announcements"
+on public.announcements
+for update
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Admins can delete announcements" on public.announcements;
+create policy "Admins can delete announcements"
+on public.announcements
+for delete
+to authenticated
+using (public.is_admin());
 
 insert into storage.buckets (id, name, public)
 values ('payment-proofs', 'payment-proofs', false)

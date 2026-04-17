@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { getAppSettings, getUserDashboardData } from "@/lib/data";
 
 export default async function PaymentsPage() {
-  const [{ currentMonthLabel, currentPayment, profile }, settings] = await Promise.all([
+  const [{ currentMonthLabel, currentPayment, dueDateLabel, profile }, settings] = await Promise.all([
     getUserDashboardData(),
     getAppSettings(),
   ]);
@@ -50,6 +50,8 @@ export default async function PaymentsPage() {
                   </p>
                 </>
               ) : null}
+              <p className="mt-5 text-base font-bold text-muted">Due date</p>
+              <p className="text-xl font-bold text-slate-950">{dueDateLabel}</p>
             </div>
             <div className="rounded-3xl bg-white p-5">
               <div className="flex items-center gap-2 text-base font-bold text-slate-950">
@@ -102,6 +104,12 @@ export default async function PaymentsPage() {
             <UploadCloud className="mr-2 inline h-5 w-5 text-primary" />
             Upload the receipt right after transferring the monthly fee. Status will change to pending until the committee reviews it.
           </p>
+
+          {currentPayment.display_status === "overdue" ? (
+            <div className="rounded-3xl bg-rose-50 px-4 py-4 text-base font-bold text-rose-950">
+              This month is already past the due date. Please upload your payment proof as soon as possible.
+            </div>
+          ) : null}
 
           <PaymentUploadForm userId={profile.id} houseNumber={profile.house_number} />
         </Card>

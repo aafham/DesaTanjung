@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Clock3, Home, Info, Wallet } from "lucide-react";
+import { AnnouncementFeed } from "@/components/announcement-feed";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentHistoryTable } from "@/components/payment-history-table";
 import { PaymentTimeline } from "@/components/payment-timeline";
@@ -8,14 +9,32 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { getUserDashboardData } from "@/lib/data";
 
 export default async function DashboardPage() {
-  const { auditLogs, currentMonthLabel, currentPayment, history, profile } =
+  const {
+    announcements,
+    auditLogs,
+    currentMonthLabel,
+    currentPayment,
+    dueDateLabel,
+    history,
+    profile,
+    settings,
+  } =
     await getUserDashboardData();
   const statusMessage = {
     paid: "Payment approved. Thank you for keeping your account up to date.",
     pending: "Receipt uploaded. Please wait for committee approval.",
     unpaid: "No payment recorded yet. Tap Pay Now to upload your receipt.",
     rejected: "Receipt was rejected. Please upload a clearer or correct proof.",
-  }[currentPayment.status];
+    overdue: "This month's payment is overdue. Please settle it as soon as possible.",
+  }[currentPayment.display_status];
+
+  const statusTitle = {
+    paid: "Paid",
+    pending: "Pending review",
+    unpaid: "Awaiting payment",
+    rejected: "Rejected",
+    overdue: "Overdue",
+  }[currentPayment.display_status];
 
   return (
     <div className="space-y-6">
@@ -28,9 +47,12 @@ export default async function DashboardPage() {
             Track this month&apos;s payment status and upload your proof as soon as you complete the transfer.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
-            <StatusBadge status={currentPayment.status} className="bg-white/10 text-white" />
+            <StatusBadge status={currentPayment.display_status} className="bg-white/10 text-white" />
             <span className="rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-100">
               House {profile.house_number}
+            </span>
+            <span className="rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-100">
+              Due {dueDateLabel}
             </span>
           </div>
           <div className="mt-5 flex items-start gap-3 rounded-3xl bg-white/10 p-4 text-base text-slate-100">
@@ -86,12 +108,33 @@ export default async function DashboardPage() {
               </div>
               <div>
                 <p className="text-base font-bold text-muted">Last status</p>
-                <p className="text-xl font-bold capitalize text-slate-950">{currentPayment.status}</p>
+                <p className="text-xl font-bold text-slate-950">{statusTitle}</p>
+              </div>
+            </div>
+          </Card>
+          <Card>
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-rose-50 p-3">
+                <Clock3 className="h-5 w-5 text-rose-700" />
+              </div>
+              <div>
+                <p className="text-base font-bold text-muted">Due date</p>
+                <p className="text-xl font-bold text-slate-950">{dueDateLabel}</p>
+                {settings.monthly_fee ? (
+                  <p className="mt-1 text-sm text-muted">
+                    Monthly fee RM {settings.monthly_fee.toFixed(2)}
+                  </p>
+                ) : null}
               </div>
             </div>
           </Card>
         </div>
       </section>
+
+      <AnnouncementFeed
+        announcements={announcements}
+        emptyMessage="No resident announcements have been posted yet."
+      />
 
       <section className="space-y-4">
         <div>

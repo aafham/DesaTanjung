@@ -1,6 +1,8 @@
 export type Role = "user" | "admin";
 
 export type PaymentStatus = "unpaid" | "pending" | "paid" | "rejected";
+export type DisplayPaymentStatus = PaymentStatus | "overdue";
+export type AnnouncementAudience = "all" | "residents" | "admins";
 
 export type UserProfile = {
   id: string;
@@ -26,6 +28,11 @@ export type PaymentRecord = {
   reject_reason: string | null;
 };
 
+export type ResidentPaymentRecord = PaymentRecord & {
+  display_status: DisplayPaymentStatus;
+  is_overdue: boolean;
+};
+
 export type PaymentAuditLog = {
   id: string;
   payment_id: string | null;
@@ -43,6 +50,7 @@ export type AppSettings = {
   bank_account_number: string;
   payment_qr_url: string;
   monthly_fee: number | null;
+  due_day: number;
 };
 
 export type NotificationRecord = {
@@ -57,4 +65,20 @@ export type NotificationRecord = {
 export type ManagedUser = UserProfile & {
   email: string;
   created_at: string;
+};
+
+export type AnnouncementRecord = {
+  id: string;
+  title: string;
+  body: string;
+  audience: AnnouncementAudience;
+  is_pinned: boolean;
+  created_by: string | null;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ResidentWithPayment = UserProfile & {
+  currentPayment: ResidentPaymentRecord | null;
 };

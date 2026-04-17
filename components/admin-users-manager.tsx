@@ -202,6 +202,7 @@ export function AdminUsersManager({
                       <input type="hidden" name="role" value={user.role} />
                       <input type="hidden" name="house_number" value={user.house_number} />
                       <ConfirmSubmitButton
+                        confirmTitle="Reset this password?"
                         confirmMessage={`Reset password for ${user.house_number} to default password?`}
                         className="rounded-full bg-amber-500 px-5 py-3 text-base font-bold text-slate-950"
                       >
@@ -213,6 +214,7 @@ export function AdminUsersManager({
                       <input type="hidden" name="user_id" value={user.id} />
                       <input type="hidden" name="house_number" value={user.house_number} />
                       <ConfirmSubmitButton
+                        confirmTitle="Delete this user?"
                         confirmMessage={`Delete ${user.house_number}? This also removes the login account and payment records.`}
                         disabled={user.id === currentAdminId}
                         variant="danger"

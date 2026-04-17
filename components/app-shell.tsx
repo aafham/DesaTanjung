@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import {
   CreditCard,
   LayoutDashboard,
+  Megaphone,
+  ReceiptText,
   Settings,
   ShieldCheck,
   UserCircle2,
@@ -28,6 +30,8 @@ const navItems: Record<
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/approvals", label: "Approvals", icon: ShieldCheck },
     { href: "/admin/residents", label: "Residents", icon: UserCircle2 },
+    { href: "/admin/reports", label: "Reports", icon: ReceiptText },
+    { href: "/admin/announcements", label: "Notices", icon: Megaphone },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ],

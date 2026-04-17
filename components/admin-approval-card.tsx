@@ -11,6 +11,7 @@ type ApprovalCardProps = {
     id: string;
     month: string;
     status: "pending" | "rejected";
+    display_status?: "pending" | "rejected";
     created_at: string;
     notes: string | null;
     reject_reason: string | null;
@@ -42,7 +43,7 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
           </h3>
           <p className="mt-1 text-base text-muted">{payment.users.address}</p>
         </div>
-        <StatusBadge status={payment.status} />
+        <StatusBadge status={payment.display_status ?? payment.status} />
       </div>
 
       <div className="grid gap-3 rounded-3xl bg-slate-50 p-4 text-base text-slate-800 sm:grid-cols-2">
@@ -95,6 +96,7 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
           />
           <ConfirmSubmitButton
             confirmMessage={`Approve payment for ${payment.users.house_number}?`}
+            confirmTitle="Approve this payment proof?"
             className="w-full"
           >
             Approve payment
@@ -129,6 +131,7 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
           />
           <ConfirmSubmitButton
             confirmMessage={`Reject payment proof from ${payment.users.house_number}?`}
+            confirmTitle="Reject this payment proof?"
             variant="danger"
             className="w-full bg-rose-700 hover:bg-rose-800"
           >

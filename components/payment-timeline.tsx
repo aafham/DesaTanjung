@@ -1,14 +1,15 @@
 import { CheckCircle2, Clock3, UploadCloud, XCircle } from "lucide-react";
-import type { PaymentAuditLog, PaymentRecord } from "@/lib/types";
+import type { PaymentAuditLog, ResidentPaymentRecord } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
 
 export function PaymentTimeline({
   payment,
   auditLogs,
 }: {
-  payment: PaymentRecord;
+  payment: ResidentPaymentRecord;
   auditLogs: PaymentAuditLog[];
 }) {
+  const displayStatus = payment.display_status;
   const steps = [
     {
       label: "Transfer record",
@@ -33,12 +34,14 @@ export function PaymentTimeline({
     {
       label: payment.status === "rejected" ? "Rejected" : "Approved",
       done: ["paid", "rejected"].includes(payment.status),
-      icon: payment.status === "rejected" ? XCircle : CheckCircle2,
+      icon: payment.status === "rejected" || displayStatus === "overdue" ? XCircle : CheckCircle2,
       description:
         payment.status === "paid"
           ? "Your payment has been approved."
           : payment.status === "rejected"
             ? payment.reject_reason ?? "Please upload a corrected receipt."
+            : displayStatus === "overdue"
+              ? "This month has passed the due date and still needs payment."
             : "Final decision pending.",
     },
   ];

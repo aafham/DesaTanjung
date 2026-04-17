@@ -8,21 +8,18 @@ import {
   markCashPaymentAction,
   updatePaymentNotesAction,
 } from "@/lib/actions";
-import type { PaymentRecord, PaymentStatus, UserProfile } from "@/lib/types";
+import type { PaymentStatus, ResidentWithPayment } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 
-type ResidentWithPayment = UserProfile & {
-  currentPayment: PaymentRecord | null;
-};
-
-const filterOptions: Array<{ label: string; value: "all" | PaymentStatus }> = [
+const filterOptions: Array<{ label: string; value: "all" | PaymentStatus | "overdue" }> = [
   { label: "All", value: "all" },
   { label: "Paid", value: "paid" },
   { label: "Pending", value: "pending" },
   { label: "Unpaid", value: "unpaid" },
+  { label: "Overdue", value: "overdue" },
   { label: "Rejected", value: "rejected" },
 ];
 
@@ -34,6 +31,10 @@ const methodOptions: Array<{ label: string; value: "all" | "online" | "cash" }> 
 
 function getStatus(resident: ResidentWithPayment): PaymentStatus {
   return resident.currentPayment?.status ?? "unpaid";
+}
+
+function getDisplayStatus(resident: ResidentWithPayment) {
+  return resident.currentPayment?.display_status ?? "unpaid";
 }
 
 function escapeCsv(value: string) {
@@ -50,7 +51,7 @@ export function AdminResidentsTable({
   currentMonthLabel: string;
 }) {
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | PaymentStatus>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | PaymentStatus | "overdue">("all");
   const [methodFilter, setMethodFilter] = useState<"all" | "online" | "cash">("all");
   const [selectedResidentIds, setSelectedResidentIds] = useState<string[]>([]);
   const [copiedResidentId, setCopiedResidentId] = useState<string | null>(null);
@@ -61,7 +62,11 @@ export function AdminResidentsTable({
 
     return residents.filter((resident) => {
       const status = getStatus(resident);
-      const matchesStatus = statusFilter === "all" || status === statusFilter;
+      const displayStatus = getDisplayStatus(resident);
+      const matchesStatus =
+        statusFilter === "all" ||
+        status === statusFilter ||
+        displayStatus === statusFilter;
       const matchesMethod =
         methodFilter === "all" || resident.currentPayment?.payment_method === methodFilter;
       const matchesSearch =
@@ -97,7 +102,7 @@ export function AdminResidentsTable({
         resident.house_number,
         resident.name,
         resident.address,
-        getStatus(resident),
+        getDisplayStatus(resident),
         resident.currentPayment ? formatTimestamp(resident.currentPayment.updated_at) : "No record yet",
         resident.currentPayment?.payment_method ?? "-",
       ]),
@@ -187,6 +192,7 @@ export function AdminResidentsTable({
         ))}
         <ConfirmSubmitButton
           confirmMessage={`Mark ${selectedResidentIds.length} selected residents as paid by cash?`}
+          confirmTitle="Confirm bulk cash update"
           disabled={selectedResidentIds.length === 0}
           className="bg-slate-950 text-white"
         >
@@ -202,11 +208,17 @@ export function AdminResidentsTable({
                 <p className="text-2xl font-bold text-slate-950">{resident.house_number}</p>
                 <p className="text-base text-muted">{resident.name}</p>
               </div>
-              <StatusBadge status={getStatus(resident)} />
+              <StatusBadge status={getDisplayStatus(resident)} />
             </summary>
 
             <div className="mt-4 space-y-3 border-t border-line pt-4">
               <p className="text-base text-slate-800">{resident.address}</p>
+              <Link
+                href={`/admin/residents/${resident.id}?month=${currentMonth}`}
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+              >
+                Open resident detail
+              </Link>
               <p className="text-sm text-muted">
                 Updated:{" "}
                 {resident.currentPayment
@@ -276,7 +288,7 @@ export function AdminResidentsTable({
                   <td className="px-4 py-5 font-semibold text-slate-950">{resident.name}</td>
                   <td className="px-4 py-4">{resident.address}</td>
                   <td className="px-4 py-5">
-                    <StatusBadge status={getStatus(resident)} />
+                    <StatusBadge status={getDisplayStatus(resident)} />
                   </td>
                   <td className="px-4 py-5">
                     {resident.currentPayment
@@ -294,12 +306,20 @@ export function AdminResidentsTable({
                         </Link>
                       ) : null}
 
+                      <Link
+                        href={`/admin/residents/${resident.id}?month=${currentMonth}`}
+                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-950"
+                      >
+                        View detail
+                      </Link>
+
                       {getStatus(resident) !== "paid" ? (
                         <form action={markCashPaymentAction}>
                           <input type="hidden" name="resident_id" value={resident.id} />
                           <input type="hidden" name="month" value={currentMonth} />
                           <ConfirmSubmitButton
                             confirmMessage={`Mark ${resident.house_number} as paid by cash for ${currentMonthLabel}?`}
+                            confirmTitle="Confirm cash payment"
                             className="w-full whitespace-nowrap rounded-full bg-slate-950 px-4 py-2 text-sm font-bold uppercase tracking-[0.08em] text-white"
                           >
                             Mark paid cash

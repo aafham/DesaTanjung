@@ -21,7 +21,7 @@ export default async function AdminResidentsPage({
             Payment status for {currentMonthLabel}
           </h2>
           <p className="mt-3 max-w-2xl text-base text-muted">
-            Search, filter status, export CSV, or mark cash payments from one table.
+            Search, filter status including overdue, export CSV, open resident detail, or mark cash payments from one table.
           </p>
         </div>
         <div className="w-full max-w-sm">

@@ -89,6 +89,7 @@ export async function approvePaymentAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
   revalidatePath("/admin/residents");
+  revalidatePath("/admin/reports");
   redirectWithMessage(
     `/admin/approvals?month=${month}`,
     "Payment approved successfully.",
@@ -118,6 +119,7 @@ export async function rejectPaymentAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
   revalidatePath("/admin/residents");
+  revalidatePath("/admin/reports");
   redirectWithMessage(
     `/admin/approvals?month=${month}`,
     "Payment proof rejected with reason saved.",
@@ -153,6 +155,7 @@ export async function markCashPaymentAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
+  revalidatePath("/admin/reports");
   redirectWithMessage(`/admin/residents?month=${month}`, "Cash payment marked successfully.");
 }
 
@@ -180,6 +183,7 @@ export async function bulkMarkCashPaymentAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
+  revalidatePath("/admin/reports");
   redirectWithMessage(
     `/admin/residents?month=${month}`,
     `${residentIds.length} resident payments marked as cash paid.`,
@@ -213,6 +217,7 @@ export async function updatePaymentNotesAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
+  revalidatePath("/admin/reports");
   redirectWithMessage("/admin/residents", "Payment note updated.");
 }
 
@@ -227,6 +232,8 @@ export async function updateAppSettingsAction(formData: FormData) {
   const existingPaymentQrUrl = String(formData.get("existing_payment_qr_url") ?? "").trim();
   const monthlyFeeValue = String(formData.get("monthly_fee") ?? "").trim();
   const monthlyFee = monthlyFeeValue ? Number(monthlyFeeValue) : null;
+  const dueDayValue = String(formData.get("due_day") ?? "").trim();
+  const dueDay = Number(dueDayValue || "7");
   const qrImage = formData.get("payment_qr_image");
 
   if (!communityName || !bankName || !bankAccountName || !bankAccountNumber) {
@@ -235,6 +242,10 @@ export async function updateAppSettingsAction(formData: FormData) {
 
   if (monthlyFeeValue && Number.isNaN(monthlyFee)) {
     redirectWithError("/admin/settings", "Monthly fee must be a number.");
+  }
+
+  if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 28) {
+    redirectWithError("/admin/settings", "Due day must be between 1 and 28.");
   }
 
   let paymentQrUrl = existingPaymentQrUrl;
@@ -277,6 +288,7 @@ export async function updateAppSettingsAction(formData: FormData) {
     bank_account_number: bankAccountNumber,
     payment_qr_url: paymentQrUrl,
     monthly_fee: monthlyFee,
+    due_day: dueDay,
   });
 
   if (error) {
@@ -286,6 +298,65 @@ export async function updateAppSettingsAction(formData: FormData) {
   revalidatePath("/admin/settings");
   revalidatePath("/payments");
   redirectWithMessage("/admin/settings", "Payment settings updated successfully.");
+}
+
+export async function createAnnouncementAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const title = String(formData.get("title") ?? "").trim();
+  const body = String(formData.get("body") ?? "").trim();
+  const audience = String(formData.get("audience") ?? "all").trim();
+  const isPinned = String(formData.get("is_pinned") ?? "") === "on";
+
+  if (!title || !body) {
+    redirectWithError("/admin/announcements", "Please fill in the announcement title and message.");
+  }
+
+  if (!["all", "residents", "admins"].includes(audience)) {
+    redirectWithError("/admin/announcements", "Invalid announcement audience.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("announcements").insert({
+    title,
+    body,
+    audience,
+    is_pinned: isPinned,
+    created_by: profile.id,
+  });
+
+  if (error) {
+    redirectWithError("/admin/announcements", error.message);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/announcements");
+  redirectWithMessage("/admin/announcements", "Announcement published successfully.");
+}
+
+export async function deleteAnnouncementAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const announcementId = String(formData.get("announcement_id") ?? "").trim();
+
+  if (!announcementId) {
+    redirectWithError("/admin/announcements", "Invalid announcement selected.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("announcements").delete().eq("id", announcementId);
+
+  if (error) {
+    redirectWithError("/admin/announcements", error.message);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin/announcements");
+  redirectWithMessage("/admin/announcements", "Announcement removed.");
 }
 
 export async function createCurrentMonthRecordAction() {

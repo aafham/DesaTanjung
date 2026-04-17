@@ -1,8 +1,8 @@
-import type { PaymentRecord } from "@/lib/types";
+import type { ResidentPaymentRecord } from "@/lib/types";
 import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
 
-export function PaymentHistoryTable({ history }: { history: PaymentRecord[] }) {
+export function PaymentHistoryTable({ history }: { history: ResidentPaymentRecord[] }) {
   return (
     <div className="overflow-hidden rounded-4xl border border-line bg-white">
       <div className="overflow-x-auto">
@@ -22,7 +22,7 @@ export function PaymentHistoryTable({ history }: { history: PaymentRecord[] }) {
                   {formatMonthLabel(payment.month)}
                 </td>
                 <td className="px-4 py-5">
-                  <StatusBadge status={payment.status} />
+                  <StatusBadge status={payment.display_status} />
                 </td>
                 <td className="px-4 py-5 capitalize">{payment.payment_method}</td>
                 <td className="px-4 py-5">{formatTimestamp(payment.updated_at)}</td>

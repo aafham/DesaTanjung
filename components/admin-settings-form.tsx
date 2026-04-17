@@ -33,6 +33,7 @@ export function AdminSettingsForm({
     bank_account_number: settings.bank_account_number,
     payment_qr_url: settings.payment_qr_url,
     monthly_fee: settings.monthly_fee ? String(settings.monthly_fee) : "",
+    due_day: String(settings.due_day),
   });
   const [selectedFileName, setSelectedFileName] = useState("");
 
@@ -81,6 +82,23 @@ export function AdminSettingsForm({
             defaultValue={settings.monthly_fee ?? ""}
             onChange={(event) => updatePreview("monthly_fee", event.target.value)}
             placeholder="Example: 30"
+            className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="due_day" className="mb-2 block text-base font-bold text-slate-950">
+            Payment due day
+          </label>
+          <input
+            id="due_day"
+            name="due_day"
+            type="number"
+            min="1"
+            max="28"
+            defaultValue={settings.due_day}
+            onChange={(event) => updatePreview("due_day", event.target.value)}
+            placeholder="7"
             className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
           />
         </div>
@@ -202,6 +220,9 @@ export function AdminSettingsForm({
           </p>
           <p className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950">
             {preview.monthly_fee ? `RM ${Number(preview.monthly_fee).toFixed(2)} / month` : "Monthly fee not set"}
+          </p>
+          <p className="mt-3 text-base font-bold text-slate-100">
+            Payment due every month on day {preview.due_day || "7"}.
           </p>
         </div>
 

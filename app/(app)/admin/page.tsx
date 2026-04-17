@@ -9,7 +9,9 @@ import {
   Users,
 } from "lucide-react";
 import { markAllNotificationsReadAction } from "@/lib/actions";
+import { AnnouncementFeed } from "@/components/announcement-feed";
 import { AdminReminderTools } from "@/components/admin-reminder-tools";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { LiveRefresh } from "@/components/live-refresh";
 import { MonthFilter } from "@/components/month-filter";
 import { PageToast } from "@/components/page-toast";
@@ -24,19 +26,34 @@ export default async function AdminDashboardPage({
   searchParams: Promise<{ month?: string; message?: string; error?: string }>;
 }) {
   const params = await searchParams;
-  const { currentMonth, currentMonthLabel, notifications, pendingPayments, residents } =
+  const {
+    announcements,
+    currentMonth,
+    currentMonthLabel,
+    dueDateLabel,
+    notifications,
+    pendingPayments,
+    residents,
+    settings,
+  } =
     await getAdminDashboardData(params.month);
 
-  const paidCount = residents.filter((resident) => resident.currentPayment?.status === "paid").length;
+  const paidCount = residents.filter(
+    (resident) => resident.currentPayment?.display_status === "paid",
+  ).length;
   const pendingCount = residents.filter(
-    (resident) => resident.currentPayment?.status === "pending",
+    (resident) => resident.currentPayment?.display_status === "pending",
   ).length;
   const needsAttentionResidents = residents.filter(
     (resident) =>
       !resident.currentPayment ||
-      resident.currentPayment.status === "unpaid" ||
+      resident.currentPayment.display_status === "unpaid" ||
+      resident.currentPayment.display_status === "overdue" ||
       resident.currentPayment.status === "rejected",
   );
+  const overdueCount = residents.filter(
+    (resident) => resident.currentPayment?.display_status === "overdue",
+  ).length;
   const collectionRate =
     residents.length > 0 ? Math.round((paidCount / residents.length) * 100) : 0;
   const unreadNotificationCount = notifications.filter(
@@ -62,7 +79,7 @@ export default async function AdminDashboardPage({
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <Link
           href={`/admin/approvals?month=${currentMonth}`}
           className="rounded-3xl bg-amber-50 px-5 py-4 text-amber-950 ring-1 ring-amber-100"
@@ -80,11 +97,18 @@ export default async function AdminDashboardPage({
           </p>
         </Link>
         <Link
+          href={`/admin/reports?month=${currentMonth}`}
+          className="rounded-3xl bg-slate-950 px-5 py-4 text-white ring-1 ring-slate-800"
+        >
+          <p className="text-sm font-bold uppercase tracking-[0.12em]">Report</p>
+          <p className="mt-2 text-2xl font-bold">RM {(settings.monthly_fee ?? 0).toFixed(2)} each house</p>
+        </Link>
+        <Link
           href="/admin/settings"
           className="rounded-3xl bg-teal-50 px-5 py-4 text-teal-950 ring-1 ring-teal-100"
         >
           <p className="text-sm font-bold uppercase tracking-[0.12em]">Setup</p>
-          <p className="mt-2 text-2xl font-bold">Update bank and QR</p>
+          <p className="mt-2 text-2xl font-bold">Due on day {settings.due_day} every month</p>
         </Link>
       </section>
 
@@ -108,7 +132,7 @@ export default async function AdminDashboardPage({
                 {paidCount} of {residents.length} residents marked paid for {currentMonthLabel}.
               </p>
               <p className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-950">
-                {needsAttentionResidents.length} houses need follow-up
+                Due by {dueDateLabel}
               </p>
             </div>
             <Link
@@ -147,7 +171,7 @@ export default async function AdminDashboardPage({
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card className="bg-emerald-50">
           <CircleCheckBig className="h-5 w-5 text-emerald-700" />
           <p className="mt-4 text-base font-bold text-emerald-800">Paid</p>
@@ -165,10 +189,20 @@ export default async function AdminDashboardPage({
             {needsAttentionResidents.length}
           </p>
         </Card>
+        <Card className="bg-red-950 text-white">
+          <TriangleAlert className="h-5 w-5 text-red-200" />
+          <p className="mt-4 text-base font-bold text-red-100">Overdue</p>
+          <p className="font-display text-4xl font-bold text-white">{overdueCount}</p>
+        </Card>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="grid gap-4">
+          <AnnouncementFeed
+            announcements={announcements}
+            emptyMessage="No admin notices have been posted yet."
+          />
+
           <Card>
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-teal-50 p-3">
@@ -190,12 +224,14 @@ export default async function AdminDashboardPage({
             </div>
             {unreadNotificationCount > 0 ? (
               <form action={markAllNotificationsReadAction} className="mt-4">
-                <button
-                  type="submit"
-                  className="rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+                <ConfirmSubmitButton
+                  confirmTitle="Mark notifications as read?"
+                  confirmMessage="This will clear the unread badge for the current notifications list."
+                  confirmLabel="Mark all read"
+                  className="bg-slate-950 px-4 py-2 text-sm text-white"
                 >
                   Mark all as read
-                </button>
+                </ConfirmSubmitButton>
               </form>
             ) : null}
 
@@ -260,7 +296,7 @@ export default async function AdminDashboardPage({
                           Uploaded for {currentMonthLabel}
                         </p>
                       </div>
-                      <StatusBadge status={payment.status} />
+                      <StatusBadge status={payment.display_status} />
                     </div>
                   </Link>
                 ))
@@ -290,7 +326,7 @@ export default async function AdminDashboardPage({
                 needsAttentionResidents.map((resident) => (
                   <Link
                     key={resident.id}
-                    href={`/admin/residents?month=${currentMonth}`}
+                    href={`/admin/residents/${resident.id}?month=${currentMonth}`}
                     className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -300,10 +336,14 @@ export default async function AdminDashboardPage({
                         <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                           {resident.currentPayment?.status === "rejected"
                             ? "Proof rejected, waiting for new upload"
-                            : "No payment recorded yet"}
+                            : resident.currentPayment?.display_status === "overdue"
+                              ? "Past due date and still not settled"
+                              : "No payment recorded yet"}
                         </p>
                       </div>
-                      <StatusBadge status={resident.currentPayment?.status ?? "unpaid"} />
+                      <StatusBadge
+                        status={resident.currentPayment?.display_status ?? "unpaid"}
+                      />
                     </div>
                   </Link>
                 ))

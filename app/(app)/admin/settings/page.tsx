@@ -19,7 +19,7 @@ export default async function AdminSettingsPage({
           Payment and community settings
         </h2>
         <p className="mt-3 max-w-2xl text-base text-muted">
-          Update bank details, QR image URL, community name, and monthly fee without editing code.
+          Update bank details, upload the QR image, set the monthly fee, and choose the due day without editing code.
         </p>
       </section>
 

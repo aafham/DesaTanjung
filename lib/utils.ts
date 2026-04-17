@@ -39,3 +39,16 @@ export function formatTimestamp(value: string) {
     timeStyle: "short",
   }).format(new Date(value));
 }
+
+export function getDueDateForMonth(monthKey: string, dueDay: number) {
+  const [year, month] = monthKey.split("-");
+  const safeDueDay = Math.min(Math.max(dueDay, 1), 28);
+
+  return new Date(Number(year), Number(month) - 1, safeDueDay, 23, 59, 59, 999);
+}
+
+export function formatDateLabel(value: Date | string) {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "full",
+  }).format(new Date(value));
+}
