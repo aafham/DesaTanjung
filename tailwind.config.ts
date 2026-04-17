@@ -23,7 +23,7 @@ const config: Config = {
         muted: "var(--muted)",
       },
       boxShadow: {
-        soft: "0 18px 40px rgba(15, 23, 42, 0.08)",
+        soft: "0 18px 44px rgba(15, 23, 42, 0.10)",
       },
       borderRadius: {
         "4xl": "2rem",
@@ -33,8 +33,8 @@ const config: Config = {
           "radial-gradient(circle at top left, rgba(13, 148, 136, 0.16), transparent 40%), radial-gradient(circle at bottom right, rgba(234, 179, 8, 0.16), transparent 35%)",
       },
       fontFamily: {
-        sans: ["var(--font-manrope)", "sans-serif"],
-        display: ["var(--font-space-grotesk)", "sans-serif"],
+        sans: ["var(--font-atkinson)", "sans-serif"],
+        display: ["var(--font-lexend)", "sans-serif"],
       },
     },
   },

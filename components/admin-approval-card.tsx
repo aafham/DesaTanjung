@@ -22,27 +22,27 @@ type ApprovalCardProps = {
 
 export function AdminApprovalCard({ payment }: ApprovalCardProps) {
   return (
-    <Card className="space-y-4">
+    <Card className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
             {payment.users.house_number}
           </p>
-          <h3 className="mt-2 font-display text-2xl font-bold text-slate-950">
+          <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
             {payment.users.name}
           </h3>
-          <p className="mt-1 text-sm text-muted">{payment.users.address}</p>
+          <p className="mt-1 text-base text-muted">{payment.users.address}</p>
         </div>
         <StatusBadge status={payment.status} />
       </div>
 
-      <div className="grid gap-2 rounded-3xl bg-slate-50 p-4 text-sm text-slate-700 sm:grid-cols-2">
+      <div className="grid gap-3 rounded-3xl bg-slate-50 p-4 text-base text-slate-800 sm:grid-cols-2">
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-muted">Month</p>
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Month</p>
           <p className="mt-1 font-semibold text-slate-900">{formatMonthLabel(payment.month)}</p>
         </div>
         <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-muted">Submitted</p>
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Submitted</p>
           <p className="mt-1 font-semibold text-slate-900">{formatTimestamp(payment.created_at)}</p>
         </div>
       </div>
@@ -78,12 +78,17 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
           <ConfirmSubmitButton
             confirmMessage={`Reject payment proof from ${payment.users.house_number}?`}
             variant="danger"
-            className="w-full"
+            className="w-full bg-rose-700 hover:bg-rose-800"
           >
-            Reject payment
+            Reject proof
           </ConfirmSubmitButton>
         </form>
       </div>
+
+      <p className="rounded-3xl bg-amber-50 px-4 py-3 text-base text-amber-900">
+        Use <span className="font-bold">Reject proof</span> only when the uploaded receipt is wrong,
+        unclear, or does not match the month.
+      </p>
     </Card>
   );
 }

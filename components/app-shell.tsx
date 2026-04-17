@@ -37,21 +37,21 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-hero-glow">
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-4 py-4 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-8">
-        <aside className="rounded-4xl border border-line bg-surface/90 p-5 shadow-soft backdrop-blur lg:sticky lg:top-8 lg:w-80">
-          <div className="mb-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-7 px-4 py-4 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-8">
+        <aside className="rounded-4xl border border-line bg-surface/95 p-5 shadow-soft backdrop-blur lg:sticky lg:top-8 lg:w-80">
+          <div className="mb-7">
+            <p className="text-sm font-bold uppercase tracking-[0.22em] text-primary">
               Desa Tanjung
             </p>
-            <h1 className="mt-3 font-display text-3xl font-bold text-slate-950">
+            <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-slate-950">
               {profile.role === "admin" ? "Committee Panel" : "Resident Portal"}
             </h1>
-            <p className="mt-2 text-sm text-muted">
-              Signed in as {profile.house_number} · {profile.name}
+            <p className="mt-3 text-base text-muted">
+              Signed in as {profile.house_number} - {profile.name}
             </p>
           </div>
 
-          <nav className="space-y-2">
+          <nav className="space-y-3">
             {items.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
@@ -61,22 +61,22 @@ export function AppShell({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-3xl px-4 py-3 text-sm font-semibold transition",
+                    "flex min-h-14 items-center gap-3 rounded-3xl px-4 py-3 text-base font-bold transition",
                     active
                       ? "bg-primary text-primary-foreground"
-                      : "bg-slate-50 text-slate-700 hover:bg-slate-100",
+                      : "bg-slate-50 text-slate-800 hover:bg-slate-100",
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-5 w-5" />
                   {item.label}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="mt-6 rounded-3xl bg-slate-50 p-4">
-            <p className="text-sm font-semibold text-slate-900">Quick note</p>
-            <p className="mt-2 text-sm text-muted">
+          <div className="mt-7 rounded-3xl bg-slate-50 p-5">
+            <p className="text-base font-bold text-slate-950">Quick note</p>
+            <p className="mt-2 text-base text-muted">
               {profile.role === "admin"
                 ? "New uploads appear here automatically every 30 seconds."
                 : "Upload your receipt after each transfer so the committee can verify it quickly."}
@@ -85,7 +85,7 @@ export function AppShell({
 
           <SidebarCalendar />
 
-          <div className="mt-6">
+          <div className="mt-7">
             <SignOutButton />
           </div>
         </aside>

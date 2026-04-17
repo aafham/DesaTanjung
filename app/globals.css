@@ -3,16 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --background: #f3f8f6;
-  --foreground: #0f172a;
+  --background: #f4faf7;
+  --foreground: #07111f;
   --surface: #ffffff;
-  --line: #d6e3dd;
-  --primary: #0f766e;
-  --primary-foreground: #f8fafc;
-  --success: #15803d;
-  --warning: #ca8a04;
-  --danger: #dc2626;
-  --muted: #64748b;
+  --line: #c8d8d2;
+  --primary: #05756f;
+  --primary-foreground: #ffffff;
+  --success: #047857;
+  --warning: #b45309;
+  --danger: #be123c;
+  --muted: #475569;
 }
 
 * {
@@ -30,6 +30,10 @@ body {
     linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(243, 248, 246, 0.9)),
     var(--background);
   color: var(--foreground);
+  font-size: 17px;
+  line-height: 1.65;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -42,4 +46,18 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  outline-color: var(--primary);
+  outline-offset: 3px;
+}
+
+::placeholder {
+  color: #64748b;
+  opacity: 1;
 }

@@ -69,11 +69,16 @@ export function PaymentUploadForm({
 
   return (
     <div className="space-y-4">
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-4xl border border-dashed border-line bg-slate-50 px-4 py-8 text-center transition hover:border-primary">
-        <UploadCloud className="h-7 w-7 text-primary" />
+      <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-4xl border-2 border-dashed border-line bg-slate-50 px-4 py-10 text-center transition hover:border-primary">
+        <UploadCloud className="h-9 w-9 text-primary" />
         <div>
-          <p className="font-semibold text-slate-900">Upload payment receipt</p>
-          <p className="mt-1 text-sm text-muted">PNG or JPG up to 10MB</p>
+          <p className="text-xl font-bold text-slate-950">Tap here to choose receipt</p>
+          <p className="mt-1 text-base text-muted">PNG or JPG up to 10MB</p>
+          {file ? (
+            <p className="mt-2 rounded-full bg-teal-100 px-3 py-1 text-sm font-bold text-teal-900">
+              Selected: {file.name}
+            </p>
+          ) : null}
         </div>
         <input
           type="file"
@@ -108,14 +113,14 @@ export function PaymentUploadForm({
       ) : null}
 
       {error ? (
-        <p className="flex items-center gap-2 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <p className="flex items-center gap-2 rounded-2xl bg-rose-50 px-4 py-3 text-base font-bold text-rose-800">
           <AlertCircle className="h-4 w-4" />
           {error}
         </p>
       ) : null}
 
       {message ? (
-        <p className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-base font-bold text-emerald-800">
           <CheckCircle2 className="h-4 w-4" />
           {message}
         </p>
@@ -125,10 +130,10 @@ export function PaymentUploadForm({
         {isPending ? (
           <>
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-            Uploading...
+            Uploading receipt...
           </>
         ) : (
-          "Submit payment proof"
+          "Submit receipt for approval"
         )}
       </Button>
     </div>

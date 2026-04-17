@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
+import { Atkinson_Hyperlegible, Lexend } from "next/font/google";
 import "./globals.css";
 
-const manrope = Manrope({
+const atkinson = Atkinson_Hyperlegible({
   subsets: ["latin"],
-  variable: "--font-manrope",
+  weight: ["400", "700"],
+  variable: "--font-atkinson",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const lexend = Lexend({
   subsets: ["latin"],
-  variable: "--font-space-grotesk",
+  variable: "--font-lexend",
 });
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} ${spaceGrotesk.variable}`}>
+      <body className={`${atkinson.variable} ${lexend.variable}`}>
         {children}
       </body>
     </html>

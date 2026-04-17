@@ -8,24 +8,24 @@ export function PaymentHistoryTable({ history }: { history: PaymentRecord[] }) {
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-line text-left">
           <thead className="bg-slate-50">
-            <tr className="text-xs uppercase tracking-[0.18em] text-muted">
-              <th className="px-4 py-3">Month</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Method</th>
-              <th className="px-4 py-3">Updated</th>
+            <tr className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+              <th className="px-4 py-4">Month</th>
+              <th className="px-4 py-4">Status</th>
+              <th className="px-4 py-4">Method</th>
+              <th className="px-4 py-4">Updated</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-line text-sm text-slate-700">
+          <tbody className="divide-y divide-line text-base text-slate-800">
             {history.map((payment) => (
               <tr key={payment.id}>
-                <td className="px-4 py-4 font-medium text-slate-900">
+                <td className="px-4 py-5 text-lg font-bold text-slate-950">
                   {formatMonthLabel(payment.month)}
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-4 py-5">
                   <StatusBadge status={payment.status} />
                 </td>
-                <td className="px-4 py-4 capitalize">{payment.payment_method}</td>
-                <td className="px-4 py-4">{formatTimestamp(payment.updated_at)}</td>
+                <td className="px-4 py-5 capitalize">{payment.payment_method}</td>
+                <td className="px-4 py-5">{formatTimestamp(payment.updated_at)}</td>
               </tr>
             ))}
           </tbody>

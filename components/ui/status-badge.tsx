@@ -9,10 +9,10 @@ const labelMap: Record<PaymentStatus, string> = {
 };
 
 const styleMap: Record<PaymentStatus, string> = {
-  paid: "bg-emerald-100 text-emerald-700",
-  pending: "bg-amber-100 text-amber-700",
-  rejected: "bg-rose-100 text-rose-700",
-  unpaid: "bg-rose-100 text-rose-700",
+  paid: "bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200",
+  pending: "bg-amber-100 text-amber-900 ring-1 ring-amber-200",
+  rejected: "bg-rose-100 text-rose-900 ring-1 ring-rose-200",
+  unpaid: "bg-rose-100 text-rose-900 ring-1 ring-rose-200",
 };
 
 export function StatusBadge({
@@ -25,7 +25,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]",
+        "inline-flex items-center rounded-full px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.12em]",
         styleMap[status],
         className,
       )}

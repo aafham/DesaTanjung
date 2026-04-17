@@ -72,26 +72,28 @@ export function SidebarCalendar() {
   const dayLabels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
   return (
-    <div className="mt-6 rounded-3xl bg-slate-50 p-4">
-      <p className="text-sm font-semibold text-slate-900">Date and time</p>
-      <p className="mt-3 font-display text-3xl font-bold text-slate-950">{timeLabel}</p>
-      <p className="mt-1 text-sm text-muted">{dateLabel}</p>
+    <div className="mt-7 rounded-3xl bg-slate-50 p-5">
+      <p className="text-base font-bold text-slate-950">Date and time</p>
+      <p className="mt-3 font-display text-4xl font-bold leading-tight text-slate-950">
+        {timeLabel}
+      </p>
+      <p className="mt-2 text-base text-muted">{dateLabel}</p>
 
-      <div className="mt-4 rounded-3xl bg-white p-4">
+      <div className="mt-5 rounded-3xl bg-white p-4">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-900">{monthLabel}</p>
-          <div className="rounded-full bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground">
+          <p className="text-base font-bold text-slate-950">{monthLabel}</p>
+          <div className="rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-primary-foreground">
             Today {currentDay}
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-2 text-center text-[11px] uppercase tracking-[0.18em] text-muted">
+        <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold uppercase tracking-[0.08em] text-muted">
           {dayLabels.map((label) => (
             <div key={label}>{label}</div>
           ))}
         </div>
 
-        <div className="mt-2 grid grid-cols-7 gap-2 text-center text-sm">
+        <div className="mt-2 grid grid-cols-7 gap-2 text-center text-base">
           {days.map((day, index) => (
             <div
               key={`${day ?? "empty"}-${index}`}

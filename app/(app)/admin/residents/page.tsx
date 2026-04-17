@@ -14,10 +14,13 @@ export default async function AdminResidentsPage({
     <div className="space-y-6">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.18em] text-primary">Residents</p>
-          <h2 className="mt-2 font-display text-3xl font-bold text-slate-950">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Residents</p>
+          <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
             Payment status for {currentMonthLabel}
           </h2>
+          <p className="mt-3 max-w-2xl text-base text-muted">
+            Search, filter status, export CSV, or mark cash payments from one table.
+          </p>
         </div>
         <div className="w-full max-w-sm">
           <MonthFilter currentMonth={currentMonth} />

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
 import { Download, Search } from "lucide-react";
 import { markCashPaymentAction } from "@/lib/actions";
@@ -79,7 +80,7 @@ export function AdminResidentsTable({
     <Card className="overflow-hidden p-0">
       <div className="grid gap-4 border-b border-line p-4 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <label htmlFor="resident-search" className="mb-2 block text-sm font-medium text-slate-700">
+          <label htmlFor="resident-search" className="mb-2 block text-base font-bold text-slate-950">
             Search resident
           </label>
           <div className="relative">
@@ -89,7 +90,7 @@ export function AdminResidentsTable({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search by house, owner, or address"
-              className="w-full rounded-2xl border border-line py-3 pl-11 pr-4 outline-none focus:border-primary"
+              className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
             />
           </div>
         </div>
@@ -101,7 +102,7 @@ export function AdminResidentsTable({
                 key={option.value}
                 type="button"
                 onClick={() => setStatusFilter(option.value)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                className={`min-h-11 rounded-full px-4 py-2 text-base font-bold transition ${
                   statusFilter === option.value
                     ? "bg-primary text-primary-foreground"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -115,7 +116,7 @@ export function AdminResidentsTable({
           <a
             href={csvHref}
             download={`desa-tanjung-${currentMonth}-payments.csv`}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-3 text-sm font-semibold text-white"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white"
           >
             <Download className="h-4 w-4" />
             Export CSV
@@ -123,14 +124,14 @@ export function AdminResidentsTable({
         </div>
       </div>
 
-      <div className="border-b border-line bg-slate-50 px-4 py-3 text-sm text-muted">
+      <div className="border-b border-line bg-slate-50 px-4 py-3 text-base text-muted">
         Showing {filteredResidents.length} of {residents.length} residents for {currentMonthLabel}.
       </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-line text-left">
           <thead className="bg-slate-50">
-            <tr className="text-xs uppercase tracking-[0.18em] text-muted">
+            <tr className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
               <th className="px-4 py-3">House</th>
               <th className="px-4 py-3">Owner</th>
               <th className="px-4 py-3">Address</th>
@@ -139,7 +140,7 @@ export function AdminResidentsTable({
               <th className="px-4 py-3">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-line text-sm text-slate-700">
+          <tbody className="divide-y divide-line text-base text-slate-800">
             {filteredResidents.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-10 text-center text-muted">
@@ -149,28 +150,45 @@ export function AdminResidentsTable({
             ) : (
               filteredResidents.map((resident) => (
                 <tr key={resident.id} className="align-top">
-                  <td className="px-4 py-4 font-semibold text-slate-900">{resident.house_number}</td>
-                  <td className="px-4 py-4">{resident.name}</td>
+                  <td className="px-4 py-5 text-lg font-bold text-slate-950">{resident.house_number}</td>
+                  <td className="px-4 py-5 font-semibold text-slate-950">{resident.name}</td>
                   <td className="px-4 py-4">{resident.address}</td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-5">
                     <StatusBadge status={getStatus(resident)} />
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-5">
                     {resident.currentPayment
                       ? formatTimestamp(resident.currentPayment.updated_at)
                       : "No record yet"}
                   </td>
-                  <td className="px-4 py-4">
-                    <form action={markCashPaymentAction}>
-                      <input type="hidden" name="resident_id" value={resident.id} />
-                      <input type="hidden" name="month" value={currentMonth} />
-                      <ConfirmSubmitButton
-                        confirmMessage={`Mark ${resident.house_number} as paid by cash for ${currentMonthLabel}?`}
-                        className="whitespace-nowrap rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
-                      >
-                        Mark paid (cash)
-                      </ConfirmSubmitButton>
-                    </form>
+                  <td className="px-4 py-5">
+                    <div className="flex flex-col gap-2">
+                      {getStatus(resident) === "pending" ? (
+                        <Link
+                          href={`/admin/approvals?month=${currentMonth}`}
+                          className="inline-flex min-h-11 items-center justify-center rounded-full bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950"
+                        >
+                          Review proof
+                        </Link>
+                      ) : null}
+
+                      {getStatus(resident) !== "paid" ? (
+                        <form action={markCashPaymentAction}>
+                          <input type="hidden" name="resident_id" value={resident.id} />
+                          <input type="hidden" name="month" value={currentMonth} />
+                          <ConfirmSubmitButton
+                            confirmMessage={`Mark ${resident.house_number} as paid by cash for ${currentMonthLabel}?`}
+                            className="w-full whitespace-nowrap rounded-full bg-slate-950 px-4 py-2 text-sm font-bold uppercase tracking-[0.08em] text-white"
+                          >
+                            Mark paid cash
+                          </ConfirmSubmitButton>
+                        </form>
+                      ) : (
+                        <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-900">
+                          Settled
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

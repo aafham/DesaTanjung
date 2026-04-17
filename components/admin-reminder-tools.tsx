@@ -51,11 +51,11 @@ export function AdminReminderTools({
           <MessageSquareText className="h-5 w-5 text-teal-200" />
         </div>
         <div>
-          <p className="text-sm uppercase tracking-[0.18em] text-teal-200">Reminder helper</p>
-          <h3 className="mt-2 font-display text-2xl font-bold">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-200">Reminder helper</p>
+          <h3 className="mt-2 font-display text-3xl font-bold leading-tight">
             Copy unpaid list for WhatsApp
           </h3>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-base text-slate-200">
             Use this when the committee wants to send a quick monthly reminder.
           </p>
         </div>
@@ -64,7 +64,7 @@ export function AdminReminderTools({
       <textarea
         readOnly
         value={reminderText}
-        className="mt-5 h-44 w-full resize-none rounded-3xl border border-white/10 bg-white/10 p-4 text-sm text-white outline-none"
+        className="mt-5 h-48 w-full resize-none rounded-3xl border border-white/20 bg-white/10 p-4 text-base leading-relaxed text-white outline-none"
       />
 
       <Button

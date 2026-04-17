@@ -11,17 +11,17 @@ export function Button({
   ...props
 }: ButtonProps) {
   const variants = {
-    primary: "bg-primary text-primary-foreground hover:opacity-95",
-    secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
-    ghost: "bg-transparent text-slate-700 hover:bg-slate-100",
-    danger: "bg-danger text-white hover:opacity-95",
+    primary: "bg-primary text-primary-foreground shadow-sm hover:bg-teal-800",
+    secondary: "bg-slate-100 text-slate-950 hover:bg-slate-200",
+    ghost: "bg-transparent text-slate-800 hover:bg-slate-100",
+    danger: "bg-danger text-white shadow-sm hover:bg-rose-800",
   };
 
   return (
     <button
       type={type}
       className={cn(
-        "inline-flex items-center justify-center rounded-full px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex min-h-12 items-center justify-center rounded-full px-5 py-3 text-base font-bold transition disabled:cursor-not-allowed disabled:opacity-60",
         variants[variant],
         className,
       )}

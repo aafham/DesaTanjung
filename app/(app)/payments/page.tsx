@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CreditCard, Landmark, QrCode } from "lucide-react";
+import { CreditCard, Landmark, QrCode, UploadCloud } from "lucide-react";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentUploadForm } from "@/components/payment-upload-form";
 import { Card } from "@/components/ui/card";
@@ -16,8 +16,8 @@ export default async function PaymentsPage() {
         <Card className="space-y-5">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm uppercase tracking-[0.18em] text-primary">Payment details</p>
-              <h2 className="mt-2 font-display text-3xl font-bold text-slate-950">
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Payment details</p>
+              <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
                 {currentMonthLabel}
               </h2>
             </div>
@@ -25,24 +25,24 @@ export default async function PaymentsPage() {
           </div>
 
           <div className="grid gap-4 rounded-4xl bg-slate-50 p-4 sm:grid-cols-2">
-            <div className="rounded-3xl bg-white p-4">
-              <Landmark className="h-5 w-5 text-primary" />
-              <p className="mt-4 text-sm text-muted">Bank name</p>
-              <p className="font-semibold text-slate-900">
+            <div className="rounded-3xl bg-white p-5">
+              <Landmark className="h-6 w-6 text-primary" />
+              <p className="mt-4 text-base font-bold text-muted">Bank name</p>
+              <p className="text-xl font-bold text-slate-950">
                 {process.env.NEXT_PUBLIC_BANK_NAME}
               </p>
-              <p className="mt-4 text-sm text-muted">Account holder</p>
-              <p className="font-semibold text-slate-900">
+              <p className="mt-5 text-base font-bold text-muted">Account holder</p>
+              <p className="text-xl font-bold text-slate-950">
                 {process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME}
               </p>
-              <p className="mt-4 text-sm text-muted">Account number</p>
-              <p className="font-display text-2xl font-bold text-slate-950">
+              <p className="mt-5 text-base font-bold text-muted">Account number</p>
+              <p className="font-display text-4xl font-bold leading-tight text-slate-950">
                 {process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER}
               </p>
             </div>
-            <div className="rounded-3xl bg-white p-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                <QrCode className="h-4 w-4 text-primary" />
+            <div className="rounded-3xl bg-white p-5">
+              <div className="flex items-center gap-2 text-base font-bold text-slate-950">
+                <QrCode className="h-5 w-5 text-primary" />
                 Scan QR
               </div>
               <div className="mt-4 overflow-hidden rounded-3xl border border-line">
@@ -65,14 +65,30 @@ export default async function PaymentsPage() {
               <CreditCard className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-sm uppercase tracking-[0.18em] text-primary">Upload proof</p>
-              <h3 className="mt-1 font-display text-2xl font-bold text-slate-950">
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Upload proof</p>
+              <h3 className="mt-1 font-display text-3xl font-bold leading-tight text-slate-950">
                 Submit your receipt
               </h3>
             </div>
           </div>
 
-          <p className="text-sm text-muted">
+          <div className="grid gap-3 rounded-3xl bg-slate-50 p-4 text-base text-slate-800">
+            <div className="flex gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">1</span>
+              <p>Transfer using the bank account or QR code.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">2</span>
+              <p>Upload a clear receipt image below.</p>
+            </div>
+            <div className="flex gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">3</span>
+              <p>Wait for committee approval. Your status will update automatically.</p>
+            </div>
+          </div>
+
+          <p className="text-base text-muted">
+            <UploadCloud className="mr-2 inline h-5 w-5 text-primary" />
             Upload the receipt right after transferring the monthly fee. Status will change to pending until the committee reviews it.
           </p>
 
