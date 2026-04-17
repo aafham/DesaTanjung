@@ -4,10 +4,13 @@ import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentUploadForm } from "@/components/payment-upload-form";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getUserDashboardData } from "@/lib/data";
+import { getAppSettings, getUserDashboardData } from "@/lib/data";
 
 export default async function PaymentsPage() {
-  const { currentMonthLabel, currentPayment, profile } = await getUserDashboardData();
+  const [{ currentMonthLabel, currentPayment, profile }, settings] = await Promise.all([
+    getUserDashboardData(),
+    getAppSettings(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -29,16 +32,24 @@ export default async function PaymentsPage() {
               <Landmark className="h-6 w-6 text-primary" />
               <p className="mt-4 text-base font-bold text-muted">Bank name</p>
               <p className="text-xl font-bold text-slate-950">
-                {process.env.NEXT_PUBLIC_BANK_NAME}
+                {settings.bank_name}
               </p>
               <p className="mt-5 text-base font-bold text-muted">Account holder</p>
               <p className="text-xl font-bold text-slate-950">
-                {process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME}
+                {settings.bank_account_name}
               </p>
               <p className="mt-5 text-base font-bold text-muted">Account number</p>
               <p className="font-display text-4xl font-bold leading-tight text-slate-950">
-                {process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER}
+                {settings.bank_account_number}
               </p>
+              {settings.monthly_fee ? (
+                <>
+                  <p className="mt-5 text-base font-bold text-muted">Monthly fee</p>
+                  <p className="text-2xl font-bold text-slate-950">
+                    RM {settings.monthly_fee.toFixed(2)}
+                  </p>
+                </>
+              ) : null}
             </div>
             <div className="rounded-3xl bg-white p-5">
               <div className="flex items-center gap-2 text-base font-bold text-slate-950">
@@ -47,7 +58,7 @@ export default async function PaymentsPage() {
               </div>
               <div className="mt-4 overflow-hidden rounded-3xl border border-line">
                 <Image
-                  src={process.env.NEXT_PUBLIC_PAYMENT_QR_URL!}
+                  src={settings.payment_qr_url}
                   alt="Community payment QR code"
                   width={800}
                   height={800}

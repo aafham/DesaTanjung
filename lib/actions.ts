@@ -14,11 +14,13 @@ import {
 import { DEFAULT_ADMIN_PASSWORD, DEFAULT_USER_PASSWORD } from "@/lib/constants";
 
 function redirectWithError(path: string, message: string) {
-  redirect(`${path}?error=${encodeURIComponent(message)}`);
+  const separator = path.includes("?") ? "&" : "?";
+  redirect(`${path}${separator}error=${encodeURIComponent(message)}`);
 }
 
 function redirectWithMessage(path: string, message: string) {
-  redirect(`${path}?message=${encodeURIComponent(message)}`);
+  const separator = path.includes("?") ? "&" : "?";
+  redirect(`${path}${separator}message=${encodeURIComponent(message)}`);
 }
 
 export async function loginAction(formData: FormData) {
@@ -72,11 +74,13 @@ export async function approvePaymentAction(formData: FormData) {
   }
 
   const paymentId = String(formData.get("payment_id") ?? "");
+  const notes = String(formData.get("notes") ?? "").trim();
   const supabase = await createClient();
 
   await supabase.rpc("admin_review_payment", {
     p_payment_id: paymentId,
     p_status: "paid",
+    p_notes: notes || null,
   });
 
   await supabase.from("notifications").update({ is_read: true }).eq("payment_id", paymentId);
@@ -94,16 +98,30 @@ export async function rejectPaymentAction(formData: FormData) {
   }
 
   const paymentId = String(formData.get("payment_id") ?? "");
+  const rejectReason = String(formData.get("reject_reason") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
   const supabase = await createClient();
 
   await supabase.rpc("admin_review_payment", {
     p_payment_id: paymentId,
     p_status: "rejected",
+    p_reject_reason: rejectReason || "Payment proof needs correction.",
+    p_notes: notes || null,
   });
 
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
   revalidatePath("/admin/residents");
+}
+
+export async function markAllNotificationsReadAction() {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const supabase = await createClient();
+  await supabase.from("notifications").update({ is_read: true }).eq("is_read", false);
+
+  revalidatePath("/admin");
 }
 
 export async function markCashPaymentAction(formData: FormData) {
@@ -124,6 +142,105 @@ export async function markCashPaymentAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
+}
+
+export async function bulkMarkCashPaymentAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const residentIds = formData.getAll("resident_ids").map((value) => String(value));
+  const month = String(formData.get("month") ?? getMonthKey());
+
+  if (residentIds.length === 0) {
+    redirectWithError(`/admin/residents?month=${month}`, "Please select at least one resident.");
+  }
+
+  const supabase = await createClient();
+
+  await Promise.all(
+    residentIds.map((residentId) =>
+      supabase.rpc("admin_mark_cash_payment", {
+        p_user_id: residentId,
+        p_month: month,
+      }),
+    ),
+  );
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/residents");
+  redirectWithMessage(
+    `/admin/residents?month=${month}`,
+    `${residentIds.length} resident payments marked as cash paid.`,
+  );
+}
+
+export async function updatePaymentNotesAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const paymentId = String(formData.get("payment_id") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+
+  if (!paymentId) {
+    redirectWithError("/admin/residents", "Invalid payment selected.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("payments").update({ notes }).eq("id", paymentId);
+
+  if (error) {
+    redirectWithError("/admin/residents", error.message);
+  }
+
+  await supabase.from("payment_audit_logs").insert({
+    payment_id: paymentId,
+    actor_id: profile.id,
+    action: "note_updated",
+    message: notes ? `Admin note updated: ${notes}` : "Admin note cleared.",
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/residents");
+}
+
+export async function updateAppSettingsAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const communityName = String(formData.get("community_name") ?? "").trim();
+  const bankName = String(formData.get("bank_name") ?? "").trim();
+  const bankAccountName = String(formData.get("bank_account_name") ?? "").trim();
+  const bankAccountNumber = String(formData.get("bank_account_number") ?? "").trim();
+  const paymentQrUrl = String(formData.get("payment_qr_url") ?? "").trim();
+  const monthlyFeeValue = String(formData.get("monthly_fee") ?? "").trim();
+  const monthlyFee = monthlyFeeValue ? Number(monthlyFeeValue) : null;
+
+  if (!communityName || !bankName || !bankAccountName || !bankAccountNumber || !paymentQrUrl) {
+    redirectWithError("/admin/settings", "Please fill in all required settings.");
+  }
+
+  if (monthlyFeeValue && Number.isNaN(monthlyFee)) {
+    redirectWithError("/admin/settings", "Monthly fee must be a number.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("app_settings").upsert({
+    id: true,
+    community_name: communityName,
+    bank_name: bankName,
+    bank_account_name: bankAccountName,
+    bank_account_number: bankAccountNumber,
+    payment_qr_url: paymentQrUrl,
+    monthly_fee: monthlyFee,
+  });
+
+  if (error) {
+    redirectWithError("/admin/settings", error.message);
+  }
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/payments");
+  redirectWithMessage("/admin/settings", "Payment settings updated successfully.");
 }
 
 export async function createCurrentMonthRecordAction() {

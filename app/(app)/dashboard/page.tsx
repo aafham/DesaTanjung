@@ -7,7 +7,8 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { getUserDashboardData } from "@/lib/data";
 
 export default async function DashboardPage() {
-  const { currentMonthLabel, currentPayment, history, profile } = await getUserDashboardData();
+  const { auditLogs, currentMonthLabel, currentPayment, history, profile } =
+    await getUserDashboardData();
   const statusMessage = {
     paid: "Payment approved. Thank you for keeping your account up to date.",
     pending: "Receipt uploaded. Please wait for committee approval.",
@@ -35,6 +36,16 @@ export default async function DashboardPage() {
             <Info className="mt-1 h-5 w-5 shrink-0 text-teal-200" />
             <p>{statusMessage}</p>
           </div>
+          {currentPayment.reject_reason ? (
+            <div className="mt-4 rounded-3xl bg-rose-100 p-4 text-base font-bold text-rose-950">
+              Reject reason: {currentPayment.reject_reason}
+            </div>
+          ) : null}
+          {currentPayment.notes ? (
+            <div className="mt-4 rounded-3xl bg-white/10 p-4 text-base text-slate-100">
+              Committee note: {currentPayment.notes}
+            </div>
+          ) : null}
           <Link
             href="/payments"
             className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-teal-300 px-6 py-3 text-lg font-bold text-slate-950 transition hover:bg-teal-200"
@@ -79,6 +90,29 @@ export default async function DashboardPage() {
             </div>
           </Card>
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Timeline</p>
+          <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
+            Latest payment activity
+          </h3>
+        </div>
+        <Card>
+          <div className="space-y-3">
+            {auditLogs.length === 0 ? (
+              <p className="text-base text-muted">No activity yet.</p>
+            ) : (
+              auditLogs.map((log) => (
+                <div key={log.id} className="rounded-3xl bg-slate-50 px-4 py-3">
+                  <p className="text-base font-bold text-slate-950">{log.message}</p>
+                  <p className="mt-1 text-sm text-muted">{new Date(log.created_at).toLocaleString()}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
       </section>
 
       <section className="space-y-4">

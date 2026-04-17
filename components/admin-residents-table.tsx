@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
-import { Download, Search } from "lucide-react";
-import { markCashPaymentAction } from "@/lib/actions";
+import { Copy, Download, Search } from "lucide-react";
+import {
+  bulkMarkCashPaymentAction,
+  markCashPaymentAction,
+  updatePaymentNotesAction,
+} from "@/lib/actions";
 import type { PaymentRecord, PaymentStatus, UserProfile } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
@@ -20,6 +24,12 @@ const filterOptions: Array<{ label: string; value: "all" | PaymentStatus }> = [
   { label: "Pending", value: "pending" },
   { label: "Unpaid", value: "unpaid" },
   { label: "Rejected", value: "rejected" },
+];
+
+const methodOptions: Array<{ label: string; value: "all" | "online" | "cash" }> = [
+  { label: "All methods", value: "all" },
+  { label: "Online", value: "online" },
+  { label: "Cash", value: "cash" },
 ];
 
 function getStatus(resident: ResidentWithPayment): PaymentStatus {
@@ -41,6 +51,9 @@ export function AdminResidentsTable({
 }) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | PaymentStatus>("all");
+  const [methodFilter, setMethodFilter] = useState<"all" | "online" | "cash">("all");
+  const [selectedResidentIds, setSelectedResidentIds] = useState<string[]>([]);
+  const [copiedResidentId, setCopiedResidentId] = useState<string | null>(null);
   const deferredQuery = useDeferredValue(query);
 
   const filteredResidents = useMemo(() => {
@@ -49,15 +62,33 @@ export function AdminResidentsTable({
     return residents.filter((resident) => {
       const status = getStatus(resident);
       const matchesStatus = statusFilter === "all" || status === statusFilter;
+      const matchesMethod =
+        methodFilter === "all" || resident.currentPayment?.payment_method === methodFilter;
       const matchesSearch =
         !normalized ||
         resident.house_number.toLowerCase().includes(normalized) ||
         resident.name.toLowerCase().includes(normalized) ||
         resident.address.toLowerCase().includes(normalized);
 
-      return matchesStatus && matchesSearch;
+      return matchesStatus && matchesMethod && matchesSearch;
     });
-  }, [deferredQuery, residents, statusFilter]);
+  }, [deferredQuery, methodFilter, residents, statusFilter]);
+
+  function toggleResident(residentId: string) {
+    setSelectedResidentIds((current) =>
+      current.includes(residentId)
+        ? current.filter((id) => id !== residentId)
+        : [...current, residentId],
+    );
+  }
+
+  async function copyReminder(resident: ResidentWithPayment) {
+    const text = `Salam ${resident.name}, bayaran untuk ${currentMonthLabel} bagi rumah ${resident.house_number} masih belum selesai. Sila buat bayaran dan upload resit dalam sistem Desa Tanjung. Terima kasih.`;
+
+    await navigator.clipboard.writeText(text);
+    setCopiedResidentId(resident.id);
+    window.setTimeout(() => setCopiedResidentId(null), 1800);
+  }
 
   const csvHref = useMemo(() => {
     const rows = [
@@ -113,6 +144,18 @@ export function AdminResidentsTable({
             ))}
           </div>
 
+          <select
+            value={methodFilter}
+            onChange={(event) => setMethodFilter(event.target.value as "all" | "online" | "cash")}
+            className="min-h-12 rounded-full border border-line bg-white px-4 py-2 text-base font-bold text-slate-950 outline-none focus:border-primary"
+          >
+            {methodOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
           <a
             href={csvHref}
             download={`desa-tanjung-${currentMonth}-payments.csv`}
@@ -128,7 +171,72 @@ export function AdminResidentsTable({
         Showing {filteredResidents.length} of {residents.length} residents for {currentMonthLabel}.
       </div>
 
-      <div className="overflow-x-auto">
+      <form
+        action={bulkMarkCashPaymentAction}
+        className="flex flex-col gap-3 border-b border-line bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div>
+          <p className="font-bold text-slate-950">Bulk action</p>
+          <p className="text-sm text-muted">
+            Select unpaid residents, then mark all selected as paid by cash.
+          </p>
+        </div>
+        <input type="hidden" name="month" value={currentMonth} />
+        {selectedResidentIds.map((residentId) => (
+          <input key={residentId} type="hidden" name="resident_ids" value={residentId} />
+        ))}
+        <ConfirmSubmitButton
+          confirmMessage={`Mark ${selectedResidentIds.length} selected residents as paid by cash?`}
+          disabled={selectedResidentIds.length === 0}
+          className="bg-slate-950 text-white"
+        >
+          Mark selected cash paid
+        </ConfirmSubmitButton>
+      </form>
+
+      <div className="grid gap-4 p-4 md:hidden">
+        {filteredResidents.map((resident) => (
+          <details key={resident.id} className="rounded-3xl border border-line bg-white p-4">
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
+              <div>
+                <p className="text-2xl font-bold text-slate-950">{resident.house_number}</p>
+                <p className="text-base text-muted">{resident.name}</p>
+              </div>
+              <StatusBadge status={getStatus(resident)} />
+            </summary>
+
+            <div className="mt-4 space-y-3 border-t border-line pt-4">
+              <p className="text-base text-slate-800">{resident.address}</p>
+              <p className="text-sm text-muted">
+                Updated:{" "}
+                {resident.currentPayment
+                  ? formatTimestamp(resident.currentPayment.updated_at)
+                  : "No record yet"}
+              </p>
+              {resident.currentPayment?.reject_reason ? (
+                <p className="rounded-2xl bg-rose-50 px-3 py-2 text-base font-bold text-rose-900">
+                  Reject reason: {resident.currentPayment.reject_reason}
+                </p>
+              ) : null}
+              {resident.currentPayment?.notes ? (
+                <p className="rounded-2xl bg-slate-50 px-3 py-2 text-base text-slate-800">
+                  Admin note: {resident.currentPayment.notes}
+                </p>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => copyReminder(resident)}
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-sm font-bold text-teal-950"
+              >
+                <Copy className="h-4 w-4" />
+                {copiedResidentId === resident.id ? "Copied reminder" : "Copy reminder"}
+              </button>
+            </div>
+          </details>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-full divide-y divide-line text-left">
           <thead className="bg-slate-50">
             <tr className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
@@ -150,7 +258,21 @@ export function AdminResidentsTable({
             ) : (
               filteredResidents.map((resident) => (
                 <tr key={resident.id} className="align-top">
-                  <td className="px-4 py-5 text-lg font-bold text-slate-950">{resident.house_number}</td>
+                  <td className="px-4 py-5">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedResidentIds.includes(resident.id)}
+                        onChange={() => toggleResident(resident.id)}
+                        disabled={getStatus(resident) === "paid"}
+                        className="h-5 w-5 rounded border-line"
+                        aria-label={`Select ${resident.house_number}`}
+                      />
+                      <span className="text-lg font-bold text-slate-950">
+                        {resident.house_number}
+                      </span>
+                    </div>
+                  </td>
                   <td className="px-4 py-5 font-semibold text-slate-950">{resident.name}</td>
                   <td className="px-4 py-4">{resident.address}</td>
                   <td className="px-4 py-5">
@@ -188,6 +310,14 @@ export function AdminResidentsTable({
                           Settled
                         </span>
                       )}
+                      <button
+                        type="button"
+                        onClick={() => copyReminder(resident)}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-sm font-bold text-teal-950"
+                      >
+                        <Copy className="h-4 w-4" />
+                        {copiedResidentId === resident.id ? "Copied" : "Reminder"}
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -195,6 +325,43 @@ export function AdminResidentsTable({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="border-t border-line bg-slate-50 p-4">
+        <p className="mb-3 text-base font-bold text-slate-950">Payment notes</p>
+        <div className="grid gap-3 lg:grid-cols-2">
+          {filteredResidents
+            .filter((resident) => resident.currentPayment)
+            .map((resident) => (
+              <form
+                key={resident.id}
+                action={updatePaymentNotesAction}
+                className="rounded-3xl bg-white p-4"
+              >
+                <input type="hidden" name="payment_id" value={resident.currentPayment!.id} />
+                <label className="block text-sm font-bold text-slate-950">
+                  {resident.house_number} admin note
+                </label>
+                <textarea
+                  name="notes"
+                  defaultValue={resident.currentPayment?.notes ?? ""}
+                  placeholder="Example: Paid to treasurer, receipt checked, waiting bank check"
+                  className="mt-2 h-24 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
+                />
+                {resident.currentPayment?.reject_reason ? (
+                  <p className="mt-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-900">
+                    Reject reason: {resident.currentPayment.reject_reason}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  className="mt-3 min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                >
+                  Save note
+                </button>
+              </form>
+            ))}
+        </div>
       </div>
     </Card>
   );

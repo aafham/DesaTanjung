@@ -23,6 +23,26 @@ export type PaymentRecord = {
   reviewed_at: string | null;
   payment_method: "online" | "cash";
   notes: string | null;
+  reject_reason: string | null;
+};
+
+export type PaymentAuditLog = {
+  id: string;
+  payment_id: string | null;
+  user_id: string | null;
+  actor_id: string | null;
+  action: string;
+  message: string;
+  created_at: string;
+};
+
+export type AppSettings = {
+  community_name: string;
+  bank_name: string;
+  bank_account_name: string;
+  bank_account_number: string;
+  payment_qr_url: string;
+  monthly_fee: number | null;
 };
 
 export type NotificationRecord = {

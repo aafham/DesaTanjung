@@ -42,8 +42,12 @@ create table if not exists public.payments (
   reviewed_by uuid references public.users (id),
   payment_method public.payment_method not null default 'online',
   notes text,
+  reject_reason text,
   unique (user_id, month)
 );
+
+alter table public.payments
+add column if not exists reject_reason text;
 
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
@@ -53,6 +57,32 @@ create table if not exists public.notifications (
   is_read boolean not null default false,
   created_at timestamptz not null default timezone('utc', now())
 );
+
+create table if not exists public.payment_audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  payment_id uuid references public.payments (id) on delete cascade,
+  user_id uuid references public.users (id) on delete cascade,
+  actor_id uuid references public.users (id) on delete set null,
+  action text not null,
+  message text not null,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists public.app_settings (
+  id boolean primary key default true,
+  community_name text not null default 'Desa Tanjung',
+  bank_name text not null default 'Maybank',
+  bank_account_name text not null default 'Persatuan Penduduk Desa Tanjung',
+  bank_account_number text not null default '1234567890',
+  payment_qr_url text not null default 'https://placehold.co/600x600/png?text=QR+Payment',
+  monthly_fee numeric(10, 2),
+  updated_at timestamptz not null default timezone('utc', now()),
+  constraint app_settings_single_row check (id = true)
+);
+
+insert into public.app_settings (id)
+values (true)
+on conflict (id) do nothing;
 
 create or replace function public.handle_updated_at()
 returns trigger
@@ -73,6 +103,12 @@ execute function public.handle_updated_at();
 drop trigger if exists payments_handle_updated_at on public.payments;
 create trigger payments_handle_updated_at
 before update on public.payments
+for each row
+execute function public.handle_updated_at();
+
+drop trigger if exists app_settings_handle_updated_at on public.app_settings;
+create trigger app_settings_handle_updated_at
+before update on public.app_settings
 for each row
 execute function public.handle_updated_at();
 
@@ -104,8 +140,8 @@ begin
     raise exception 'Authentication required';
   end if;
 
-  insert into public.payments (user_id, month, status, proof_url, payment_method, reviewed_at, reviewed_by, notes)
-  values (auth.uid(), p_month, 'pending', p_proof_url, 'online', null, null, null)
+  insert into public.payments (user_id, month, status, proof_url, payment_method, reviewed_at, reviewed_by, notes, reject_reason)
+  values (auth.uid(), p_month, 'pending', p_proof_url, 'online', null, null, null, null)
   on conflict (user_id, month)
   do update set
     status = 'pending',
@@ -113,19 +149,30 @@ begin
     payment_method = 'online',
     reviewed_at = null,
     reviewed_by = null,
-    notes = null
+    notes = null,
+    reject_reason = null
   returning id into v_payment_id;
+
+  insert into public.payment_audit_logs (payment_id, user_id, actor_id, action, message)
+  values (v_payment_id, auth.uid(), auth.uid(), 'submitted', 'Resident uploaded payment proof.');
 
   return v_payment_id;
 end;
 $$;
 
-create or replace function public.admin_review_payment(p_payment_id uuid, p_status public.payment_status)
+create or replace function public.admin_review_payment(
+  p_payment_id uuid,
+  p_status public.payment_status,
+  p_reject_reason text default null,
+  p_notes text default null
+)
 returns void
 language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_user_id uuid;
 begin
   if not public.is_admin() then
     raise exception 'Admin access required';
@@ -139,8 +186,23 @@ begin
   set
     status = p_status,
     reviewed_at = timezone('utc', now()),
-    reviewed_by = auth.uid()
-  where id = p_payment_id;
+    reviewed_by = auth.uid(),
+    reject_reason = case when p_status = 'rejected' then nullif(p_reject_reason, '') else null end,
+    notes = nullif(p_notes, '')
+  where id = p_payment_id
+  returning user_id into v_user_id;
+
+  insert into public.payment_audit_logs (payment_id, user_id, actor_id, action, message)
+  values (
+    p_payment_id,
+    v_user_id,
+    auth.uid(),
+    case when p_status = 'paid' then 'approved' else 'rejected' end,
+    case
+      when p_status = 'paid' then 'Committee approved payment proof.'
+      else coalesce(nullif(p_reject_reason, ''), 'Committee rejected payment proof.')
+    end
+  );
 end;
 $$;
 
@@ -171,13 +233,22 @@ begin
     payment_method = 'cash',
     reviewed_at = timezone('utc', now()),
     reviewed_by = auth.uid(),
-    notes = 'Marked as paid manually by committee.';
+    notes = 'Marked as paid manually by committee.',
+    reject_reason = null;
+
+  insert into public.payment_audit_logs (payment_id, user_id, actor_id, action, message)
+  select id, user_id, auth.uid(), 'cash_paid', 'Committee marked this month as paid by cash.'
+  from public.payments
+  where user_id = p_user_id
+    and month = p_month;
 end;
 $$;
 
 alter table public.users enable row level security;
 alter table public.payments enable row level security;
 alter table public.notifications enable row level security;
+alter table public.payment_audit_logs enable row level security;
+alter table public.app_settings enable row level security;
 
 drop policy if exists "Users can view own profile or admins can view all" on public.users;
 create policy "Users can view own profile or admins can view all"
@@ -236,6 +307,42 @@ on public.notifications
 for update
 to authenticated
 using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Users can view own audit logs or admins can view all" on public.payment_audit_logs;
+create policy "Users can view own audit logs or admins can view all"
+on public.payment_audit_logs
+for select
+to authenticated
+using (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists "Admins can insert audit logs" on public.payment_audit_logs;
+create policy "Admins can insert audit logs"
+on public.payment_audit_logs
+for insert
+to authenticated
+with check (public.is_admin());
+
+drop policy if exists "Authenticated users can view app settings" on public.app_settings;
+create policy "Authenticated users can view app settings"
+on public.app_settings
+for select
+to authenticated
+using (true);
+
+drop policy if exists "Admins can update app settings" on public.app_settings;
+create policy "Admins can update app settings"
+on public.app_settings
+for update
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Admins can insert app settings" on public.app_settings;
+create policy "Admins can insert app settings"
+on public.app_settings
+for insert
+to authenticated
 with check (public.is_admin());
 
 insert into storage.buckets (id, name, public)

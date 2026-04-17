@@ -2,8 +2,10 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { PAYMENT_BUCKET } from "@/lib/constants";
 import type {
+  AppSettings,
   ManagedUser,
   NotificationRecord,
+  PaymentAuditLog,
   PaymentRecord,
   UserProfile,
 } from "@/lib/types";
@@ -13,6 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 type PendingApprovalPayment = PaymentRecord & {
   status: "pending" | "rejected";
   users: Pick<UserProfile, "house_number" | "name" | "address">;
+  auditLogs?: PaymentAuditLog[];
 };
 
 export const getCurrentUserProfile = cache(async () => {
@@ -83,7 +86,7 @@ export async function getUserDashboardData() {
   const { data: currentPayment } = await supabase
     .from("payments")
     .select(
-      "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes",
+      "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
     )
     .eq("user_id", profile.id)
     .eq("month", currentMonth)
@@ -92,7 +95,7 @@ export async function getUserDashboardData() {
   const { data: history } = await supabase
     .from("payments")
     .select(
-      "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes",
+      "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
     )
     .eq("user_id", profile.id)
     .order("month", { ascending: false });
@@ -112,7 +115,15 @@ export async function getUserDashboardData() {
       reviewed_at: null,
       payment_method: "online",
       notes: null,
+      reject_reason: null,
     };
+
+  const { data: auditLogs } = await supabase
+    .from("payment_audit_logs")
+    .select("id, payment_id, user_id, actor_id, action, message, created_at")
+    .eq("user_id", profile.id)
+    .order("created_at", { ascending: false })
+    .limit(8);
 
   return {
     currentMonth,
@@ -120,6 +131,7 @@ export async function getUserDashboardData() {
     currentPayment: resolvedCurrentPayment,
     currentProofUrl: signedProof,
     history: (history as PaymentRecord[] | null) ?? [],
+    auditLogs: (auditLogs as PaymentAuditLog[] | null) ?? [],
     profile,
   };
 }
@@ -147,7 +159,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
     supabase
       .from("payments")
       .select(
-        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, users!inner(house_number, name, address)",
+        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason, users!inner(house_number, name, address)",
       )
       .eq("month", month)
       .in("status", ["pending", "rejected"])
@@ -165,7 +177,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
     supabase
       .from("payments")
       .select(
-        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes",
+        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
       )
       .eq("month", month),
   ]);
@@ -186,6 +198,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
       signedProofUrl: payment.proof_url
         ? await getSignedReceiptUrl(payment.proof_url)
         : null,
+      auditLogs: await getPaymentAuditLogs(payment.id),
     })),
   );
 
@@ -196,6 +209,57 @@ export async function getAdminDashboardData(filterMonth?: string) {
     pendingPayments: pendingWithReceipts,
     notifications: (notifications as NotificationRecord[] | null) ?? [],
     residents: residentRows,
+  };
+}
+
+export async function getPaymentAuditLogs(paymentId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("payment_audit_logs")
+    .select("id, payment_id, user_id, actor_id, action, message, created_at")
+    .eq("payment_id", paymentId)
+    .order("created_at", { ascending: false });
+
+  return (data as PaymentAuditLog[] | null) ?? [];
+}
+
+export async function getAppSettings() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("app_settings")
+    .select(
+      "community_name, bank_name, bank_account_name, bank_account_number, payment_qr_url, monthly_fee",
+    )
+    .eq("id", true)
+    .maybeSingle();
+
+  return ((data as AppSettings | null) ?? {
+    community_name: "Desa Tanjung",
+    bank_name: process.env.NEXT_PUBLIC_BANK_NAME ?? "Maybank",
+    bank_account_name:
+      process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? "Persatuan Penduduk Desa Tanjung",
+    bank_account_number: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? "1234567890",
+    payment_qr_url:
+      process.env.NEXT_PUBLIC_PAYMENT_QR_URL ??
+      "https://placehold.co/600x600/png?text=QR+Payment",
+    monthly_fee: null,
+  }) as AppSettings;
+}
+
+export async function getAdminSettingsData() {
+  const profile = await requireUserProfile();
+
+  if (profile.role !== "admin") {
+    redirect("/dashboard");
+  }
+
+  if (profile.must_change_password) {
+    redirect("/change-password");
+  }
+
+  return {
+    profile,
+    settings: await getAppSettings(),
   };
 }
 

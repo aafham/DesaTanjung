@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CreditCard, LayoutDashboard, ShieldCheck, UserCircle2, Users } from "lucide-react";
+import {
+  CreditCard,
+  LayoutDashboard,
+  Settings,
+  ShieldCheck,
+  UserCircle2,
+  Users,
+} from "lucide-react";
 import { SidebarCalendar } from "@/components/sidebar-calendar";
 import { SignOutButton } from "@/components/sign-out-button";
 import type { Role, UserProfile } from "@/lib/types";
@@ -22,6 +29,7 @@ const navItems: Record<
     { href: "/admin/approvals", label: "Approvals", icon: ShieldCheck },
     { href: "/admin/residents", label: "Residents", icon: UserCircle2 },
     { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/settings", label: "Settings", icon: Settings },
   ],
 };
 

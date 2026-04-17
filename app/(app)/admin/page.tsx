@@ -8,6 +8,7 @@ import {
   TriangleAlert,
   Users,
 } from "lucide-react";
+import { markAllNotificationsReadAction } from "@/lib/actions";
 import { AdminReminderTools } from "@/components/admin-reminder-tools";
 import { LiveRefresh } from "@/components/live-refresh";
 import { MonthFilter } from "@/components/month-filter";
@@ -57,6 +58,32 @@ export default async function AdminDashboardPage({
         <div className="w-full max-w-sm">
           <MonthFilter currentMonth={currentMonth} />
         </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-3">
+        <Link
+          href={`/admin/approvals?month=${currentMonth}`}
+          className="rounded-3xl bg-amber-50 px-5 py-4 text-amber-950 ring-1 ring-amber-100"
+        >
+          <p className="text-sm font-bold uppercase tracking-[0.12em]">Today action</p>
+          <p className="mt-2 text-2xl font-bold">{pendingPayments.length} proofs to review</p>
+        </Link>
+        <Link
+          href={`/admin/residents?month=${currentMonth}`}
+          className="rounded-3xl bg-rose-50 px-5 py-4 text-rose-950 ring-1 ring-rose-100"
+        >
+          <p className="text-sm font-bold uppercase tracking-[0.12em]">Follow-up</p>
+          <p className="mt-2 text-2xl font-bold">
+            {needsAttentionResidents.length} residents not settled
+          </p>
+        </Link>
+        <Link
+          href="/admin/settings"
+          className="rounded-3xl bg-teal-50 px-5 py-4 text-teal-950 ring-1 ring-teal-100"
+        >
+          <p className="text-sm font-bold uppercase tracking-[0.12em]">Setup</p>
+          <p className="mt-2 text-2xl font-bold">Update bank and QR</p>
+        </Link>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
@@ -159,6 +186,16 @@ export default async function AdminDashboardPage({
                 </h3>
               </div>
             </div>
+            {unreadNotificationCount > 0 ? (
+              <form action={markAllNotificationsReadAction} className="mt-4">
+                <button
+                  type="submit"
+                  className="rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+                >
+                  Mark all as read
+                </button>
+              </form>
+            ) : null}
 
             <div className="mt-5 max-h-[420px] space-y-3 overflow-y-auto pr-1">
               {notifications.length === 0 ? (
