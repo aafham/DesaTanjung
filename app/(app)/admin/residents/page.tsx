@@ -1,9 +1,6 @@
-import { markCashPaymentAction } from "@/lib/actions";
+import { AdminResidentsTable } from "@/components/admin-residents-table";
 import { MonthFilter } from "@/components/month-filter";
-import { Card } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { getAdminDashboardData } from "@/lib/data";
-import { formatTimestamp } from "@/lib/utils";
 
 export default async function AdminResidentsPage({
   searchParams,
@@ -27,51 +24,11 @@ export default async function AdminResidentsPage({
         </div>
       </section>
 
-      <Card className="overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-line text-left">
-            <thead className="bg-slate-50">
-              <tr className="text-xs uppercase tracking-[0.18em] text-muted">
-                <th className="px-4 py-3">House</th>
-                <th className="px-4 py-3">Owner</th>
-                <th className="px-4 py-3">Address</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Updated</th>
-                <th className="px-4 py-3">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line text-sm text-slate-700">
-              {residents.map((resident) => (
-                <tr key={resident.id}>
-                  <td className="px-4 py-4 font-semibold text-slate-900">{resident.house_number}</td>
-                  <td className="px-4 py-4">{resident.name}</td>
-                  <td className="px-4 py-4">{resident.address}</td>
-                  <td className="px-4 py-4">
-                    <StatusBadge status={resident.currentPayment?.status ?? "unpaid"} />
-                  </td>
-                  <td className="px-4 py-4">
-                    {resident.currentPayment
-                      ? formatTimestamp(resident.currentPayment.updated_at)
-                      : "No record yet"}
-                  </td>
-                  <td className="px-4 py-4">
-                    <form action={markCashPaymentAction}>
-                      <input type="hidden" name="resident_id" value={resident.id} />
-                      <input type="hidden" name="month" value={currentMonth} />
-                      <button
-                        type="submit"
-                        className="rounded-full bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
-                      >
-                        Mark paid (cash)
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <AdminResidentsTable
+        residents={residents}
+        currentMonth={currentMonth}
+        currentMonthLabel={currentMonthLabel}
+      />
     </div>
   );
 }

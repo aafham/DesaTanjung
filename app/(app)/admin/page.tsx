@@ -1,4 +1,14 @@
-import { BellRing, CircleCheckBig, Clock3, TriangleAlert } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  BellRing,
+  CircleCheckBig,
+  Clock3,
+  ShieldCheck,
+  TriangleAlert,
+  Users,
+} from "lucide-react";
+import { AdminReminderTools } from "@/components/admin-reminder-tools";
 import { LiveRefresh } from "@/components/live-refresh";
 import { MonthFilter } from "@/components/month-filter";
 import { Card } from "@/components/ui/card";
@@ -19,13 +29,17 @@ export default async function AdminDashboardPage({
   const pendingCount = residents.filter(
     (resident) => resident.currentPayment?.status === "pending",
   ).length;
-  const unpaidCount = residents.length - paidCount - pendingCount;
   const needsAttentionResidents = residents.filter(
     (resident) =>
       !resident.currentPayment ||
       resident.currentPayment.status === "unpaid" ||
       resident.currentPayment.status === "rejected",
   );
+  const collectionRate =
+    residents.length > 0 ? Math.round((paidCount / residents.length) * 100) : 0;
+  const unreadNotificationCount = notifications.filter(
+    (notification) => !notification.is_read,
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -36,9 +50,61 @@ export default async function AdminDashboardPage({
           <h2 className="mt-2 font-display text-3xl font-bold text-slate-950">
             Overview for {currentMonthLabel}
           </h2>
+          <p className="mt-2 max-w-xl text-sm text-muted">
+            Review new uploads, spot unpaid houses, and jump into the common admin tasks from one screen.
+          </p>
         </div>
         <div className="w-full max-w-sm">
           <MonthFilter currentMonth={currentMonth} />
+        </div>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+        <Card className="bg-slate-950 text-white">
+          <p className="text-sm uppercase tracking-[0.22em] text-teal-300">Monthly collection</p>
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="font-display text-5xl font-bold">{collectionRate}%</p>
+              <p className="mt-2 text-sm text-slate-300">
+                {paidCount} of {residents.length} residents marked paid for {currentMonthLabel}.
+              </p>
+              <p className="mt-3 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-teal-200">
+                {needsAttentionResidents.length} houses need follow-up
+              </p>
+            </div>
+            <Link
+              href={`/admin/residents?month=${currentMonth}`}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-teal-400 px-4 py-3 text-sm font-semibold text-slate-950"
+            >
+              View residents
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="mt-6 h-3 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-teal-400"
+              style={{ width: `${collectionRate}%` }}
+            />
+          </div>
+        </Card>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+          <Link
+            href={`/admin/approvals?month=${currentMonth}`}
+            className="rounded-4xl border border-line bg-white p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            <p className="mt-4 font-semibold text-slate-950">Review approvals</p>
+            <p className="mt-2 text-sm text-muted">{pendingPayments.length} proof uploads waiting.</p>
+          </Link>
+          <Link
+            href="/admin/users"
+            className="rounded-4xl border border-line bg-white p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <Users className="h-5 w-5 text-primary" />
+            <p className="mt-4 font-semibold text-slate-950">Manage residents</p>
+            <p className="mt-2 text-sm text-muted">Add, edit, reset password, or delete users.</p>
+          </Link>
         </div>
       </section>
 
@@ -56,44 +122,60 @@ export default async function AdminDashboardPage({
         <Card className="bg-rose-50">
           <TriangleAlert className="h-5 w-5 text-rose-700" />
           <p className="mt-4 text-sm text-rose-700">Needs attention</p>
-          <p className="font-display text-3xl font-bold text-rose-950">{unpaidCount}</p>
+          <p className="font-display text-3xl font-bold text-rose-950">
+            {needsAttentionResidents.length}
+          </p>
         </Card>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-        <Card>
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-teal-50 p-3">
-              <BellRing className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm uppercase tracking-[0.18em] text-primary">Notifications</p>
-              <h3 className="mt-1 font-display text-2xl font-bold text-slate-950">
-                Latest submissions
-              </h3>
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {notifications.length === 0 ? (
-              <div className="rounded-3xl bg-slate-50 px-4 py-6 text-sm text-muted">
-                No recent notifications yet.
+        <div className="grid gap-4">
+          <Card>
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-teal-50 p-3">
+                <BellRing className="h-5 w-5 text-primary" />
               </div>
-            ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
-                >
-                  <p className="text-sm font-semibold text-slate-900">{notification.message}</p>
-                  <p className="mt-2 text-xs uppercase tracking-[0.18em] text-muted">
-                    {formatTimestamp(notification.created_at)}
-                  </p>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm uppercase tracking-[0.18em] text-primary">Notifications</p>
+                  {unreadNotificationCount > 0 ? (
+                    <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">
+                      {unreadNotificationCount} unread
+                    </span>
+                  ) : null}
                 </div>
-              ))
-            )}
-          </div>
-        </Card>
+                <h3 className="mt-1 font-display text-2xl font-bold text-slate-950">
+                  Latest submissions
+                </h3>
+              </div>
+            </div>
+
+            <div className="mt-5 max-h-[420px] space-y-3 overflow-y-auto pr-1">
+              {notifications.length === 0 ? (
+                <div className="rounded-3xl bg-slate-50 px-4 py-6 text-sm text-muted">
+                  No recent notifications yet.
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
+                  >
+                    <p className="text-sm font-semibold text-slate-900">{notification.message}</p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-muted">
+                      {formatTimestamp(notification.created_at)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+          <AdminReminderTools
+            residents={needsAttentionResidents}
+            currentMonthLabel={currentMonthLabel}
+          />
+        </div>
 
         <div className="grid gap-4">
           <Card>
@@ -109,15 +191,16 @@ export default async function AdminDashboardPage({
               </span>
             </div>
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 max-h-[360px] space-y-3 overflow-y-auto pr-1">
               {pendingPayments.length === 0 ? (
                 <div className="rounded-3xl bg-slate-50 px-4 py-6 text-sm text-muted">
                   No uploaded payment proofs are waiting for review this month.
                 </div>
               ) : (
                 pendingPayments.map((payment) => (
-                  <div
+                  <Link
                     key={payment.id}
+                    href={`/admin/approvals?month=${currentMonth}`}
                     className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
                   >
                     <div className="flex items-center justify-between gap-3">
@@ -130,7 +213,7 @@ export default async function AdminDashboardPage({
                       </div>
                       <StatusBadge status={payment.status} />
                     </div>
-                  </div>
+                  </Link>
                 ))
               )}
             </div>
@@ -149,7 +232,7 @@ export default async function AdminDashboardPage({
               </span>
             </div>
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 max-h-[360px] space-y-3 overflow-y-auto pr-1">
               {needsAttentionResidents.length === 0 ? (
                 <div className="rounded-3xl bg-emerald-50 px-4 py-6 text-sm text-emerald-700">
                   All residents are settled for this month.

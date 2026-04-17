@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { approvePaymentAction, rejectPaymentAction } from "@/lib/actions";
 import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 
@@ -66,15 +66,22 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
       <div className="grid gap-3 sm:grid-cols-2">
         <form action={approvePaymentAction}>
           <input type="hidden" name="payment_id" value={payment.id} />
-          <Button type="submit" className="w-full">
+          <ConfirmSubmitButton
+            confirmMessage={`Approve payment for ${payment.users.house_number}?`}
+            className="w-full"
+          >
             Approve payment
-          </Button>
+          </ConfirmSubmitButton>
         </form>
         <form action={rejectPaymentAction}>
           <input type="hidden" name="payment_id" value={payment.id} />
-          <Button type="submit" variant="danger" className="w-full">
+          <ConfirmSubmitButton
+            confirmMessage={`Reject payment proof from ${payment.users.house_number}?`}
+            variant="danger"
+            className="w-full"
+          >
             Reject payment
-          </Button>
+          </ConfirmSubmitButton>
         </form>
       </div>
     </Card>

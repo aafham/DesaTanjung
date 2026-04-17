@@ -7,6 +7,7 @@ import {
   updateManagedUserAction,
 } from "@/lib/actions";
 import type { ManagedUser } from "@/lib/types";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
 
 export function AdminUsersManager({
@@ -17,21 +18,25 @@ export function AdminUsersManager({
   currentAdminId: string;
 }) {
   const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
 
   const filteredUsers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
 
-    if (!normalized) {
-      return users;
-    }
-
     return users.filter((user) => {
-      return (
+      const matchesRole = roleFilter === "all" || user.role === roleFilter;
+      const matchesSearch =
+        !normalized ||
         user.house_number.toLowerCase().includes(normalized) ||
-        user.name.toLowerCase().includes(normalized)
-      );
+        user.name.toLowerCase().includes(normalized);
+
+      return matchesRole && matchesSearch;
     });
-  }, [query, users]);
+  }, [query, roleFilter, users]);
+
+  const adminCount = users.filter((user) => user.role === "admin").length;
+  const residentCount = users.filter((user) => user.role === "user").length;
+  const passwordResetCount = users.filter((user) => user.must_change_password).length;
 
   return (
     <section className="space-y-4">
@@ -56,8 +61,45 @@ export function AdminUsersManager({
         </div>
       </div>
 
+      <div className="grid gap-3 md:grid-cols-4">
+        <button
+          type="button"
+          onClick={() => setRoleFilter("all")}
+          className={`rounded-3xl px-4 py-3 text-left text-sm transition ${
+            roleFilter === "all" ? "bg-slate-950 text-white" : "bg-slate-50 text-muted"
+          }`}
+        >
+          <span className="block font-semibold">{users.length}</span>
+          All users
+        </button>
+        <button
+          type="button"
+          onClick={() => setRoleFilter("user")}
+          className={`rounded-3xl px-4 py-3 text-left text-sm transition ${
+            roleFilter === "user" ? "bg-primary text-primary-foreground" : "bg-slate-50 text-muted"
+          }`}
+        >
+          <span className="block font-semibold">{residentCount}</span>
+          Residents
+        </button>
+        <button
+          type="button"
+          onClick={() => setRoleFilter("admin")}
+          className={`rounded-3xl px-4 py-3 text-left text-sm transition ${
+            roleFilter === "admin" ? "bg-primary text-primary-foreground" : "bg-slate-50 text-muted"
+          }`}
+        >
+          <span className="block font-semibold">{adminCount}</span>
+          Admins
+        </button>
+        <div className="rounded-3xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span className="block font-semibold">{passwordResetCount}</span>
+          Need password change
+        </div>
+      </div>
+
       <div className="rounded-3xl bg-slate-50 px-4 py-3 text-sm text-muted">
-        Showing {filteredUsers.length} of {users.length} users.
+        Showing {filteredUsers.length} of {users.length} users. Click a card to open or close details.
       </div>
 
       <div className="grid gap-4">
@@ -68,7 +110,7 @@ export function AdminUsersManager({
         ) : (
           filteredUsers.map((user) => (
             <Card key={user.id} className="p-0">
-              <details className="group" open={query.length > 0}>
+              <details className="group">
                 <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-6 py-5">
                   <div>
                     <p className="text-sm uppercase tracking-[0.18em] text-primary">
@@ -159,24 +201,25 @@ export function AdminUsersManager({
                       <input type="hidden" name="user_id" value={user.id} />
                       <input type="hidden" name="role" value={user.role} />
                       <input type="hidden" name="house_number" value={user.house_number} />
-                      <button
-                        type="submit"
+                      <ConfirmSubmitButton
+                        confirmMessage={`Reset password for ${user.house_number} to default password?`}
                         className="rounded-full bg-amber-500 px-4 py-3 text-sm font-semibold text-slate-950"
                       >
                         Reset to default password
-                      </button>
+                      </ConfirmSubmitButton>
                     </form>
 
                     <form action={deleteManagedUserAction}>
                       <input type="hidden" name="user_id" value={user.id} />
                       <input type="hidden" name="house_number" value={user.house_number} />
-                      <button
-                        type="submit"
+                      <ConfirmSubmitButton
+                        confirmMessage={`Delete ${user.house_number}? This also removes the login account and payment records.`}
                         disabled={user.id === currentAdminId}
+                        variant="danger"
                         className="rounded-full bg-rose-600 px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Delete user
-                      </button>
+                      </ConfirmSubmitButton>
                     </form>
                   </div>
                 </div>
