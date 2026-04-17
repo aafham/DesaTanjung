@@ -224,16 +224,48 @@ export async function updateAppSettingsAction(formData: FormData) {
   const bankName = String(formData.get("bank_name") ?? "").trim();
   const bankAccountName = String(formData.get("bank_account_name") ?? "").trim();
   const bankAccountNumber = String(formData.get("bank_account_number") ?? "").trim();
-  const paymentQrUrl = String(formData.get("payment_qr_url") ?? "").trim();
+  const existingPaymentQrUrl = String(formData.get("existing_payment_qr_url") ?? "").trim();
   const monthlyFeeValue = String(formData.get("monthly_fee") ?? "").trim();
   const monthlyFee = monthlyFeeValue ? Number(monthlyFeeValue) : null;
+  const qrImage = formData.get("payment_qr_image");
 
-  if (!communityName || !bankName || !bankAccountName || !bankAccountNumber || !paymentQrUrl) {
+  if (!communityName || !bankName || !bankAccountName || !bankAccountNumber) {
     redirectWithError("/admin/settings", "Please fill in all required settings.");
   }
 
   if (monthlyFeeValue && Number.isNaN(monthlyFee)) {
     redirectWithError("/admin/settings", "Monthly fee must be a number.");
+  }
+
+  let paymentQrUrl = existingPaymentQrUrl;
+
+  if (qrImage instanceof File && qrImage.size > 0) {
+    if (!qrImage.type.startsWith("image/")) {
+      redirectWithError("/admin/settings", "QR image must be a valid image file.");
+    }
+
+    const adminClient = createAdminClient();
+    const extension = qrImage.name.split(".").pop()?.toLowerCase() || "png";
+    const path = `qr/payment-qr-${Date.now()}.${extension}`;
+    const bytes = Buffer.from(await qrImage.arrayBuffer());
+
+    const { error: uploadError } = await adminClient.storage
+      .from("app-assets")
+      .upload(path, bytes, {
+        contentType: qrImage.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      redirectWithError("/admin/settings", uploadError.message);
+    }
+
+    const { data: publicUrlData } = adminClient.storage.from("app-assets").getPublicUrl(path);
+    paymentQrUrl = publicUrlData.publicUrl;
+  }
+
+  if (!paymentQrUrl) {
+    redirectWithError("/admin/settings", "Please upload a QR image first.");
   }
 
   const supabase = await createClient();

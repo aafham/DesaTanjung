@@ -349,6 +349,10 @@ insert into storage.buckets (id, name, public)
 values ('payment-proofs', 'payment-proofs', false)
 on conflict (id) do nothing;
 
+insert into storage.buckets (id, name, public)
+values ('app-assets', 'app-assets', true)
+on conflict (id) do nothing;
+
 drop policy if exists "Owners and admins can read receipts" on storage.objects;
 create policy "Owners and admins can read receipts"
 on storage.objects

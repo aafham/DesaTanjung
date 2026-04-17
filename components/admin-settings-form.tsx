@@ -3,6 +3,22 @@
 import { useState } from "react";
 import type { AppSettings } from "@/lib/types";
 
+const MALAYSIAN_BANKS = [
+  "Maybank",
+  "CIMB Bank",
+  "Public Bank",
+  "RHB Bank",
+  "Hong Leong Bank",
+  "AmBank",
+  "Bank Islam",
+  "Bank Muamalat",
+  "BSN",
+  "OCBC Bank",
+  "UOB Malaysia",
+  "Affin Bank",
+  "Alliance Bank",
+];
+
 export function AdminSettingsForm({
   settings,
   action,
@@ -18,9 +34,21 @@ export function AdminSettingsForm({
     payment_qr_url: settings.payment_qr_url,
     monthly_fee: settings.monthly_fee ? String(settings.monthly_fee) : "",
   });
+  const [selectedFileName, setSelectedFileName] = useState("");
 
   function updatePreview(name: string, value: string) {
     setPreview((current) => ({ ...current, [name]: value }));
+  }
+
+  function handleQrPreview(file: File | null) {
+    if (!file) {
+      setSelectedFileName("");
+      return;
+    }
+
+    setSelectedFileName(file.name);
+    const objectUrl = URL.createObjectURL(file);
+    updatePreview("payment_qr_url", objectUrl);
   }
 
   return (
@@ -61,14 +89,20 @@ export function AdminSettingsForm({
           <label htmlFor="bank_name" className="mb-2 block text-base font-bold text-slate-950">
             Bank name
           </label>
-          <input
+          <select
             id="bank_name"
             name="bank_name"
             required
             defaultValue={settings.bank_name}
             onChange={(event) => updatePreview("bank_name", event.target.value)}
-            className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
-          />
+            className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base font-semibold text-slate-950 outline-none focus:border-primary"
+          >
+            {MALAYSIAN_BANKS.map((bank) => (
+              <option key={bank} value={bank}>
+                {bank}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -100,19 +134,36 @@ export function AdminSettingsForm({
         </div>
 
         <div className="md:col-span-2">
-          <label htmlFor="payment_qr_url" className="mb-2 block text-base font-bold text-slate-950">
-            Payment QR image URL
+          <label htmlFor="payment_qr_image" className="mb-2 block text-base font-bold text-slate-950">
+            Payment QR image
+          </label>
+          <input type="hidden" name="existing_payment_qr_url" value={settings.payment_qr_url} />
+          <label
+            htmlFor="payment_qr_image"
+            className="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-line bg-slate-50 px-4 py-6 text-center transition hover:border-primary"
+          >
+            <span className="text-base font-bold text-slate-950">
+              Upload QR image
+            </span>
+            <span className="text-sm text-muted">
+              PNG or JPG. Leave empty if you want to keep current QR.
+            </span>
+            {selectedFileName ? (
+              <span className="rounded-full bg-teal-100 px-3 py-1 text-sm font-bold text-teal-950">
+                {selectedFileName}
+              </span>
+            ) : null}
           </label>
           <input
-            id="payment_qr_url"
-            name="payment_qr_url"
-            required
-            defaultValue={settings.payment_qr_url}
-            onChange={(event) => updatePreview("payment_qr_url", event.target.value)}
-            className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
+            id="payment_qr_image"
+            name="payment_qr_image"
+            type="file"
+            accept="image/png,image/jpeg,image/jpg,image/webp"
+            onChange={(event) => handleQrPreview(event.target.files?.[0] ?? null)}
+            className="hidden"
           />
           <p className="mt-2 text-sm text-muted">
-            Use a public image URL. Supabase Storage public URL also works.
+            Upload a new QR image if bank QR changes.
           </p>
         </div>
 
