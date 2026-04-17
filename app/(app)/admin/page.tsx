@@ -60,29 +60,39 @@ export default async function AdminDashboardPage({
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
-        <Card className="bg-slate-950 text-white">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-200">Monthly collection</p>
+        <Card
+          className="border-slate-900 text-white"
+          style={{
+            background:
+              "linear-gradient(135deg, #07111f 0%, #0b2f2d 55%, #064e48 100%)",
+          }}
+        >
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">
+            Monthly collection
+          </p>
           <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="font-display text-6xl font-bold leading-none">{collectionRate}%</p>
-              <p className="mt-3 text-base text-slate-200">
+              <p className="font-display text-6xl font-bold leading-none text-white">
+                {collectionRate}%
+              </p>
+              <p className="mt-3 text-base font-bold text-slate-100">
                 {paidCount} of {residents.length} residents marked paid for {currentMonthLabel}.
               </p>
-              <p className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-teal-100">
+              <p className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-950">
                 {needsAttentionResidents.length} houses need follow-up
               </p>
             </div>
             <Link
               href={`/admin/residents?month=${currentMonth}`}
-              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-teal-300 px-5 py-3 text-base font-bold text-slate-950 transition hover:bg-teal-200"
+              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-teal-200 px-5 py-3 text-base font-bold text-slate-950 shadow-sm transition hover:bg-white"
             >
               View residents
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-6 h-3 overflow-hidden rounded-full bg-white/10">
+          <div className="mt-6 h-4 overflow-hidden rounded-full bg-white/20">
             <div
-              className="h-full rounded-full bg-teal-400"
+              className="h-full rounded-full bg-teal-200"
               style={{ width: `${collectionRate}%` }}
             />
           </div>
