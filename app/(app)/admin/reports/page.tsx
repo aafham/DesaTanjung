@@ -36,23 +36,29 @@ export default async function AdminReportsPage({
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="bg-slate-950 text-white">
+        <Card
+          className="text-white"
+          style={{
+            background:
+              "linear-gradient(135deg, #07111f 0%, #12324a 100%)",
+          }}
+        >
           <p className="text-base font-bold text-slate-100">Expected collection</p>
-          <p className="mt-2 font-display text-4xl font-bold">
+          <p className="mt-2 font-display text-4xl font-bold text-white">
             RM {totals.expectedCollection.toFixed(2)}
           </p>
           <p className="mt-2 text-base text-slate-200">
             RM {(settings.monthly_fee ?? 0).toFixed(2)} x {totals.totalResidents} residents
           </p>
         </Card>
-        <Card className="bg-emerald-50">
+        <Card className="border-emerald-200 bg-emerald-50">
           <p className="text-base font-bold text-emerald-800">Collected</p>
           <p className="mt-2 font-display text-4xl font-bold text-emerald-950">
             RM {totals.collectedAmount.toFixed(2)}
           </p>
           <p className="mt-2 text-base text-emerald-900">{totals.paidCount} houses paid</p>
         </Card>
-        <Card className="bg-rose-50">
+        <Card className="border-rose-200 bg-rose-50">
           <p className="text-base font-bold text-rose-800">Outstanding</p>
           <p className="mt-2 font-display text-4xl font-bold text-rose-950">
             RM {totals.outstandingAmount.toFixed(2)}
@@ -61,7 +67,7 @@ export default async function AdminReportsPage({
             {totals.unsettledCount} houses to follow up
           </p>
         </Card>
-        <Card className="bg-amber-50">
+        <Card className="border-amber-200 bg-amber-50">
           <p className="text-base font-bold text-amber-800">Due date</p>
           <p className="mt-2 font-display text-3xl font-bold text-amber-950">{dueDateLabel}</p>
           <p className="mt-2 text-base text-amber-900">{totals.pendingCount} receipts still pending</p>
@@ -69,24 +75,30 @@ export default async function AdminReportsPage({
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <Card>
-          <p className="text-base font-bold text-slate-700">Paid</p>
+        <Card className="border-emerald-200 bg-emerald-50">
+          <p className="text-base font-bold text-emerald-800">Paid</p>
           <p className="mt-2 font-display text-4xl font-bold text-slate-950">{totals.paidCount}</p>
         </Card>
-        <Card>
-          <p className="text-base font-bold text-slate-700">Pending</p>
+        <Card className="border-amber-200 bg-amber-50">
+          <p className="text-base font-bold text-amber-800">Pending</p>
           <p className="mt-2 font-display text-4xl font-bold text-slate-950">{totals.pendingCount}</p>
         </Card>
-        <Card>
+        <Card className="border-slate-200 bg-slate-50">
           <p className="text-base font-bold text-slate-700">Unpaid</p>
           <p className="mt-2 font-display text-4xl font-bold text-slate-950">{totals.unpaidCount}</p>
         </Card>
-        <Card className="bg-red-950 text-white">
-          <p className="text-base font-bold text-red-100">Overdue</p>
+        <Card
+          className="text-white"
+          style={{
+            background:
+              "linear-gradient(135deg, #5f1020 0%, #8b1538 100%)",
+          }}
+        >
+          <p className="text-base font-bold text-rose-100">Overdue</p>
           <p className="mt-2 font-display text-4xl font-bold text-white">{totals.overdueCount}</p>
         </Card>
-        <Card>
-          <p className="text-base font-bold text-slate-700">Rejected</p>
+        <Card className="border-rose-200 bg-rose-50">
+          <p className="text-base font-bold text-rose-800">Rejected</p>
           <p className="mt-2 font-display text-4xl font-bold text-slate-950">
             {totals.rejectedCount}
           </p>
