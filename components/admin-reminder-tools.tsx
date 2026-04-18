@@ -166,11 +166,11 @@ export function AdminReminderTools({
       />
 
       <div className="mt-4 grid gap-3">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 xl:grid-cols-2">
           <Button
             type="button"
             onClick={copyReminder}
-            className="w-full gap-2 bg-teal-300 px-6 text-slate-950 hover:bg-teal-200 sm:min-w-[15rem]"
+            className="w-full gap-2 bg-teal-300 px-6 text-slate-950 hover:bg-teal-200"
           >
             <Copy className="h-4 w-4" />
             {copied ? "Copied" : "Copy reminder text"}
@@ -180,13 +180,13 @@ export function AdminReminderTools({
               href={whatsappComposeLink}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white/10 px-6 py-3 text-center text-base font-bold leading-tight text-white transition hover:bg-white/20 sm:min-w-[15rem]"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-white/10 px-6 py-3 text-center text-base font-bold leading-tight text-white transition hover:bg-white/20"
             >
               <MessageSquareText className="h-4 w-4" />
               Open WhatsApp draft
             </a>
           ) : (
-            <div className="inline-flex min-h-12 items-center justify-center rounded-full border border-dashed border-white/20 px-5 py-3 text-center text-sm font-semibold text-slate-200">
+            <div className="flex min-h-12 w-full items-center justify-center rounded-3xl border border-dashed border-white/20 px-5 py-3 text-center text-sm font-semibold leading-relaxed text-slate-200">
               Add at least one resident phone number to open WhatsApp draft.
             </div>
           )}

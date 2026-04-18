@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, LoaderCircle, UploadCloud } from "lucide-react";
 import { submitPaymentProofAction } from "@/lib/actions";
@@ -25,7 +25,18 @@ export function PaymentUploadForm({
   const [isUploading, setIsUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    return () => {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
+
   function resetSelection() {
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
     setFile(null);
     setPreview(null);
   }
@@ -171,7 +182,9 @@ export function PaymentUploadForm({
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={handleUpload}
+                onClick={() => {
+                  void handleUpload();
+                }}
                 className="rounded-full bg-rose-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-rose-800"
               >
                 Try upload again
@@ -195,7 +208,13 @@ export function PaymentUploadForm({
         </p>
       ) : null}
 
-      <Button className="w-full" onClick={handleUpload} disabled={!file || isUploading || isPending}>
+      <Button
+        className="w-full"
+        onClick={() => {
+          void handleUpload();
+        }}
+        disabled={!file || isUploading || isPending}
+      >
         {isUploading || isPending ? (
           <>
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />

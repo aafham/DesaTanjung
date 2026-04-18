@@ -4,8 +4,51 @@ import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
 
 export function PaymentHistoryTable({ history }: { history: ResidentPaymentRecord[] }) {
+  if (history.length === 0) {
+    return (
+      <div className="rounded-4xl border border-line bg-slate-50 px-5 py-8 text-base text-muted">
+        No payment records are available yet. Your future uploads and committee decisions will appear here.
+      </div>
+    );
+  }
+
   return (
-    <div className="overflow-hidden rounded-4xl border border-line bg-white">
+    <>
+      <div className="grid gap-3 md:hidden">
+        {history.map((payment) => (
+          <div key={payment.id} className="rounded-4xl border border-line bg-white p-4 shadow-soft">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-lg font-bold text-slate-950">{formatMonthLabel(payment.month)}</p>
+                <p className="mt-1 text-sm text-muted">{formatTimestamp(payment.updated_at)}</p>
+              </div>
+              <StatusBadge status={payment.display_status} />
+            </div>
+
+            <div className="mt-4 grid gap-3 rounded-3xl bg-slate-50 p-4 text-sm text-slate-800">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-bold text-muted">Method</span>
+                <span className="font-semibold capitalize text-slate-950">{payment.payment_method}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-bold text-muted">Receipt</span>
+                {payment.signed_proof_url ? (
+                  <ReceiptPreviewModal
+                    src={payment.signed_proof_url}
+                    alt={`Receipt for ${formatMonthLabel(payment.month)}`}
+                    triggerLabel="View receipt"
+                    inline
+                  />
+                ) : (
+                  <span className="font-semibold text-muted">No receipt</span>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-4xl border border-line bg-white md:block">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-line text-left">
           <thead className="bg-slate-50">
@@ -45,6 +88,7 @@ export function PaymentHistoryTable({ history }: { history: ResidentPaymentRecor
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

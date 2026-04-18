@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Clock3, Home, Info, Phone, Wallet } from "lucide-react";
+import { ArrowRight, BellRing, Clock3, Home, Info, Phone, Wallet } from "lucide-react";
 import { AnnouncementFeed } from "@/components/announcement-feed";
 import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
@@ -86,13 +86,22 @@ export default async function DashboardPage() {
               Committee note: {currentPayment.notes}
             </div>
           ) : null}
-          <Link
-            href="/payments"
-            className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-teal-200 px-6 py-3 text-lg font-bold text-slate-950 transition hover:bg-white"
-          >
-            PAY NOW
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/payments"
+              className="inline-flex min-h-14 items-center gap-2 rounded-full bg-teal-200 px-6 py-3 text-lg font-bold text-slate-950 transition hover:bg-white"
+            >
+              PAY NOW
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/notifications"
+              className="inline-flex min-h-14 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-6 py-3 text-base font-bold text-white transition hover:bg-white/15"
+            >
+              <BellRing className="h-4 w-4" />
+              View updates
+            </Link>
+          </div>
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">

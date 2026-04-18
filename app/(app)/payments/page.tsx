@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { CreditCard, Landmark, QrCode, UploadCloud } from "lucide-react";
+import Link from "next/link";
+import { BellRing, CreditCard, Landmark, QrCode, UploadCloud } from "lucide-react";
 import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentUploadForm } from "@/components/payment-upload-form";
@@ -7,14 +8,19 @@ import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
 import { ResidentNotificationList } from "@/components/resident-notification-list";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getAppSettings, getUserDashboardData } from "@/lib/data";
+import { getUserDashboardData } from "@/lib/data";
 
 export default async function PaymentsPage() {
-  const [{ currentMonthLabel, currentPayment, dueDateLabel, notifications, profile, warnings }, settings] = await Promise.all([
-    getUserDashboardData(),
-    getAppSettings(),
-  ]);
+  const { currentMonthLabel, currentPayment, dueDateLabel, notifications, profile, settings, warnings } =
+    await getUserDashboardData();
   const usingPlaceholderQr = settings.payment_qr_url.includes("placehold.co");
+  const statusHelperText = {
+    paid: "This month is settled. You can keep the receipt for your own record.",
+    pending: "Your receipt is already in review. Upload a new image only if the committee asks for it.",
+    unpaid: "Please complete the transfer and upload your proof so the committee can verify it.",
+    rejected: "Upload a clearer receipt or the corrected transaction slip for another review.",
+    overdue: "This month has passed the due date. Please settle it as soon as possible.",
+  }[currentPayment.display_status];
 
   return (
     <div className="space-y-6">
@@ -123,6 +129,25 @@ export default async function PaymentsPage() {
             </div>
           </div>
 
+          <div className="grid gap-3 rounded-3xl bg-slate-50 p-4 sm:grid-cols-3">
+            <div className="rounded-2xl bg-white px-4 py-4">
+              <p className="text-sm font-bold uppercase tracking-[0.12em] text-muted">Current status</p>
+              <div className="mt-3">
+                <StatusBadge status={currentPayment.display_status} />
+              </div>
+            </div>
+            <div className="rounded-2xl bg-white px-4 py-4">
+              <p className="text-sm font-bold uppercase tracking-[0.12em] text-muted">Monthly fee</p>
+              <p className="mt-3 text-2xl font-bold text-slate-950">
+                RM {settings.monthly_fee?.toFixed(2) ?? "Not set"}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-white px-4 py-4">
+              <p className="text-sm font-bold uppercase tracking-[0.12em] text-muted">Due date</p>
+              <p className="mt-3 text-lg font-bold text-slate-950">{dueDateLabel}</p>
+            </div>
+          </div>
+
           <div className="grid gap-3 rounded-3xl bg-slate-50 p-4 text-base text-slate-800">
             <div className="flex gap-3">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">1</span>
@@ -142,6 +167,11 @@ export default async function PaymentsPage() {
             <UploadCloud className="mr-2 inline h-5 w-5 text-primary" />
             Upload the receipt right after transferring the monthly fee. Status will change to pending until the committee reviews it.
           </p>
+
+          <div className="rounded-3xl border border-slate-200 bg-white px-4 py-4 text-base text-slate-800">
+            <p className="font-bold text-slate-950">What happens next</p>
+            <p className="mt-2">{statusHelperText}</p>
+          </div>
 
           {currentPayment.display_status === "overdue" ? (
             <div className="rounded-3xl bg-rose-50 px-4 py-4 text-base font-bold text-rose-950">
@@ -175,7 +205,24 @@ export default async function PaymentsPage() {
         </Card>
       </section>
 
-      <ResidentNotificationList notifications={notifications.slice(0, 4)} compact />
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Resident inbox</p>
+            <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
+              Latest payment updates
+            </h3>
+          </div>
+          <Link
+            href="/notifications"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white transition hover:bg-slate-800"
+          >
+            <BellRing className="h-4 w-4" />
+            View all updates
+          </Link>
+        </div>
+        <ResidentNotificationList notifications={notifications.slice(0, 4)} compact />
+      </section>
     </div>
   );
 }

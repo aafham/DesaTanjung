@@ -478,7 +478,7 @@ export async function getPaymentAuditLogs(paymentId: string) {
   return (data as PaymentAuditLog[] | null) ?? [];
 }
 
-export async function getAppSettings() {
+export const getAppSettings = cache(async () => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("app_settings")
@@ -500,7 +500,7 @@ export async function getAppSettings() {
     monthly_fee: null,
     due_day: 7,
   }) as AppSettings;
-}
+});
 
 export async function getAdminSettingsData() {
   const profile = await requireUserProfile();

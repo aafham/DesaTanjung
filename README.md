@@ -90,6 +90,11 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
 - [x] Sejarah bayaran resident
 - [x] Timeline aktiviti bayaran
 - [x] Resident notification inbox
+- [x] Resident UI final polish:
+  - [x] dashboard action flow
+  - [x] payments page summary + next-step guidance
+  - [x] profile layout refinement
+  - [x] mobile-friendly payment history
 - [x] Resident profile update:
   - [x] nama
   - [x] alamat
@@ -140,6 +145,10 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
 - [x] Bulk WhatsApp reminder draft
 - [x] Preview resit lama
 - [x] Loading state untuk action penting
+- [x] Performance polish ringan:
+  - [x] elak fetch settings berganda pada resident payments page
+  - [x] cache app settings per request
+  - [x] loading state lebih jelas semasa navigation dalam portal
 - [x] Login page kemas
 - [x] Konsistensi font seluruh app
 - [x] README setup + walkthrough admin + resident
