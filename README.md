@@ -126,6 +126,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] admin users
   - [x] admin residents
   - [x] resident notifications
+- [x] Loading screen for sidebar navigation inside the portal
 - [x] Upload QR image dalam settings
 - [x] Dropdown bank Malaysia dalam settings
 - [x] Admin health page

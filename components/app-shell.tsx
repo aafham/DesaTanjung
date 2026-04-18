@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
+  LoaderCircle,
   Bell,
   CreditCard,
   HeartPulse,
@@ -55,9 +57,18 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [loadingHref, setLoadingHref] = useState<string | null>(null);
   const items = navItems[profile.role];
   const printOnlyReportRoute =
     profile.role === "admin" && pathname.startsWith("/admin/reports");
+  const activeLoadingItem = useMemo(
+    () => items.find((item) => item.href === loadingHref) ?? null,
+    [items, loadingHref],
+  );
+
+  useEffect(() => {
+    setLoadingHref(null);
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-hero-glow">
@@ -98,14 +109,25 @@ export function AppShell({
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch
+                  onClick={() => {
+                    if (item.href !== pathname) {
+                      setLoadingHref(item.href);
+                    }
+                  }}
                   className={cn(
                     "flex min-h-14 items-center gap-3 rounded-3xl px-4 py-3 text-base font-bold transition",
                     active
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "border border-slate-100 bg-white/85 text-slate-800 hover:bg-slate-50",
                   )}
+                  aria-current={active ? "page" : undefined}
                 >
-                  <Icon className="h-5 w-5" />
+                  {loadingHref === item.href ? (
+                    <LoaderCircle className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Icon className="h-5 w-5" />
+                  )}
                   <span className="flex flex-1 items-center justify-between gap-3">
                     <span>{item.label}</span>
                     {profile.role === "user" && item.href === "/notifications" && (badgeCounts?.notifications ?? 0) > 0 ? (
@@ -146,7 +168,30 @@ export function AppShell({
           </div>
         </aside>
 
-        <main className={`flex-1 ${printOnlyReportRoute ? "print:w-full" : ""}`}>{children}</main>
+        <div className={`relative flex-1 ${printOnlyReportRoute ? "print:w-full" : ""}`}>
+          {loadingHref ? (
+            <div className="pointer-events-none absolute inset-0 z-20 rounded-4xl bg-white/72 backdrop-blur-[2px] print:hidden">
+              <div className="flex h-full min-h-[60vh] items-center justify-center p-4">
+                <div className="w-full max-w-md rounded-4xl border border-line bg-white px-6 py-7 text-center shadow-soft">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-teal-50">
+                    <LoaderCircle className="h-7 w-7 animate-spin text-primary" />
+                  </div>
+                  <p className="mt-4 text-sm font-bold uppercase tracking-[0.14em] text-primary">
+                    Opening page
+                  </p>
+                  <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
+                    {activeLoadingItem?.label ?? "Loading"}
+                  </h3>
+                  <p className="mt-3 text-base leading-8 text-slate-600">
+                    We&apos;re loading the latest portal data so the next page opens with fresh
+                    information.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+          <main aria-busy={loadingHref ? "true" : "false"}>{children}</main>
+        </div>
       </div>
     </div>
   );
