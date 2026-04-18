@@ -1,6 +1,7 @@
 import { createAnnouncementAction, deleteAnnouncementAction } from "@/lib/actions";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { DataWarning } from "@/components/data-warning";
+import { FormSubmitButton } from "@/components/form-submit-button";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { getAdminAnnouncementsData } from "@/lib/data";
@@ -89,12 +90,9 @@ export default async function AdminAnnouncementsPage({
           </div>
 
           <div className="md:col-span-2">
-            <button
-              type="submit"
-              className="min-h-14 rounded-full bg-primary px-6 py-3 text-base font-bold text-primary-foreground"
-            >
+            <FormSubmitButton className="min-h-14 px-6 py-3" pendingLabel="Publishing...">
               Publish announcement
-            </button>
+            </FormSubmitButton>
           </div>
         </form>
       </Card>

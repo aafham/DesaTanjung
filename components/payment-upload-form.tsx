@@ -22,6 +22,7 @@ export function PaymentUploadForm({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   async function handleUpload() {
@@ -33,6 +34,7 @@ export function PaymentUploadForm({
 
     setError(null);
     setMessage(null);
+    setIsUploading(true);
 
     const supabase = createClient();
     const month = getMonthKey();
@@ -45,6 +47,7 @@ export function PaymentUploadForm({
 
     if (uploadError) {
       setError(uploadError.message);
+      setIsUploading(false);
       return;
     }
 
@@ -56,6 +59,7 @@ export function PaymentUploadForm({
           ? submissionError.message
           : "Unable to save the payment record.",
       );
+      setIsUploading(false);
       return;
     }
 
@@ -65,6 +69,8 @@ export function PaymentUploadForm({
 
     setMessage("Payment proof uploaded successfully. It is now waiting for approval.");
     setFile(null);
+    setPreview(null);
+    setIsUploading(false);
   }
 
   return (
@@ -84,6 +90,7 @@ export function PaymentUploadForm({
           type="file"
           accept="image/png,image/jpeg,image/jpg"
           className="hidden"
+          disabled={isUploading || isPending}
           onChange={(event) => {
             const selected = event.target.files?.[0] ?? null;
             setFile(selected);
@@ -126,8 +133,8 @@ export function PaymentUploadForm({
         </p>
       ) : null}
 
-      <Button className="w-full" onClick={handleUpload} disabled={!file || isPending}>
-        {isPending ? (
+      <Button className="w-full" onClick={handleUpload} disabled={!file || isUploading || isPending}>
+        {isUploading || isPending ? (
           <>
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             Uploading receipt...

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { KeyRound, MapPinned, Phone, UserRound } from "lucide-react";
 import { formatMalaysianPhoneNumber } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { FormSubmitButton } from "@/components/form-submit-button";
 import { PageToast } from "@/components/page-toast";
 import { requireUserProfile } from "@/lib/data";
 import { updateProfileAction } from "@/lib/actions";
@@ -118,12 +119,9 @@ export default async function ProfilePage({
             <p className="mt-2 text-sm text-muted">Use Malaysian mobile format such as 012-345 6789.</p>
           </div>
           <div className="md:col-span-2">
-            <button
-              type="submit"
-              className="min-h-14 rounded-full bg-primary px-6 py-3 text-base font-bold text-primary-foreground"
-            >
+            <FormSubmitButton className="min-h-14 px-6 py-3" pendingLabel="Saving profile...">
               Save profile changes
-            </button>
+            </FormSubmitButton>
           </div>
         </form>
       </Card>

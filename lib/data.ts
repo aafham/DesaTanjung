@@ -178,6 +178,17 @@ export async function getUserDashboardData() {
     warnings.push(createWarningMessage("Payment history", historyError.message));
   }
 
+  const { data: notifications, error: notificationsError } = await supabase
+    .from("notifications")
+    .select("id, user_id, payment_id, message, is_read, scope, created_at")
+    .eq("user_id", profile.id)
+    .eq("scope", "resident")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  if (notificationsError) {
+    warnings.push(createWarningMessage("Notifications", notificationsError.message));
+  }
+
   const signedProof = currentPayment?.proof_url
     ? await getSignedReceiptUrl(currentPayment.proof_url)
     : null;
@@ -211,6 +222,7 @@ export async function getUserDashboardData() {
     history: ((history as PaymentRecord[] | null) ?? []).map((payment) =>
       enrichPaymentRecord(payment, payment.month, settings.due_day),
     ) as ResidentPaymentRecord[],
+    notifications: (notifications as NotificationRecord[] | null) ?? [],
     auditLogs: (auditLogs as PaymentAuditLog[] | null) ?? [],
     announcements,
     settings,
@@ -252,7 +264,8 @@ export async function getAdminDashboardData(filterMonth?: string) {
       .order("updated_at", { ascending: false }),
     supabase
       .from("notifications")
-      .select("id, user_id, payment_id, message, is_read, created_at")
+      .select("id, user_id, payment_id, message, is_read, scope, created_at")
+      .eq("scope", "admin")
       .order("created_at", { ascending: false })
       .limit(12),
     supabase
@@ -462,6 +475,31 @@ export async function getAdminUserManagementData() {
       ...user,
       activityLogs: logsByUser.get(user.id) ?? [],
     }))),
+  };
+}
+
+export async function getAdminActivityLogData() {
+  const profile = await requireUserProfile();
+
+  if (profile.role !== "admin") {
+    redirect("/dashboard");
+  }
+
+  if (profile.must_change_password) {
+    redirect("/change-password");
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("user_activity_logs")
+    .select("id, user_id, action, message, created_at, users(house_number, name, role)")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  return {
+    profile,
+    activityLogs: (data as UserActivityWithUser[] | null) ?? [],
+    warnings: error ? [createWarningMessage("Activity log", error.message)] : [],
   };
 }
 

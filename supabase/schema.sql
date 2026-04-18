@@ -67,8 +67,12 @@ create table if not exists public.notifications (
   payment_id uuid references public.payments (id) on delete set null,
   message text not null,
   is_read boolean not null default false,
+  scope text not null default 'admin' check (scope in ('admin', 'resident')),
   created_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.notifications
+add column if not exists scope text not null default 'admin';
 
 create table if not exists public.payment_audit_logs (
   id uuid primary key default gen_random_uuid(),
@@ -338,12 +342,19 @@ for select
 to authenticated
 using (public.is_admin());
 
+drop policy if exists "Users can view own resident notifications" on public.notifications;
+create policy "Users can view own resident notifications"
+on public.notifications
+for select
+to authenticated
+using (user_id = auth.uid() and scope = 'resident');
+
 drop policy if exists "Authenticated users can create notifications" on public.notifications;
 create policy "Authenticated users can create notifications"
 on public.notifications
 for insert
 to authenticated
-with check (auth.uid() is not null);
+with check (user_id = auth.uid() or public.is_admin());
 
 drop policy if exists "Admins can update notifications" on public.notifications;
 create policy "Admins can update notifications"
@@ -352,6 +363,14 @@ for update
 to authenticated
 using (public.is_admin())
 with check (public.is_admin());
+
+drop policy if exists "Users can update own resident notifications" on public.notifications;
+create policy "Users can update own resident notifications"
+on public.notifications
+for update
+to authenticated
+using (user_id = auth.uid() and scope = 'resident')
+with check (user_id = auth.uid() and scope = 'resident');
 
 drop policy if exists "Users can view own audit logs or admins can view all" on public.payment_audit_logs;
 create policy "Users can view own audit logs or admins can view all"

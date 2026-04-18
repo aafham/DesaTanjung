@@ -5,6 +5,7 @@ import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentHistoryTable } from "@/components/payment-history-table";
 import { PaymentTimeline } from "@/components/payment-timeline";
+import { ResidentNotificationList } from "@/components/resident-notification-list";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getUserDashboardData } from "@/lib/data";
@@ -18,6 +19,7 @@ export default async function DashboardPage() {
     currentPayment,
     dueDateLabel,
     history,
+    notifications,
     profile,
     settings,
     warnings,
@@ -165,6 +167,8 @@ export default async function DashboardPage() {
         announcements={announcements}
         emptyMessage="No resident announcements have been posted yet."
       />
+
+      <ResidentNotificationList notifications={notifications} />
 
       <section className="space-y-4">
         <div>

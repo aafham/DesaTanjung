@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { AppSettings } from "@/lib/types";
+import { FormSubmitButton } from "@/components/form-submit-button";
 
 const MALAYSIAN_BANKS = [
   "Maybank",
@@ -195,12 +196,9 @@ export function AdminSettingsForm({
         </div>
 
         <div className="md:col-span-2">
-          <button
-            type="submit"
-            className="min-h-14 rounded-full bg-primary px-6 py-3 text-base font-bold text-primary-foreground"
-          >
+          <FormSubmitButton className="min-h-14 px-6 py-3" pendingLabel="Saving settings...">
             Save settings
-          </button>
+          </FormSubmitButton>
         </div>
       </form>
 

@@ -1,5 +1,6 @@
 import { requireUserProfile } from "@/lib/data";
 import { changePasswordAction } from "@/lib/actions";
+import { FormSubmitButton } from "@/components/form-submit-button";
 import { PasswordInput } from "@/components/password-input";
 
 export default async function ChangePasswordPage({
@@ -62,12 +63,9 @@ export default async function ChangePasswordPage({
             </p>
           ) : null}
 
-          <button
-            type="submit"
-            className="min-h-14 w-full rounded-full bg-primary px-5 py-3 text-lg font-bold text-primary-foreground"
-          >
+          <FormSubmitButton className="min-h-14 w-full px-5 py-3 text-lg" pendingLabel="Saving password...">
             Save new password
-          </button>
+          </FormSubmitButton>
         </form>
       </div>
     </main>

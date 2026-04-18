@@ -37,6 +37,26 @@ async function logUserActivity(
   });
 }
 
+async function createNotification({
+  userId,
+  paymentId = null,
+  message,
+  scope,
+}: {
+  userId: string;
+  paymentId?: string | null;
+  message: string;
+  scope: "admin" | "resident";
+}) {
+  const supabase = await createClient();
+  await supabase.from("notifications").insert({
+    user_id: userId,
+    payment_id: paymentId,
+    message,
+    scope,
+  });
+}
+
 export async function loginAction(formData: FormData) {
   const identifier = String(formData.get("identifier") ?? "");
   const password = String(formData.get("password") ?? "");
@@ -180,6 +200,11 @@ export async function approvePaymentAction(formData: FormData) {
   const notes = String(formData.get("notes") ?? "").trim();
   const month = String(formData.get("month") ?? getMonthKey());
   const supabase = await createClient();
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("id, user_id, month")
+    .eq("id", paymentId)
+    .maybeSingle();
 
   await supabase.rpc("admin_review_payment", {
     p_payment_id: paymentId,
@@ -187,12 +212,22 @@ export async function approvePaymentAction(formData: FormData) {
     p_notes: notes || null,
   });
 
-  await supabase.from("notifications").update({ is_read: true }).eq("payment_id", paymentId);
+  await supabase.from("notifications").update({ is_read: true }).eq("payment_id", paymentId).eq("scope", "admin");
+  if (payment?.user_id) {
+    await createNotification({
+      userId: payment.user_id,
+      paymentId,
+      scope: "resident",
+      message: `Payment for ${formatMonthLabel(payment.month)} has been approved by the committee.`,
+    });
+  }
 
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
   revalidatePath("/admin/residents");
   revalidatePath("/admin/reports");
+  revalidatePath("/dashboard");
+  revalidatePath("/payments");
   redirectWithMessage(
     `/admin/approvals?month=${month}`,
     "Payment approved successfully.",
@@ -211,6 +246,11 @@ export async function rejectPaymentAction(formData: FormData) {
   const notes = String(formData.get("notes") ?? "").trim();
   const month = String(formData.get("month") ?? getMonthKey());
   const supabase = await createClient();
+  const { data: payment } = await supabase
+    .from("payments")
+    .select("id, user_id, month")
+    .eq("id", paymentId)
+    .maybeSingle();
 
   await supabase.rpc("admin_review_payment", {
     p_payment_id: paymentId,
@@ -219,10 +259,23 @@ export async function rejectPaymentAction(formData: FormData) {
     p_notes: notes || null,
   });
 
+  if (payment?.user_id) {
+    await createNotification({
+      userId: payment.user_id,
+      paymentId,
+      scope: "resident",
+      message: `Payment proof for ${formatMonthLabel(payment.month)} was rejected. Reason: ${
+        rejectReason || "Payment proof needs correction."
+      }`,
+    });
+  }
+
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
   revalidatePath("/admin/residents");
   revalidatePath("/admin/reports");
+  revalidatePath("/dashboard");
+  revalidatePath("/payments");
   redirectWithMessage(
     `/admin/approvals?month=${month}`,
     "Payment proof rejected with reason saved.",
@@ -234,10 +287,26 @@ export async function markAllNotificationsReadAction() {
   requireAdmin(profile);
 
   const supabase = await createClient();
-  await supabase.from("notifications").update({ is_read: true }).eq("is_read", false);
+  await supabase.from("notifications").update({ is_read: true }).eq("is_read", false).eq("scope", "admin");
 
   revalidatePath("/admin");
   redirectWithMessage("/admin", "All notifications marked as read.");
+}
+
+export async function markResidentNotificationsReadAction() {
+  const profile = await requireUserProfile();
+  const supabase = await createClient();
+
+  await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("user_id", profile.id)
+    .eq("scope", "resident")
+    .eq("is_read", false);
+
+  revalidatePath("/dashboard");
+  revalidatePath("/payments");
+  redirectWithMessage("/dashboard", "Notifications marked as read.");
 }
 
 export async function markCashPaymentAction(formData: FormData) {
@@ -255,10 +324,17 @@ export async function markCashPaymentAction(formData: FormData) {
     p_user_id: residentId,
     p_month: month,
   });
+  await createNotification({
+    userId: residentId,
+    scope: "resident",
+    message: `Payment for ${formatMonthLabel(month)} was marked as paid by cash.`,
+  });
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
   revalidatePath("/admin/reports");
+  revalidatePath("/dashboard");
+  revalidatePath("/payments");
   redirectWithMessage(`/admin/residents?month=${month}`, "Cash payment marked successfully.");
 }
 
@@ -277,16 +353,25 @@ export async function bulkMarkCashPaymentAction(formData: FormData) {
 
   await Promise.all(
     residentIds.map((residentId) =>
-      supabase.rpc("admin_mark_cash_payment", {
-        p_user_id: residentId,
-        p_month: month,
-      }),
+      Promise.all([
+        supabase.rpc("admin_mark_cash_payment", {
+          p_user_id: residentId,
+          p_month: month,
+        }),
+        createNotification({
+          userId: residentId,
+          scope: "resident",
+          message: `Payment for ${formatMonthLabel(month)} was marked as paid by cash.`,
+        }),
+      ]),
     ),
   );
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
   revalidatePath("/admin/reports");
+  revalidatePath("/dashboard");
+  revalidatePath("/payments");
   redirectWithMessage(
     `/admin/residents?month=${month}`,
     `${residentIds.length} resident payments marked as cash paid.`,
@@ -486,10 +571,17 @@ export async function submitPaymentProofAction(
     throw new Error(error?.message ?? "Unable to save payment proof.");
   }
 
-  await supabase.from("notifications").insert({
-    user_id: profile.id,
-    payment_id: paymentId,
+  await createNotification({
+    userId: profile.id,
+    paymentId,
+    scope: "admin",
     message: `House ${houseNumber} submitted payment for ${formatMonthLabel(month)}.`,
+  });
+  await createNotification({
+    userId: profile.id,
+    paymentId,
+    scope: "resident",
+    message: `Payment proof for ${formatMonthLabel(month)} has been submitted and is waiting for committee review.`,
   });
   await logUserActivity(
     profile.id,

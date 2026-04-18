@@ -268,9 +268,17 @@ export default async function AdminDashboardPage({
                   Resident actions
                 </h3>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-                {recentActivity.length} items
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+                  {recentActivity.length} items
+                </span>
+                <Link
+                  href="/admin/activity"
+                  className="rounded-full bg-slate-950 px-3 py-1 text-sm font-semibold text-white"
+                >
+                  View all
+                </Link>
+              </div>
             </div>
 
             <div className="mt-5 max-h-[360px] space-y-3 overflow-y-auto pr-1">

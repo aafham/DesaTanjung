@@ -2,6 +2,7 @@ import {
   createManagedUserAction,
 } from "@/lib/actions";
 import { AdminUsersManager } from "@/components/admin-users-manager";
+import { FormSubmitButton } from "@/components/form-submit-button";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { getAdminUserManagementData } from "@/lib/data";
@@ -90,12 +91,9 @@ export default async function AdminUsersPage({
               Every new resident is created with username based on house number and default
               password <span className="font-semibold text-slate-900">password</span>.
             </p>
-            <button
-              type="submit"
-              className="min-h-14 rounded-full bg-primary px-6 py-3 text-base font-bold text-primary-foreground"
-            >
+            <FormSubmitButton className="min-h-14 px-6 py-3" pendingLabel="Adding user...">
               Add user
-            </button>
+            </FormSubmitButton>
           </div>
         </form>
       </Card>

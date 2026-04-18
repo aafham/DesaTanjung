@@ -10,6 +10,7 @@ import { ContactActions } from "@/components/contact-actions";
 import type { ManagedUser } from "@/lib/types";
 import { formatMalaysianPhoneNumber, formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { FormSubmitButton } from "@/components/form-submit-button";
 import { Card } from "@/components/ui/card";
 
 export function AdminUsersManager({
@@ -40,6 +41,16 @@ export function AdminUsersManager({
   const adminCount = users.filter((user) => user.role === "admin").length;
   const residentCount = users.filter((user) => user.role === "user").length;
   const passwordResetCount = users.filter((user) => user.must_change_password).length;
+  const missingPhoneCount = users.filter((user) => !user.phone_number).length;
+  const inactiveCount = users.filter((user) => {
+    if (!user.last_login_at) {
+      return false;
+    }
+
+    const age = Date.now() - new Date(user.last_login_at).getTime();
+    return age >= 1000 * 60 * 60 * 24 * 30;
+  }).length;
+  const neverLoggedInCount = users.filter((user) => !user.last_login_at).length;
 
   return (
     <section className="space-y-4">
@@ -64,7 +75,7 @@ export function AdminUsersManager({
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
         <button
           type="button"
           onClick={() => setRoleFilter("all")}
@@ -99,6 +110,18 @@ export function AdminUsersManager({
           <span className="block font-semibold">{passwordResetCount}</span>
           Need password change
         </div>
+        <div className="rounded-3xl bg-rose-50 px-4 py-3 text-base font-bold text-rose-900">
+          <span className="block font-semibold">{missingPhoneCount}</span>
+          Missing phone
+        </div>
+        <div className="rounded-3xl bg-slate-100 px-4 py-3 text-base font-bold text-slate-900">
+          <span className="block font-semibold">{inactiveCount}</span>
+          Inactive 30+ days
+        </div>
+      </div>
+
+      <div className="rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted">
+        {neverLoggedInCount} users have never logged in yet. Users without a phone number or with no recent login are easier to spot below.
       </div>
 
       <div className="rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted">
@@ -153,8 +176,24 @@ export function AdminUsersManager({
                     />
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-800">
-                      {user.must_change_password ? "Needs password change" : "Password active"}
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {!user.phone_number ? (
+                        <div className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-rose-800">
+                          Missing phone
+                        </div>
+                      ) : null}
+                      {!user.last_login_at ? (
+                        <div className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-amber-900">
+                          Never logged in
+                        </div>
+                      ) : Date.now() - new Date(user.last_login_at).getTime() >= 1000 * 60 * 60 * 24 * 30 ? (
+                        <div className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-800">
+                          Inactive 30+ days
+                        </div>
+                      ) : null}
+                      <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-800">
+                        {user.must_change_password ? "Needs password change" : "Password active"}
+                      </div>
                     </div>
                     <div className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white">
                       Open
@@ -232,12 +271,9 @@ export function AdminUsersManager({
                       </select>
                     </div>
                     <div className="md:col-span-2 flex flex-wrap gap-3">
-                      <button
-                        type="submit"
-                        className="rounded-full bg-primary px-5 py-3 text-base font-bold text-primary-foreground"
-                      >
+                      <FormSubmitButton className="rounded-full px-5 py-3" pendingLabel="Saving changes...">
                         Save changes
-                      </button>
+                      </FormSubmitButton>
                     </div>
                   </form>
 

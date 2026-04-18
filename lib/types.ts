@@ -3,6 +3,7 @@ export type Role = "user" | "admin";
 export type PaymentStatus = "unpaid" | "pending" | "paid" | "rejected";
 export type DisplayPaymentStatus = PaymentStatus | "overdue";
 export type AnnouncementAudience = "all" | "residents" | "admins";
+export type NotificationScope = "admin" | "resident";
 
 export type UserProfile = {
   id: string;
@@ -60,6 +61,7 @@ export type NotificationRecord = {
   payment_id: string | null;
   message: string;
   is_read: boolean;
+  scope: NotificationScope;
   created_at: string;
 };
 
