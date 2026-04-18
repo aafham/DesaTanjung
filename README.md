@@ -1,29 +1,106 @@
 # Desa Tanjung Payment Portal
 
-Mobile-first residential monthly payment management built with Next.js App Router, Tailwind CSS, Supabase Auth/Database/Storage, and Vercel deployment in mind.
+Portal bayaran bulanan penduduk taman yang dibina dengan `Next.js App Router`, `Tailwind CSS`, `Supabase`, dan sesuai untuk deploy di `Vercel`.
 
-## What is included
+Project ini direka untuk dua peranan:
 
-- Resident login using visible usernames such as `A-12`
-- Admin login using `admin`
-- Forced password change on first login
-- Resident dashboard with current-month status and payment history
-- Payment page with bank details, QR display, and receipt upload
-- Admin dashboard with notifications, approval queue, and residents table
-- Manual cash-payment marking for committee/admin users
-- Supabase SQL schema with RLS, storage policies, and RPC helpers
-- Seed script for creating Supabase Auth users plus `public.users` records
+- `Resident / Penduduk`
+- `Admin / Jawatankuasa`
 
-## Important auth note
+Tujuan utama sistem:
 
-Supabase Auth signs users in with email/password, but your UI requirement is username = house number.
+- semak status bayaran bulanan
+- muat naik resit bayaran
+- semakan dan kelulusan oleh jawatankuasa
+- rekod aktiviti dan notifikasi yang lebih jelas
 
-This project handles that by mapping usernames to synthetic emails internally:
+## Ringkasan fungsi
+
+### Resident
+
+- log masuk guna nombor rumah, contoh `A-12`
+- tukar kata laluan pada login pertama
+- lihat status bayaran bulan semasa
+- lihat sejarah bayaran
+- lihat notifikasi resident
+- lihat timeline aktiviti bayaran
+- lihat maklumat bank dan QR bayaran
+- muat naik resit bayaran
+- kemas kini profil:
+  - nombor rumah
+  - nama pemilik
+  - alamat
+  - nombor telefon
+
+### Admin
+
+- log masuk guna username `admin`
+- dashboard kutipan bulanan
+- approval queue untuk semak resit
+- approve / reject payment proof
+- letak sebab reject
+- tambah nota admin pada bayaran
+- tanda bayaran cash secara manual
+- bulk mark cash paid
+- urus resident dan user:
+  - tambah user
+  - edit user
+  - reset password
+  - delete user
+  - lihat last login / last logout
+  - lihat activity log resident
+- halaman reports
+- halaman activity log
+- halaman notices / announcements
+- halaman settings:
+  - nama komuniti
+  - bank
+  - nama pemegang akaun
+  - nombor akaun
+  - jumlah yuran bulanan
+  - hari due date
+  - upload QR image
+
+## Cara login
+
+Walaupun pengguna nampak login dengan `username`, Supabase Auth sebenarnya guna `email + password`.
+
+Project ini map username kepada email dalaman:
 
 - `admin` -> `admin@desatanjung.local`
 - `A-12` -> `a-12@desatanjung.local`
+- `B-08` -> `b-08@desatanjung.local`
 
-Residents still type only their house number in the app. Passwords are stored by Supabase Auth, not duplicated in `public.users`. That is safer than keeping a second hashed password column in app tables.
+Pengguna tetap hanya masukkan:
+
+- `username / nombor rumah`
+- `password`
+
+## Default login
+
+### Admin
+
+- username: `admin`
+- password: `passwordadmin`
+
+### Resident
+
+- username: contoh `A-12`
+- password: `password`
+
+Nota:
+
+- semua akaun seed akan dipaksa tukar kata laluan pada login pertama
+
+## Tech stack
+
+- `Next.js 15`
+- `React 19`
+- `Tailwind CSS`
+- `Supabase Auth`
+- `Supabase Postgres`
+- `Supabase Storage`
+- `Vercel`
 
 ## Project structure
 
@@ -35,9 +112,14 @@ Residents still type only their house number in the app. Passwords are stored by
 |   |   `-- login/page.tsx
 |   |-- (app)
 |   |   |-- admin
+|   |   |   |-- activity/page.tsx
+|   |   |   |-- announcements/page.tsx
 |   |   |   |-- approvals/page.tsx
+|   |   |   |-- reports/page.tsx
 |   |   |   |-- residents/page.tsx
-|   |   |   `-- page.tsx
+|   |   |   |-- residents/[id]/page.tsx
+|   |   |   |-- settings/page.tsx
+|   |   |   `-- users/page.tsx
 |   |   |-- dashboard/page.tsx
 |   |   |-- payments/page.tsx
 |   |   |-- profile/page.tsx
@@ -47,13 +129,31 @@ Residents still type only their house number in the app. Passwords are stored by
 |   |-- layout.tsx
 |   `-- page.tsx
 |-- components
+|   |-- admin-activity-log.tsx
 |   |-- admin-approval-card.tsx
+|   |-- admin-reminder-tools.tsx
+|   |-- admin-residents-table.tsx
+|   |-- admin-settings-form.tsx
+|   |-- admin-users-manager.tsx
+|   |-- announcement-feed.tsx
 |   |-- app-shell.tsx
 |   |-- auth-panel.tsx
+|   |-- confirm-submit-button.tsx
+|   |-- contact-actions.tsx
+|   |-- data-warning.tsx
+|   |-- form-submit-button.tsx
 |   |-- live-refresh.tsx
+|   |-- login-form.tsx
 |   |-- month-filter.tsx
+|   |-- page-toast.tsx
+|   |-- password-input.tsx
 |   |-- payment-history-table.tsx
+|   |-- payment-timeline.tsx
 |   |-- payment-upload-form.tsx
+|   |-- print-page-button.tsx
+|   |-- receipt-preview-modal.tsx
+|   |-- resident-notification-list.tsx
+|   |-- sidebar-calendar.tsx
 |   |-- sign-out-button.tsx
 |   `-- ui
 |-- lib
@@ -64,6 +164,7 @@ Residents still type only their house number in the app. Passwords are stored by
 |   |-- types.ts
 |   `-- utils.ts
 |-- scripts
+|   |-- reset-password.mjs
 |   |-- seed-users.json.example
 |   `-- seed-users.mjs
 |-- supabase
@@ -71,118 +172,486 @@ Residents still type only their house number in the app. Passwords are stored by
 `-- middleware.ts
 ```
 
-## Setup
+## Setup local
 
-1. Install dependencies.
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-2. Copy `.env.example` to `.env.local` and fill in:
+### 2. Sediakan environment variables
+
+Buat fail `.env.local` dan isi nilai ini:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
-NEXT_PUBLIC_BANK_ACCOUNT_NAME=Persatuan Penduduk Desa Tanjung
-NEXT_PUBLIC_BANK_ACCOUNT_NUMBER=1234567890
-NEXT_PUBLIC_BANK_NAME=Maybank
-NEXT_PUBLIC_PAYMENT_QR_URL=https://placehold.co/600x600/png?text=Upload+Your+QR
 ```
 
-3. In Supabase SQL Editor, run [`supabase/schema.sql`](/workspace/supabase/schema.sql).
+Nota:
 
-4. Copy `scripts/seed-users.json.example` to `scripts/seed-users.json`, then adjust the resident/admin list.
+- `NEXT_PUBLIC_SUPABASE_URL` ambil dari Supabase project
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` ambil dari `Publishable / anon key`
+- `SUPABASE_SERVICE_ROLE_KEY` ambil dari `Secret key`
 
-Default local seed file included for quick testing:
+## Setup Supabase
 
-- `admin` / `passwordadmin`
-- `A-12` / `password`
-- `B-08` / `password`
+### 1. Run schema
 
-5. Seed auth users and profile rows.
+Pergi `Supabase > SQL Editor` dan run fail ini:
+
+- [supabase/schema.sql](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\supabase\schema.sql)
+
+Ini akan cipta:
+
+- `public.users`
+- `public.payments`
+- `public.notifications`
+- `public.payment_audit_logs`
+- `public.user_activity_logs`
+- `public.app_settings`
+- `public.announcements`
+- RLS policies
+- storage bucket:
+  - `payment-proofs`
+  - `app-assets`
+
+Penting:
+
+- setiap kali schema berubah, run semula fail ini di Supabase
+
+### 2. Seed user demo
+
+Copy fail contoh:
+
+```bash
+copy scripts\seed-users.json.example scripts\seed-users.json
+```
+
+Kemudian edit `scripts/seed-users.json` ikut user sebenar.
+
+Run:
 
 ```bash
 npm run seed:users
 ```
 
-If you get a missing file error, create `scripts/seed-users.json` first based on the example file.
-
-6. Start the app.
+## Run local
 
 ```bash
 npm run dev
 ```
 
-## Default logins
+## Build check
 
-- Resident username: any seeded house number such as `A-12`
-- Resident password: `password`
-- Admin username: `admin`
-- Admin password: `passwordadmin`
+```bash
+npm run lint
+npm run build
+```
 
-All seeded accounts are marked `must_change_password = true`, so first login redirects to `/change-password`.
+## Cara guna sistem
 
-## Supabase schema summary
+## Flow resident
 
-Core tables:
+### 1. Login
 
-- `public.users`
-  - profile and role data linked 1:1 with `auth.users`
-- `public.payments`
-  - one record per resident per month
-  - supports `unpaid`, `pending`, `paid`, `rejected`
-- `public.notifications`
-  - lightweight admin feed for new submissions
+Resident login guna:
 
-Extra backend logic in SQL:
+- nombor rumah sebagai username
+- kata laluan semasa
 
-- `public.submit_payment_proof(...)`
-  - safely sets a resident’s current month to `pending`
-- `public.admin_review_payment(...)`
-  - approves or rejects uploaded payment proofs
-- `public.admin_mark_cash_payment(...)`
-  - marks a resident as paid by cash/manual collection
-- RLS policies
-  - residents only read their own rows
-  - admins can read everything
-- Storage policies
-  - residents upload only inside their own folder
-  - admins can review all receipts
+Jika login pertama:
 
-## Feature notes
+- resident akan dibawa ke `Change password`
 
-- Auto monthly record creation:
-  - the app ensures a current-month payment row exists when a resident opens the dashboard/payment views
-- Real-time updates:
-  - admin and resident dashboards auto-refresh every 30 seconds
-- Upload handling:
-  - receipt image goes to Supabase Storage
-  - payment record is updated through a server action + SQL RPC
-  - notification row is created for admin review
-- Manual cash updates:
-  - admins can mark any resident as paid for the selected month
-- Filter by month:
-  - included on admin dashboard, approvals, and residents pages
+### 2. Dashboard
 
-## Deployment
+Resident boleh lihat:
 
-Deploy to Vercel with the same environment variables from `.env.local`.
+- status bulan semasa
+- due date
+- phone number yang disimpan
+- announcement
+- notification inbox
+- payment timeline
+- payment history
 
-Recommended production flow:
+### 3. Payments
 
-1. Push this repo to GitHub.
-2. Import the repo into Vercel.
-3. Add all environment variables in the Vercel project settings.
-4. Ensure your Supabase project URL is added to Vercel envs for Preview and Production.
-5. Redeploy after schema changes.
+Resident boleh:
 
-## Files to check first
+- lihat nama bank
+- lihat nombor akaun
+- lihat jumlah yuran bulanan
+- scan QR
+- upload resit bayaran
 
-- [`supabase/schema.sql`](/workspace/supabase/schema.sql)
-- [`lib/actions.ts`](/workspace/lib/actions.ts)
-- [`lib/data.ts`](/workspace/lib/data.ts)
-- [`app/(app)/dashboard/page.tsx`](/workspace/app/(app)/dashboard/page.tsx)
-- [`app/(app)/payments/page.tsx`](/workspace/app/(app)/payments/page.tsx)
-- [`app/(app)/admin/page.tsx`](/workspace/app/(app)/admin/page.tsx)
+Bila resit diupload:
+
+- imej pergi ke Supabase Storage
+- rekod bayaran diupdate jadi `pending`
+- admin akan nampak di approval queue
+- resident dapat notification bahawa resit sedang menunggu semakan
+
+### 4. Profile
+
+Resident boleh update:
+
+- nama pemilik
+- alamat
+- nombor telefon
+
+Semua perubahan ini akan direkod dalam activity log admin.
+
+### 5. Password
+
+Resident boleh tukar password pada:
+
+- login pertama
+- bila klik `Update password` di profile
+
+## Flow admin
+
+### 1. Login
+
+Admin login guna:
+
+- username: `admin`
+- password semasa
+
+### 2. Dashboard admin
+
+Admin boleh lihat:
+
+- collection rate
+- total paid / pending / overdue / needs attention
+- latest notifications
+- latest resident activity
+- pending uploaded proofs
+- resident belum settle
+- reminder helper
+
+### 3. Approvals
+
+Admin boleh:
+
+- lihat resit yang resident upload
+- lihat nombor rumah, nama, alamat, phone number
+- approve payment
+- reject payment
+- pilih sebab reject
+- simpan nota admin
+- lihat timeline payment
+
+Bila admin approve:
+
+- status resident jadi `paid`
+- resident dapat notification `approved`
+
+Bila admin reject:
+
+- status resident jadi `rejected`
+- reject reason disimpan
+- resident dapat notification `rejected`
+
+### 4. Residents
+
+Admin boleh:
+
+- search resident
+- filter by status
+- filter by payment method
+- export CSV
+- bulk mark cash paid
+- mark cash paid satu per satu
+- lihat notes payment
+- pergi ke resident detail
+- call / WhatsApp resident
+
+### 5. Resident detail
+
+Admin boleh lihat:
+
+- profile resident
+- phone number
+- contact actions
+- payment history
+- payment timeline
+- current month status
+
+### 6. Users
+
+Admin boleh:
+
+- tambah user baru
+- edit user
+- reset default password
+- delete user
+- semak:
+  - last login
+  - last logout
+  - activity log
+  - missing phone
+  - never logged in
+  - inactive 30+ days
+
+### 7. Activity
+
+Halaman `Admin Activity` digunakan untuk audit.
+
+Admin boleh:
+
+- search ikut nama / nombor rumah
+- filter ikut action
+- filter ikut role
+- filter ikut tarikh
+- export CSV
+
+Action yang direkod:
+
+- login
+- logout
+- profile update
+- password changed
+- payment uploaded
+
+### 8. Reports
+
+Admin boleh lihat:
+
+- expected collection
+- collected amount
+- outstanding amount
+- due date
+- collection rate
+- resident breakdown
+- print report
+
+### 9. Notices
+
+Admin boleh:
+
+- create announcement
+- set audience:
+  - all
+  - residents
+  - admins
+- pin notice
+- delete notice
+
+### 10. Settings
+
+Admin boleh update:
+
+- community name
+- bank name
+- account holder name
+- account number
+- monthly fee
+- due day
+- payment QR image
+
+## Activity log yang direkod
+
+Sistem sekarang rekod aktiviti resident seperti:
+
+- resident login
+- resident logout
+- resident update profile
+- resident tukar password
+- resident upload payment proof
+
+Admin boleh nampak aktiviti ini pada:
+
+- dashboard admin
+- page `Users`
+- page `Activity`
+
+## Notification flow
+
+### Admin notifications
+
+Admin akan dapat feed untuk:
+
+- resident submit payment proof
+
+### Resident notifications
+
+Resident akan nampak inbox untuk:
+
+- payment proof submitted
+- payment approved
+- payment rejected
+- payment marked as cash paid
+
+## Loading states yang ada
+
+Project sekarang ada loading state pada action penting:
+
+- login
+- logout
+- change password
+- save profile
+- save settings
+- add user
+- update user
+- publish announcement
+- upload receipt
+
+## Scripts yang tersedia
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run seed:users
+npm run reset:password
+```
+
+### Reset password manual
+
+Script ini berguna untuk reset password akaun dummy atau akaun auth.
+
+Contoh:
+
+```powershell
+$env:NEXT_PUBLIC_SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
+$env:SUPABASE_SERVICE_ROLE_KEY="YOUR_SECRET_KEY"
+$env:RESET_IDENTIFIER="admin"
+$env:RESET_PASSWORD="passwordadmin"
+npm run reset:password
+```
+
+## Deploy ke Vercel
+
+### 1. Push ke GitHub
+
+```bash
+git add .
+git commit -m "your update"
+git push origin main
+```
+
+### 2. Import repo ke Vercel
+
+Preset:
+
+- `Next.js`
+
+Biarkan default:
+
+- Root Directory: `./`
+- Build Command: default
+- Output Directory: default
+- Install Command: default
+
+### 3. Isi environment variables di Vercel
+
+Isi nilai yang sama seperti `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+### 4. Deploy
+
+Selepas deploy:
+
+- run semula `supabase/schema.sql` jika ada perubahan schema
+- redeploy jika perlu
+
+## Checklist selepas deploy
+
+Test satu per satu:
+
+### Resident
+
+1. login
+2. tukar password
+3. update profile
+4. lihat QR dan bank info
+5. upload resit
+6. lihat status jadi `pending`
+7. lihat notifikasi masuk
+
+### Admin
+
+1. login
+2. tengok resident upload masuk ke `Approvals`
+3. approve payment
+4. reject payment
+5. mark cash paid
+6. lihat resident activity log
+7. lihat reports
+8. tambah user baru
+9. reset password user
+10. update settings
+
+## Common masalah dan cara semak
+
+### 1. User upload tapi admin tak nampak
+
+Semak:
+
+- `supabase/schema.sql` dah run atau belum
+- Vercel env betul atau tidak
+- Supabase project yang digunakan oleh Vercel sama atau tidak
+
+### 2. QR tak keluar di page user
+
+Semak:
+
+- admin dah upload QR dan tekan `Save settings`
+- bucket `app-assets` wujud
+- kolum `app_settings.payment_qr_url` betul
+
+### 3. Warning live data muncul
+
+Biasanya berpunca daripada:
+
+- schema Supabase belum update
+- relation / policy belum sama dengan code semasa
+- duplicate data dalam database
+
+### 4. Payment duplicate untuk bulan sama
+
+Pastikan constraint ini wujud:
+
+- `unique (user_id, month)`
+
+Dan run semula schema jika perlu.
+
+## Files penting untuk semak dahulu
+
+- [supabase/schema.sql](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\supabase\schema.sql)
+- [lib/actions.ts](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\lib\actions.ts)
+- [lib/data.ts](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\lib\data.ts)
+- [lib/types.ts](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\lib\types.ts)
+- [app/(app)/admin/page.tsx](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\app\(app)\admin\page.tsx)
+- [app/(app)/dashboard/page.tsx](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\app\(app)\dashboard\page.tsx)
+- [app/(app)/payments/page.tsx](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\app\(app)\payments\page.tsx)
+- [app/(app)/profile/page.tsx](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\app\(app)\profile\page.tsx)
+
+## Nota keselamatan
+
+- jangan dedahkan `SUPABASE_SERVICE_ROLE_KEY`
+- kalau key pernah terdedah, rotate key di Supabase
+- password tidak disimpan di `public.users`
+- password diurus oleh `Supabase Auth`
+
+## Ringkas sangat
+
+Kalau nak paling cepat:
+
+1. `npm install`
+2. isi `.env.local`
+3. run `supabase/schema.sql`
+4. `npm run seed:users`
+5. `npm run dev`
+6. login sebagai admin dan resident
+7. test flow upload -> approve -> notification
