@@ -261,6 +261,321 @@ npm run build
 
 ## Flow penggunaan sistem
 
+## Walkthrough penuh dari awal sampai habis
+
+Bahagian ini sesuai untuk orang yang baru pertama kali guna sistem dan mahu ikut langkah satu per satu.
+
+## Walkthrough resident
+
+### A. Kali pertama log masuk
+
+1. Buka page `Login`
+2. Masukkan `nombor rumah` sebagai username
+   - contoh: `A-12`
+3. Masukkan password semasa
+   - default awal: `password`
+4. Tekan `Masuk portal`
+5. Sistem akan bawa ke page `Change password`
+6. Masukkan password baru dan sahkan password baru
+7. Selepas berjaya, sistem akan bawa resident ke `Dashboard`
+
+### B. Semak status bulan semasa
+
+Di `Dashboard`, resident patut semak:
+
+1. status bulan semasa
+   - `Paid`
+   - `Pending review`
+   - `Awaiting payment`
+   - `Rejected`
+   - `Overdue`
+2. due date bulan semasa
+3. monthly fee
+4. mesej tindakan seterusnya
+5. notifikasi terbaru
+
+Kalau status `Awaiting payment`, resident perlu pergi ke `Payments`.
+
+### C. Buat bayaran dan upload resit
+
+Di page `Payments`:
+
+1. semak nama bank
+2. semak nama pemegang akaun
+3. semak nombor akaun
+4. scan QR jika disediakan
+5. buat bayaran melalui bank transfer / QR
+6. pilih fail gambar resit
+7. tekan submit upload resit
+
+Selepas itu:
+
+1. resit akan disimpan dalam Supabase Storage
+2. rekod bayaran bulan semasa akan jadi `pending`
+3. admin akan nampak resit itu dalam `Approvals`
+4. resident akan dapat notifikasi bahawa resit telah dihantar
+
+### D. Tunggu semakan admin
+
+Selepas upload:
+
+1. resident boleh buka `Dashboard`
+2. atau buka `Notifications`
+3. tunggu status berubah
+
+Kemungkinan hasil:
+
+- `Approved` -> bayaran diterima
+- `Rejected` -> perlu upload semula resit yang betul atau lebih jelas
+
+### E. Kalau resit ditolak
+
+Jika admin reject:
+
+1. resident akan nampak status `Rejected`
+2. resident akan nampak sebab reject
+3. resident pergi semula ke `Payments`
+4. upload resit baru
+5. status akan kembali `Pending review`
+
+### F. Kemas kini profil
+
+Resident boleh buka `Profile` untuk:
+
+1. semak nombor rumah
+2. semak nama pemilik
+3. semak alamat rumah
+4. semak nombor telefon
+5. update nama, alamat, dan nombor telefon jika perlu
+
+Setiap update ini akan masuk ke activity log admin.
+
+### G. Semak rekod lama
+
+Resident boleh:
+
+1. buka `Dashboard`
+2. lihat `Payment history`
+3. lihat status bagi bulan-bulan lepas
+4. buka semula resit lama jika ada
+
+### H. Akhir sekali
+
+Bila selesai:
+
+1. semak notifikasi terakhir
+2. pastikan status bulan semasa betul
+3. tekan `Sign out`
+
+## Walkthrough admin
+
+### A. Setup awal sebelum resident guna
+
+Sebelum mula guna sistem secara sebenar, admin patut buat ini dahulu:
+
+1. login sebagai `admin`
+2. buka `Settings`
+3. isi / semak:
+   - community name
+   - bank name
+   - account holder name
+   - account number
+   - monthly fee
+   - due day
+   - payment QR image
+4. save settings
+5. buka page `Health`
+6. semak semua check penting
+   - QR bukan placeholder
+   - monthly fee sudah diisi
+   - bucket storage wujud
+   - tiada duplicate payment
+   - env penting wujud
+
+### B. Tambah resident baru
+
+Di page `Users`:
+
+1. isi nombor rumah
+2. isi nama pemilik
+3. isi alamat
+4. isi nombor telefon
+5. tekan `Add user`
+
+Selepas itu:
+
+- resident boleh login guna nombor rumah
+- password awal resident ialah `password`
+
+### C. Pantau dashboard admin
+
+Di `Admin Dashboard`, admin boleh semak:
+
+1. collection rate
+2. jumlah paid / pending / needs attention / overdue
+3. latest submissions
+4. resident activity
+5. uploaded proofs
+6. notice board
+7. reminder helper
+
+Ini biasanya page utama untuk semakan harian.
+
+### D. Semak resit yang baru dihantar
+
+Bila resident upload resit:
+
+1. admin buka `Approvals`
+2. cari payment untuk bulan semasa
+3. buka gambar resit
+4. semak maklumat rumah, nama, phone number
+5. semak timeline / nota jika perlu
+
+Kemudian pilih salah satu:
+
+- `Approve`
+- `Reject`
+
+### E. Approve payment
+
+Jika resit betul:
+
+1. admin tekan `Approve`
+2. status payment akan jadi `paid`
+3. resident akan dapat notification `approved`
+4. page `Residents`, `Reports`, dan `Dashboard` akan update
+
+### F. Reject payment
+
+Jika resit tak jelas atau salah:
+
+1. admin pilih sebab reject
+2. admin boleh tambah nota jika perlu
+3. admin tekan `Reject`
+4. status payment akan jadi `rejected`
+5. resident akan dapat notification dengan sebab reject
+
+### G. Mark cash paid
+
+Jika bayaran dibuat secara tunai:
+
+1. admin buka `Residents`
+2. cari resident
+3. tekan `Mark paid cash`
+4. jika ramai resident sekali, pilih beberapa resident
+5. guna `Bulk action`
+
+Selepas itu:
+
+- rekod payment akan jadi `paid`
+- payment method akan jadi `cash`
+- resident akan dapat notification `cash paid`
+
+### H. Guna Residents page untuk follow-up
+
+Di `Residents`, admin boleh:
+
+1. search nama / nombor rumah / alamat / phone
+2. filter status
+3. filter payment method
+4. export CSV
+5. buka resident detail
+6. copy reminder text
+7. call resident
+8. WhatsApp resident
+9. simpan payment note
+
+### I. Guna Users page untuk urus akaun
+
+Di `Users`, admin boleh:
+
+1. tambah resident baru
+2. edit data resident
+3. reset password resident
+4. delete user
+5. semak:
+   - last login
+   - last logout
+   - missing phone
+   - never logged in
+   - inactive 30+ days
+   - resident activity log
+
+### J. Guna Search page
+
+Di `Search`, admin boleh cari maklumat dengan cepat:
+
+1. nama resident
+2. nombor rumah
+3. nombor telefon
+4. payment bulan semasa
+5. activity log
+
+Sesuai untuk semakan cepat tanpa lompat banyak page.
+
+### K. Guna Activity page
+
+Di `Activity`, admin boleh audit apa yang resident telah buat:
+
+1. login
+2. logout
+3. update profile
+4. change password
+5. upload payment proof
+
+Sesuai untuk semakan dalaman dan troubleshooting.
+
+### L. Guna Reports page
+
+Di `Reports`, admin boleh:
+
+1. semak expected collection
+2. semak collected amount
+3. semak outstanding amount
+4. semak collection rate
+5. semak breakdown setiap rumah
+6. tekan `Print report`
+
+Sesuai untuk mesyuarat AJK atau semakan bulanan.
+
+### M. Guna Notices page
+
+Di `Notices`, admin boleh:
+
+1. create announcement
+2. pilih audience
+3. pin notice jika penting
+4. publish
+
+Resident akan nampak notice itu di dashboard / notifications flow yang berkaitan.
+
+### N. Guna Health page
+
+Di `Health`, admin boleh semak keadaan sistem:
+
+1. env penting cukup atau tidak
+2. QR placeholder masih ada atau tidak
+3. monthly fee sudah lengkap atau tidak
+4. bucket storage wujud atau tidak
+5. duplicate payment wujud atau tidak
+6. resident yang tiada phone number
+7. pending proof yang belum direview
+
+Ini page terbaik bila rasa sistem “tak sync” atau nampak warning.
+
+### O. Tutup kitaran bulanan
+
+Pada hujung bulan atau selepas due date, admin biasanya akan buat:
+
+1. buka `Dashboard`
+2. semak siapa yang belum settle
+3. guna reminder helper / WhatsApp
+4. review semua pending proof
+5. mark cash paid jika ada bayaran tunai
+6. buka `Reports`
+7. print report
+8. simpan rekod untuk mesyuarat
+
 ## Flow resident
 
 ### 1. Login
