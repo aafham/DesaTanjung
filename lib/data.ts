@@ -242,7 +242,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
     supabase
       .from("payments")
       .select(
-        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason, users!inner(house_number, name, address)",
+        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason, users!payments_user_id_fkey(house_number, name, address)",
       )
       .eq("month", month)
       .in("status", ["pending", "rejected"])
