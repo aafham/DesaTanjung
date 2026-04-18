@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import type { UserActivityWithUser } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 const ACTION_OPTIONS = [
@@ -37,6 +38,7 @@ export function AdminActivityLog({
 }: {
   activityLogs: UserActivityWithUser[];
 }) {
+  const PAGE_SIZE = 5;
   const [query, setQuery] = useState("");
   const [actionFilter, setActionFilter] =
     useState<(typeof ACTION_OPTIONS)[number]["value"]>("all");
@@ -44,6 +46,7 @@ export function AdminActivityLog({
     useState<(typeof ROLE_OPTIONS)[number]["value"]>("all");
   const [dateFilter, setDateFilter] =
     useState<(typeof DATE_OPTIONS)[number]["value"]>("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredActivity = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -95,6 +98,30 @@ export function AdminActivityLog({
 
     return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
   }, [filteredActivity]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredActivity.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, actionFilter, roleFilter, dateFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedActivity = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredActivity.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, filteredActivity]);
+
+  const pageNumbers = useMemo(() => {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }, [totalPages]);
+
+  const startItem = filteredActivity.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endItem = Math.min(currentPage * PAGE_SIZE, filteredActivity.length);
 
   return (
     <section className="space-y-4">
@@ -179,7 +206,10 @@ export function AdminActivityLog({
       </div>
 
       <div className="flex flex-col gap-3 rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted sm:flex-row sm:items-center sm:justify-between">
-        <p>Showing {filteredActivity.length} of {activityLogs.length} recorded resident actions.</p>
+        <p>
+          Showing {startItem}-{endItem} of {filteredActivity.length} filtered actions
+          {" "}from {activityLogs.length} recorded resident actions.
+        </p>
         <a
           href={csvHref}
           download="resident-activity-log.csv"
@@ -196,7 +226,7 @@ export function AdminActivityLog({
             No resident activity matched the current search and filter.
           </Card>
         ) : (
-          filteredActivity.map((activity) => (
+          paginatedActivity.map((activity) => (
             <Card key={activity.id}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -221,6 +251,39 @@ export function AdminActivityLog({
           ))
         )}
       </div>
+
+      {filteredActivity.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border border-line bg-white px-4 py-4">
+          <Button
+            variant="secondary"
+            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+            disabled={currentPage === 1}
+            className="min-h-11 px-4"
+          >
+            &lt;
+          </Button>
+
+          {pageNumbers.map((pageNumber) => (
+            <Button
+              key={pageNumber}
+              variant={currentPage === pageNumber ? "primary" : "secondary"}
+              onClick={() => setCurrentPage(pageNumber)}
+              className="min-h-11 min-w-11 px-4"
+            >
+              {pageNumber}
+            </Button>
+          ))}
+
+          <Button
+            variant="secondary"
+            onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+            disabled={currentPage === totalPages}
+            className="min-h-11 px-4"
+          >
+            &gt;
+          </Button>
+        </div>
+      ) : null}
     </section>
   );
 }
