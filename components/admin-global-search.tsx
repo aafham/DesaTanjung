@@ -70,6 +70,8 @@ export function AdminGlobalSearch({
     };
   }, [activityLogs, payments, query, residents]);
 
+  const hasQuery = query.trim().length > 0;
+
   return (
     <div className="space-y-6">
       <Card>
@@ -83,7 +85,7 @@ export function AdminGlobalSearch({
             </p>
           </div>
           <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-            {query.trim() ? "Live filtered results" : "Showing latest records first"}
+            {hasQuery ? "Live filtered results" : "Showing latest records first"}
           </div>
         </div>
         <div className="relative mt-4">
@@ -98,8 +100,38 @@ export function AdminGlobalSearch({
         </div>
       </Card>
 
+      <section className="grid gap-4 md:grid-cols-3">
+        <Card className="border-slate-200 bg-slate-50 p-5">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">
+            Resident matches
+          </p>
+          <p className="mt-2 text-3xl font-bold text-slate-950">{filtered.residents.length}</p>
+          <p className="mt-2 text-sm text-slate-600">
+            House number, owner name, address, phone, and email.
+          </p>
+        </Card>
+        <Card className="border-amber-200 bg-amber-50 p-5">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-800">
+            Payment matches
+          </p>
+          <p className="mt-2 text-3xl font-bold text-amber-950">{filtered.payments.length}</p>
+          <p className="mt-2 text-sm text-amber-900">
+            Notes, reject reasons, and status records for {currentMonthLabel}.
+          </p>
+        </Card>
+        <Card className="border-teal-200 bg-teal-50 p-5">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-teal-800">
+            Activity matches
+          </p>
+          <p className="mt-2 text-3xl font-bold text-teal-950">{filtered.activityLogs.length}</p>
+          <p className="mt-2 text-sm text-teal-900">
+            Login, profile changes, uploads, and account activity.
+          </p>
+        </Card>
+      </section>
+
       <section className="grid gap-4 xl:grid-cols-3">
-        <Card>
+        <Card className="p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Users</p>
@@ -148,7 +180,7 @@ export function AdminGlobalSearch({
           </div>
         </Card>
 
-        <Card>
+        <Card className="p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Payments</p>
@@ -201,7 +233,7 @@ export function AdminGlobalSearch({
           </div>
         </Card>
 
-        <Card>
+        <Card className="p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Activity</p>

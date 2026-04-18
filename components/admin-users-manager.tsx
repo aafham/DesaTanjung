@@ -123,6 +123,47 @@ export function AdminUsersManager({
         </div>
       </div>
 
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Card className="border-slate-200 bg-slate-50 p-5">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">
+            Current view
+          </p>
+          <p className="mt-2 text-2xl font-bold text-slate-950">{filteredUsers.length}</p>
+          <p className="mt-2 text-sm text-slate-600">
+            {activeRoleFilterLabel} with {activeFollowUpLabel.toLowerCase()}.
+          </p>
+        </Card>
+        <Card className="border-amber-200 bg-amber-50 p-5">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-800">
+            Need first login
+          </p>
+          <p className="mt-2 text-2xl font-bold text-amber-950">{neverLoggedInCount}</p>
+          <p className="mt-2 text-sm text-amber-900">
+            Accounts that have never entered the portal yet.
+          </p>
+        </Card>
+        <Card className="border-rose-200 bg-rose-50 p-5">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-800">
+            Missing contact
+          </p>
+          <p className="mt-2 text-2xl font-bold text-rose-950">{missingPhoneCount}</p>
+          <p className="mt-2 text-sm text-rose-900">
+            Residents who still need a phone number for follow-up.
+          </p>
+        </Card>
+        <Card className="border-slate-200 bg-white p-5">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">
+            Shown on this page
+          </p>
+          <p className="mt-2 text-2xl font-bold text-slate-950">
+            {startItem}-{endItem}
+          </p>
+          <p className="mt-2 text-sm text-slate-600">
+            Page {currentPage} of {totalPages}.
+          </p>
+        </Card>
+      </section>
+
       <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
         <button
           type="button"
@@ -182,40 +223,55 @@ export function AdminUsersManager({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {[
-          { value: "all", label: "All conditions" },
-          { value: "missing-phone", label: "Missing phone" },
-          { value: "never-logged-in", label: "Never logged in" },
-          { value: "inactive", label: "Inactive 30+ days" },
-        ].map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() =>
-              setFollowUpFilter(
-                option.value as "all" | "missing-phone" | "never-logged-in" | "inactive",
-              )
-            }
-            className={`rounded-full px-4 py-2 text-sm font-bold transition ${
-              followUpFilter === option.value
-                ? "bg-slate-950 text-white"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
-        <div className="rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted">
-          {neverLoggedInCount} users have never logged in yet. Users without a phone number or with no recent login are easier to spot below.
+      <Card className="p-5">
+        <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+              Follow-up filters
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[
+                { value: "all", label: "All conditions" },
+                { value: "missing-phone", label: "Missing phone" },
+                { value: "never-logged-in", label: "Never logged in" },
+                { value: "inactive", label: "Inactive 30+ days" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() =>
+                    setFollowUpFilter(
+                      option.value as "all" | "missing-phone" | "never-logged-in" | "inactive",
+                    )
+                  }
+                  className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                    followUpFilter === option.value
+                      ? "bg-slate-950 text-white"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-4 text-base text-slate-600">
+              {neverLoggedInCount} users have never logged in yet. Use these filters to quickly
+              spot accounts that still need setup or follow-up.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-slate-50 px-4 py-4">
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
+              Current result window
+            </p>
+            <p className="mt-2 text-lg font-bold text-slate-950">
+              {activeRoleFilterLabel} - {activeFollowUpLabel}
+            </p>
+            <p className="mt-2 text-sm text-slate-600">
+              Showing {startItem}-{endItem} of {filteredUsers.length} matched users.
+            </p>
+          </div>
         </div>
-        <div className="rounded-3xl border border-line bg-white px-4 py-3 text-sm font-semibold text-slate-700">
-          {activeRoleFilterLabel} - {activeFollowUpLabel}: {startItem}-{endItem} of {filteredUsers.length} shown
-        </div>
-      </div>
+      </Card>
 
       <div className="grid gap-4">
         {filteredUsers.length === 0 ? (
@@ -284,7 +340,7 @@ export function AdminUsersManager({
                         {user.must_change_password ? "Needs password change" : "Password active"}
                       </div>
                     </div>
-                    <div className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white">
+                    <div className="rounded-full bg-slate-950 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
                       Open details
                     </div>
                   </div>

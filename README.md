@@ -115,6 +115,8 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] last login
   - [x] last logout
 - [x] Admin global search
+- [x] Users page polish
+- [x] Search page polish
 - [x] Admin activity page
 - [x] Admin reports page
 - [x] Admin notices / announcements
