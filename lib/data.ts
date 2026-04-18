@@ -30,10 +30,40 @@ type PendingApprovalPayment = ResidentPaymentRecord & {
   auditLogs?: PaymentAuditLog[];
 };
 
+type SearchPaymentRecord = PaymentRecord & {
+  users: Pick<UserProfile, "house_number" | "name" | "address" | "phone_number"> | null;
+};
+
 type ManagedAnnouncement = AnnouncementRecord;
 
 function createWarningMessage(scope: string, message: string) {
   return `${scope}: ${message}`;
+}
+
+function getSystemHealthWarnings(settings: AppSettings) {
+  const warnings: string[] = [];
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    warnings.push("System health: NEXT_PUBLIC_SUPABASE_URL is missing.");
+  }
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    warnings.push("System health: NEXT_PUBLIC_SUPABASE_ANON_KEY is missing.");
+  }
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    warnings.push("System health: SUPABASE_SERVICE_ROLE_KEY is missing on the server.");
+  }
+
+  if (!settings.monthly_fee || settings.monthly_fee <= 0) {
+    warnings.push("System health: Monthly fee has not been configured in Settings.");
+  }
+
+  if (settings.payment_qr_url.includes("placehold.co")) {
+    warnings.push("System health: Payment QR is still using the placeholder image.");
+  }
+
+  return warnings;
 }
 
 function getDisplayStatus(
@@ -154,7 +184,7 @@ export async function getUserDashboardData() {
   const supabase = await createClient();
   const settings = await getAppSettings();
   const currentMonth = getMonthKey();
-  const warnings: string[] = [];
+  const warnings: string[] = [...getSystemHealthWarnings(settings)];
   const { data: currentPayment, error: currentPaymentError } = await supabase
     .from("payments")
     .select(
@@ -290,7 +320,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
       limit: 5,
     }),
   ]);
-  const warnings: string[] = [];
+  const warnings: string[] = [...getSystemHealthWarnings(settings)];
 
   if (pendingPaymentsError) {
     warnings.push(createWarningMessage("Approval queue", pendingPaymentsError.message));
@@ -443,9 +473,12 @@ export async function getAdminSettingsData() {
     redirect("/change-password");
   }
 
+  const settings = await getAppSettings();
+
   return {
     profile,
-    settings: await getAppSettings(),
+    settings,
+    warnings: getSystemHealthWarnings(settings),
   };
 }
 
@@ -578,6 +611,92 @@ export async function getAdminReportData(filterMonth?: string) {
       outstandingAmount: monthlyFee * unsettledResidents.length,
     },
     currentMonth,
+  };
+}
+
+export async function getResidentNotificationsPageData() {
+  const profile = await requireUserProfile();
+
+  if (profile.role === "admin") {
+    redirect("/admin");
+  }
+
+  if (profile.must_change_password) {
+    redirect("/change-password");
+  }
+
+  const [notifications, announcements, settings] = await Promise.all([
+    getResidentNotifications(profile.id, 30),
+    getAnnouncements({ audience: "residents", limit: 6 }),
+    getAppSettings(),
+  ]);
+
+  return {
+    profile,
+    notifications,
+    announcements,
+    warnings: getSystemHealthWarnings(settings),
+  };
+}
+
+export async function getAdminSearchData(filterMonth?: string) {
+  const profile = await requireUserProfile();
+
+  if (profile.role !== "admin") {
+    redirect("/dashboard");
+  }
+
+  if (profile.must_change_password) {
+    redirect("/change-password");
+  }
+
+  const month = filterMonth ?? getMonthKey();
+  const settings = await getAppSettings();
+  const supabase = await createClient();
+
+  const [
+    { data: residents, error: residentsError },
+    { data: payments, error: paymentsError },
+    { data: activityLogs, error: activityLogsError },
+  ] = await Promise.all([
+    supabase
+      .from("users")
+      .select("id, house_number, email, name, address, phone_number, role, must_change_password, created_at, last_login_at, last_logout_at")
+      .order("house_number", { ascending: true }),
+    supabase
+      .from("payments")
+      .select("id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason, users!payments_user_id_fkey(house_number, name, address, phone_number)")
+      .eq("month", month)
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("user_activity_logs")
+      .select("id, user_id, action, message, created_at, users(house_number, name, role)")
+      .order("created_at", { ascending: false })
+      .limit(60),
+  ]);
+
+  const warnings = [
+    ...getSystemHealthWarnings(settings),
+    ...(residentsError ? [createWarningMessage("Users", residentsError.message)] : []),
+    ...(paymentsError ? [createWarningMessage("Payments", paymentsError.message)] : []),
+    ...(activityLogsError ? [createWarningMessage("Activity log", activityLogsError.message)] : []),
+  ];
+
+  return {
+    profile,
+    currentMonth: month,
+    currentMonthLabel: formatMonthLabel(month),
+    residents: (residents as ManagedUser[] | null) ?? [],
+    payments:
+      ((((payments as Array<
+        SearchPaymentRecord
+      > | null) ?? [])).map((payment) => ({
+        ...payment,
+        display_status: getDisplayStatus(payment.status, payment.month, settings.due_day),
+        is_overdue: getDisplayStatus(payment.status, payment.month, settings.due_day) === "overdue",
+      }))) ?? [],
+    activityLogs: (activityLogs as UserActivityWithUser[] | null) ?? [],
+    warnings,
   };
 }
 

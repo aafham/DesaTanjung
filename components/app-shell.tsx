@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  Bell,
   CreditCard,
   LayoutDashboard,
   Megaphone,
   ReceiptText,
+  Search,
   Settings,
   ShieldCheck,
   UserCircle2,
@@ -25,12 +27,14 @@ const navItems: Record<
   user: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/payments", label: "Payments", icon: CreditCard },
+    { href: "/notifications", label: "Notifications", icon: Bell },
     { href: "/profile", label: "Profile", icon: UserCircle2 },
   ],
   admin: [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/approvals", label: "Approvals", icon: ShieldCheck },
     { href: "/admin/residents", label: "Residents", icon: UserCircle2 },
+    { href: "/admin/search", label: "Search", icon: Search },
     { href: "/admin/reports", label: "Reports", icon: ReceiptText },
     { href: "/admin/activity", label: "Activity", icon: Activity },
     { href: "/admin/announcements", label: "Notices", icon: Megaphone },
