@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { MonthFilter } from "@/components/month-filter";
 import { DataWarning } from "@/components/data-warning";
 import { PageToast } from "@/components/page-toast";
@@ -25,24 +26,26 @@ export default async function AdminReportsPage({
       <PageToast message={params.message} error={params.error} />
       <DataWarning warnings={warnings} />
 
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Reports</p>
-          <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
-            Monthly report for {currentMonthLabel}
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-muted">
-            Review collection progress, overdue houses, and expected versus collected amount in one page.
-          </p>
-        </div>
-        <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-          <MonthFilter currentMonth={currentMonth} />
-          <PrintPageButton className="min-h-14" />
-        </div>
-      </section>
+      <AdminPageHeader
+        eyebrow="Reports"
+        title={`Monthly report for ${currentMonthLabel}`}
+        description="Review collection progress, overdue houses, and expected versus collected amount in one page."
+        actions={
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end lg:ml-auto">
+            <MonthFilter currentMonth={currentMonth} />
+            <PrintPageButton className="min-h-14" />
+          </div>
+        }
+      />
 
       <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
-        <Card className="border-slate-900 bg-slate-950 text-white">
+        <Card
+          className="text-white"
+          style={{
+            background:
+              "linear-gradient(135deg, #07111f 0%, #12324a 55%, #115e59 100%)",
+          }}
+        >
           <p className="text-base font-bold text-slate-100">Collection rate</p>
           <p className="mt-2 font-display text-5xl font-bold text-white">{collectionRate}%</p>
           <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/20">

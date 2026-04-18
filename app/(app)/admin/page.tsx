@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { markAllNotificationsReadAction } from "@/lib/actions";
 import { AnnouncementFeed } from "@/components/announcement-feed";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminReminderTools } from "@/components/admin-reminder-tools";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { DataWarning } from "@/components/data-warning";
@@ -68,32 +69,28 @@ export default async function AdminDashboardPage({
       <PageToast message={params.message} error={params.error} />
       <LiveRefresh />
       <DataWarning warnings={warnings} />
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Admin dashboard</p>
-          <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
-            Overview for {currentMonthLabel}
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-muted">
-            Review new uploads, spot unpaid houses, and jump into the common admin tasks from one screen.
-          </p>
-        </div>
-        <div className="w-full max-w-sm">
-          <MonthFilter currentMonth={currentMonth} />
-        </div>
-      </section>
+      <AdminPageHeader
+        eyebrow="Admin dashboard"
+        title={`Overview for ${currentMonthLabel}`}
+        description="Review new uploads, spot unpaid houses, and move through the key committee tasks from one organised dashboard."
+        actions={
+          <div className="max-w-sm lg:ml-auto">
+            <MonthFilter currentMonth={currentMonth} />
+          </div>
+        }
+      />
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <Link
           href={`/admin/approvals?month=${currentMonth}`}
-          className="rounded-3xl bg-amber-50 px-5 py-4 text-amber-950 ring-1 ring-amber-100"
+          className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-950 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
         >
           <p className="text-sm font-bold uppercase tracking-[0.12em]">Today action</p>
           <p className="mt-2 text-2xl font-bold">{pendingPayments.length} proofs to review</p>
         </Link>
         <Link
           href={`/admin/residents?month=${currentMonth}`}
-          className="rounded-3xl bg-rose-50 px-5 py-4 text-rose-950 ring-1 ring-rose-100"
+          className="rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-950 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
         >
           <p className="text-sm font-bold uppercase tracking-[0.12em]">Follow-up</p>
           <p className="mt-2 text-2xl font-bold">
@@ -102,14 +99,18 @@ export default async function AdminDashboardPage({
         </Link>
         <Link
           href={`/admin/reports?month=${currentMonth}`}
-          className="rounded-3xl bg-slate-950 px-5 py-4 text-white ring-1 ring-slate-800"
+          className="rounded-3xl px-5 py-4 text-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
+          style={{
+            background:
+              "linear-gradient(135deg, #07111f 0%, #10263a 45%, #134e4a 100%)",
+          }}
         >
           <p className="text-sm font-bold uppercase tracking-[0.12em]">Report</p>
           <p className="mt-2 text-2xl font-bold">RM {(settings.monthly_fee ?? 0).toFixed(2)} each house</p>
         </Link>
         <Link
           href="/admin/settings"
-          className="rounded-3xl bg-teal-50 px-5 py-4 text-teal-950 ring-1 ring-teal-100"
+          className="rounded-3xl border border-teal-200 bg-teal-50 px-5 py-4 text-teal-950 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg"
         >
           <p className="text-sm font-bold uppercase tracking-[0.12em]">Setup</p>
           <p className="mt-2 text-2xl font-bold">Due on day {settings.due_day} every month</p>
@@ -170,7 +171,7 @@ export default async function AdminDashboardPage({
           >
             <Users className="h-5 w-5 text-primary" />
             <p className="mt-4 text-lg font-bold text-slate-950">Manage residents</p>
-            <p className="mt-2 text-base text-muted">Add, edit, reset password, or delete users.</p>
+            <p className="mt-2 text-base text-muted">Update resident records, phone numbers, and login accounts.</p>
           </Link>
         </div>
       </section>
@@ -193,7 +194,13 @@ export default async function AdminDashboardPage({
             {needsAttentionResidents.length}
           </p>
         </Card>
-        <Card className="bg-red-950 text-white">
+        <Card
+          className="text-white"
+          style={{
+            background:
+              "linear-gradient(135deg, #60121f 0%, #8f1238 100%)",
+          }}
+        >
           <TriangleAlert className="h-5 w-5 text-red-200" />
           <p className="mt-4 text-base font-bold text-red-100">Overdue</p>
           <p className="font-display text-4xl font-bold text-white">{overdueCount}</p>

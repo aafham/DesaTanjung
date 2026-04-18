@@ -1,4 +1,5 @@
 import { updateAppSettingsAction } from "@/lib/actions";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { DataWarning } from "@/components/data-warning";
 import { getAdminSettingsData } from "@/lib/data";
 import { AdminSettingsForm } from "@/components/admin-settings-form";
@@ -15,15 +16,11 @@ export default async function AdminSettingsPage({
     <div className="space-y-6">
       <PageToast message={params.message} error={params.error} />
       <DataWarning warnings={warnings} />
-      <section>
-        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Settings</p>
-        <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
-          Payment and community settings
-        </h2>
-        <p className="mt-3 max-w-2xl text-base text-muted">
-          Update bank details, upload the QR image, set the monthly fee, and choose the due day without editing code.
-        </p>
-      </section>
+      <AdminPageHeader
+        eyebrow="Settings"
+        title="Payment and community settings"
+        description="Update bank details, upload the QR image, set the monthly fee, and choose the due day without editing code."
+      />
 
       <AdminSettingsForm settings={settings} action={updateAppSettingsAction} />
     </div>

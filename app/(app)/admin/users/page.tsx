@@ -2,6 +2,7 @@ import {
   createManagedUserAction,
 } from "@/lib/actions";
 import { AdminUsersManager } from "@/components/admin-users-manager";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
@@ -20,14 +21,11 @@ export default async function AdminUsersPage({
   return (
     <div className="space-y-6">
       <PageToast message={params.message} error={params.error} />
-      <section className="flex flex-col gap-3">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">User management</p>
-          <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
-            Add, edit, delete, and reset user accounts
-          </h2>
-        </div>
-      </section>
+      <AdminPageHeader
+        eyebrow="User management"
+        title="Add, edit, delete, and reset user accounts"
+        description="Keep resident records tidy, update contact details, and manage who can access the portal."
+      />
 
       <Card>
         <div className="mb-5">

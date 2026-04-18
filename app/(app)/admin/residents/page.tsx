@@ -1,4 +1,5 @@
 import { AdminResidentsTable } from "@/components/admin-residents-table";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { DataWarning } from "@/components/data-warning";
 import { MonthFilter } from "@/components/month-filter";
 import { PageToast } from "@/components/page-toast";
@@ -16,20 +17,16 @@ export default async function AdminResidentsPage({
     <div className="space-y-6">
       <PageToast message={params.message} error={params.error} />
       <DataWarning warnings={warnings} />
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Residents</p>
-          <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
-            Payment status for {currentMonthLabel}
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-muted">
-            Search, filter status including overdue, export CSV, open resident detail, or mark cash payments from one table.
-          </p>
-        </div>
-        <div className="w-full max-w-sm">
-          <MonthFilter currentMonth={currentMonth} />
-        </div>
-      </section>
+      <AdminPageHeader
+        eyebrow="Residents"
+        title={`Payment status for ${currentMonthLabel}`}
+        description="Search, filter settlement status, export CSV, open resident details, or mark cash payments from one table."
+        actions={
+          <div className="max-w-sm lg:ml-auto">
+            <MonthFilter currentMonth={currentMonth} />
+          </div>
+        }
+      />
 
       <AdminResidentsTable
         residents={residents}

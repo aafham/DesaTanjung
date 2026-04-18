@@ -1,4 +1,5 @@
 import { createAnnouncementAction, deleteAnnouncementAction } from "@/lib/actions";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { DataWarning } from "@/components/data-warning";
 import { FormSubmitButton } from "@/components/form-submit-button";
@@ -22,15 +23,11 @@ export default async function AdminAnnouncementsPage({
       <PageToast message={params.message} error={params.error} />
       <DataWarning warnings={warnings} />
 
-      <section>
-        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Notice board</p>
-        <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
-          Publish updates for residents and committee
-        </h2>
-        <p className="mt-3 max-w-2xl text-base text-muted">
-          Use this page for fee reminders, meetings, maintenance notices, or any important update.
-        </p>
-      </section>
+      <AdminPageHeader
+        eyebrow="Notice board"
+        title="Publish updates for residents and committee"
+        description="Use this page for fee reminders, meetings, maintenance notices, or any important update."
+      />
 
       <Card>
         <div className="mb-5">

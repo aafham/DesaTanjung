@@ -1,4 +1,5 @@
 import { AdminApprovalCard } from "@/components/admin-approval-card";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
 import { MonthFilter } from "@/components/month-filter";
@@ -23,31 +24,33 @@ export default async function AdminApprovalsPage({
       <PageToast message={params.message} error={params.error} />
       <LiveRefresh />
       <DataWarning warnings={warnings} />
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Approval system</p>
-          <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
-            Review submissions for {currentMonthLabel}
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-muted">
-            Receipt cards will show two clear actions: approve payment or reject proof.
-          </p>
-        </div>
-        <div className="w-full max-w-sm">
-          <MonthFilter currentMonth={currentMonth} />
-        </div>
-      </section>
+      <AdminPageHeader
+        eyebrow="Approval system"
+        title={`Review submissions for ${currentMonthLabel}`}
+        description="Open each receipt, confirm the transfer proof is clear, then approve or reject with a short reason."
+        actions={
+          <div className="max-w-sm lg:ml-auto">
+            <MonthFilter currentMonth={currentMonth} />
+          </div>
+        }
+      />
 
       <section className="grid gap-4 sm:grid-cols-3">
-        <Card className="bg-amber-50">
+        <Card className="border-amber-200 bg-amber-50">
           <p className="text-base font-bold text-amber-800">Pending proof</p>
           <p className="mt-2 font-display text-4xl font-bold text-amber-950">{pendingCount}</p>
         </Card>
-        <Card className="bg-rose-50">
+        <Card className="border-rose-200 bg-rose-50">
           <p className="text-base font-bold text-rose-800">Rejected follow-up</p>
           <p className="mt-2 font-display text-4xl font-bold text-rose-950">{rejectedCount}</p>
         </Card>
-        <Card className="bg-slate-950 text-white">
+        <Card
+          className="text-white"
+          style={{
+            background:
+              "linear-gradient(135deg, #07111f 0%, #1f3650 45%, #0f766e 100%)",
+          }}
+        >
           <p className="text-base font-bold text-slate-200">Review tip</p>
           <p className="mt-2 text-base font-bold leading-relaxed">
             Open each receipt, check image clearly, then approve or reject proof.
@@ -57,7 +60,7 @@ export default async function AdminApprovalsPage({
 
       <section className="grid gap-4 xl:grid-cols-2">
         {pendingPayments.length === 0 ? (
-          <div className="rounded-4xl border border-dashed border-line bg-white px-6 py-10 text-center text-base text-muted">
+          <div className="rounded-4xl border border-dashed border-line bg-slate-50 px-6 py-10 text-center text-base leading-8 text-slate-600">
             No uploaded receipts are waiting for review this month. The reject button will appear
             inside a receipt card after a resident uploads payment proof.
           </div>

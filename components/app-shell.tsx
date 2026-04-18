@@ -69,6 +69,12 @@ export function AppShell({
             </p>
           </div>
 
+          <div className="mb-3 px-1">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+              {profile.role === "admin" ? "Admin tools" : "Resident menu"}
+            </p>
+          </div>
+
           <nav className="space-y-3">
             {items.map((item) => {
               const Icon = item.icon;
@@ -81,8 +87,8 @@ export function AppShell({
                   className={cn(
                     "flex min-h-14 items-center gap-3 rounded-3xl px-4 py-3 text-base font-bold transition",
                     active
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-slate-50 text-slate-800 hover:bg-slate-100",
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "border border-slate-100 bg-white/85 text-slate-800 hover:bg-slate-50",
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -92,7 +98,7 @@ export function AppShell({
             })}
           </nav>
 
-          <div className="mt-7 rounded-3xl bg-slate-50 p-5">
+          <div className="mt-7 rounded-3xl border border-slate-100 bg-white/90 p-5">
             <p className="text-base font-bold text-slate-950">Quick note</p>
             <p className="mt-2 text-base text-muted">
               {profile.role === "admin"
