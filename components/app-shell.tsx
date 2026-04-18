@@ -56,11 +56,21 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const items = navItems[profile.role];
+  const printOnlyReportRoute =
+    profile.role === "admin" && pathname.startsWith("/admin/reports");
 
   return (
     <div className="min-h-screen bg-hero-glow">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-7 px-4 py-4 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-8">
-        <aside className="rounded-4xl border border-line bg-surface/95 p-5 shadow-soft backdrop-blur lg:sticky lg:top-8 lg:w-80">
+      <div
+        className={`mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-7 px-4 py-4 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-8 ${
+          printOnlyReportRoute ? "print:max-w-none print:px-0 print:py-0" : ""
+        }`}
+      >
+        <aside
+          className={`rounded-4xl border border-line bg-surface/95 p-5 shadow-soft backdrop-blur lg:sticky lg:top-8 lg:w-80 ${
+            printOnlyReportRoute ? "print:hidden" : ""
+          }`}
+        >
           <div className="mb-7">
             <p className="text-sm font-bold uppercase tracking-[0.22em] text-primary">
               Desa Tanjung
@@ -136,7 +146,7 @@ export function AppShell({
           </div>
         </aside>
 
-        <main className="flex-1">{children}</main>
+        <main className={`flex-1 ${printOnlyReportRoute ? "print:w-full" : ""}`}>{children}</main>
       </div>
     </div>
   );

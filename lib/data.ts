@@ -7,8 +7,10 @@ import type {
   AnnouncementRecord,
   AppSettings,
   DisplayPaymentStatus,
+  DuplicatePaymentGroup,
   HealthCheckItem,
   ManagedUser,
+  MissingPhoneResident,
   NotificationRecord,
   PaymentAuditLog,
   PaymentRecord,
@@ -669,18 +671,16 @@ export async function getAdminHealthData() {
   const warnings = getSystemHealthWarnings(settings);
 
   const [
-    { count: userCount, error: userCountError },
-    { count: missingPhoneCount, error: missingPhoneError },
+    { data: residents, error: residentsError },
     { error: settingsError },
     { data: payments, error: paymentsError },
     { data: buckets, error: bucketsError },
   ] = await Promise.all([
-    supabase.from("users").select("*", { count: "exact", head: true }).eq("role", "user"),
     supabase
       .from("users")
-      .select("*", { count: "exact", head: true })
+      .select("id, house_number, name, address, phone_number, role, must_change_password")
       .eq("role", "user")
-      .is("phone_number", null),
+      .order("house_number", { ascending: true }),
     supabase
       .from("app_settings")
       .select("id", { count: "exact", head: true })
@@ -693,17 +693,58 @@ export async function getAdminHealthData() {
   ]);
 
   const duplicatePayments = new Map<string, number>();
+  const residentDirectory = ((residents as UserProfile[] | null) ?? []);
+  const residentMap = new Map(residentDirectory.map((resident) => [resident.id, resident]));
+  const missingPhoneResidents: MissingPhoneResident[] = residentDirectory
+    .filter((resident) => !resident.phone_number)
+    .map((resident) => ({
+      id: resident.id,
+      house_number: resident.house_number,
+      name: resident.name,
+      address: resident.address,
+    }));
+
   for (const payment of ((payments as PaymentRecord[] | null) ?? [])) {
     const key = `${payment.user_id}:${payment.month}`;
     duplicatePayments.set(key, (duplicatePayments.get(key) ?? 0) + 1);
   }
-  const duplicateCount = Array.from(duplicatePayments.values()).filter((count) => count > 1).length;
+  const duplicateGroups: DuplicatePaymentGroup[] = Array.from(duplicatePayments.entries())
+    .filter(([, count]) => count > 1)
+    .map(([key, count]) => {
+      const [userId, month] = key.split(":");
+      const resident = residentMap.get(userId);
+
+      return {
+        user_id: userId,
+        house_number: resident?.house_number ?? "Unknown house",
+        name: resident?.name ?? "Unknown resident",
+        month,
+        count,
+      };
+    })
+    .sort((left, right) => right.count - left.count || left.house_number.localeCompare(right.house_number));
+  const duplicateCount = duplicateGroups.length;
+  const missingPhoneCount = missingPhoneResidents.length;
 
   const unresolvedProofCount = ((payments as PaymentRecord[] | null) ?? []).filter(
     (payment) => !!payment.proof_url && payment.status === "pending",
   ).length;
+  const queryErrors = [residentsError, settingsError, paymentsError, bucketsError].filter(Boolean);
 
   const checks: HealthCheckItem[] = [
+    {
+      id: "core-data-readiness",
+      label: "Core data readiness",
+      status: queryErrors.length === 0 ? "healthy" : "error",
+      detail:
+        queryErrors.length === 0
+          ? "Health checks could read resident data, payment data, settings, and storage successfully."
+          : "One or more health queries failed. This often means the live schema, policies, or environment values do not fully match the current code.",
+      action:
+        queryErrors.length === 0
+          ? "No action needed."
+          : "Run the latest supabase/schema.sql, then recheck Vercel and Supabase environment values.",
+    },
     {
       id: "env-public-url",
       label: "Supabase public URL",
@@ -772,11 +813,11 @@ export async function getAdminHealthData() {
     {
       id: "resident-phone-numbers",
       label: "Resident phone numbers",
-      status: (missingPhoneCount ?? 0) === 0 ? "healthy" : "warning",
+      status: missingPhoneCount === 0 ? "healthy" : "warning",
       detail:
-        (missingPhoneCount ?? 0) === 0
-          ? `All ${userCount ?? 0} resident accounts have phone numbers saved.`
-          : `${missingPhoneCount ?? 0} resident account(s) are missing phone numbers.`,
+        missingPhoneCount === 0
+          ? `All ${residentDirectory.length} resident accounts have phone numbers saved.`
+          : `${missingPhoneCount} resident account(s) are missing phone numbers.`,
       action: "Open Admin Users and complete missing phone numbers for follow-up actions.",
     },
     {
@@ -792,8 +833,7 @@ export async function getAdminHealthData() {
   ];
 
   const queryWarnings = [
-    ...(userCountError ? [createWarningMessage("Resident count", userCountError.message)] : []),
-    ...(missingPhoneError ? [createWarningMessage("Missing phone numbers", missingPhoneError.message)] : []),
+    ...(residentsError ? [createWarningMessage("Resident directory", residentsError.message)] : []),
     ...(settingsError ? [createWarningMessage("QR settings", settingsError.message)] : []),
     ...(paymentsError ? [createWarningMessage("Payment scan", paymentsError.message)] : []),
     ...(bucketsError ? [createWarningMessage("Storage buckets", bucketsError.message)] : []),
@@ -802,6 +842,8 @@ export async function getAdminHealthData() {
   return {
     profile,
     checks,
+    duplicateGroups,
+    missingPhoneResidents,
     warnings: [...warnings, ...queryWarnings],
   };
 }

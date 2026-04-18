@@ -138,8 +138,8 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] `missing phone`
   - [x] `never logged in`
   - [x] `inactive users`
-  - [ ] `overdue only`
-  - [ ] `rejected only`
+  - [x] `overdue only`
+  - [x] `rejected only`
 - [ ] Resident upload UX lebih baik:
   - [x] preview gambar sebelum submit
   - [x] mesej saiz / jenis fail lebih jelas
@@ -149,15 +149,15 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] overdue
   - [x] rejected
 - [ ] Data health helper yang lebih action-oriented:
-  - [ ] duplicate payment cleanup helper
-  - [ ] missing phone export
-  - [ ] schema mismatch detector yang lebih spesifik
+  - [x] duplicate payment cleanup helper
+  - [x] missing phone export
+  - [x] schema mismatch detector yang lebih spesifik
 - [ ] Report versi lebih formal untuk mesyuarat:
-  - [ ] layout A4 penuh
-  - [ ] ruang tandatangan AJK
-  - [ ] ruang catatan mesyuarat
-  - [ ] PDF-ready styling
-- [ ] Final polish `Users` dan `Search` untuk filter lanjutan
+  - [x] layout A4 penuh
+  - [x] ruang tandatangan AJK
+  - [x] ruang catatan mesyuarat
+  - [x] PDF-ready styling
+  - [ ] Final polish `Users` dan `Search` untuk filter lanjutan
 - [ ] Resident notification management:
   - [x] mark as read
   - [x] filter by type
@@ -702,6 +702,9 @@ Di `Health`, admin boleh semak keadaan sistem:
 5. duplicate payment wujud atau tidak
 6. resident yang tiada phone number
 7. pending proof yang belum direview
+8. export senarai resident yang belum ada phone number
+9. export duplicate payment report
+10. salin SQL cleanup helper jika perlu bersihkan duplicate payment
 
 Ini page terbaik bila rasa sistem “tak sync” atau nampak warning.
 

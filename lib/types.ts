@@ -94,6 +94,21 @@ export type HealthCheckItem = {
   action?: string;
 };
 
+export type DuplicatePaymentGroup = {
+  user_id: string;
+  house_number: string;
+  name: string;
+  month: string;
+  count: number;
+};
+
+export type MissingPhoneResident = {
+  id: string;
+  house_number: string;
+  name: string;
+  address: string;
+};
+
 export type AnnouncementRecord = {
   id: string;
   title: string;

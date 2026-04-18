@@ -3,6 +3,7 @@ import { AdminPageHeader } from "@/components/admin-page-header";
 import { DataWarning } from "@/components/data-warning";
 import { Card } from "@/components/ui/card";
 import { getAdminHealthData } from "@/lib/data";
+import { formatMonthLabel } from "@/lib/utils";
 
 const statusPresentation = {
   healthy: {
@@ -29,11 +30,51 @@ const statusPresentation = {
 } as const;
 
 export default async function AdminHealthPage() {
-  const { checks, warnings } = await getAdminHealthData();
+  const { checks, duplicateGroups, missingPhoneResidents, warnings } = await getAdminHealthData();
   const healthyCount = checks.filter((check) => check.status === "healthy").length;
   const warningCount = checks.filter((check) => check.status === "warning").length;
   const errorCount = checks.filter((check) => check.status === "error").length;
   const actionItems = checks.filter((check) => check.status !== "healthy");
+  const missingPhoneCsvHref = `data:text/csv;charset=utf-8,${encodeURIComponent(
+    [
+      ["House", "Owner", "Address"],
+      ...missingPhoneResidents.map((resident) => [
+        resident.house_number,
+        resident.name,
+        resident.address,
+      ]),
+    ]
+      .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
+      .join("\n"),
+  )}`;
+  const duplicateCsvHref = `data:text/csv;charset=utf-8,${encodeURIComponent(
+    [
+      ["House", "Owner", "Month", "Duplicate rows"],
+      ...duplicateGroups.map((group) => [
+        group.house_number,
+        group.name,
+        formatMonthLabel(group.month),
+        String(group.count),
+      ]),
+    ]
+      .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
+      .join("\n"),
+  )}`;
+  const duplicateCleanupSql = `with ranked as (
+  select
+    id,
+    row_number() over (
+      partition by user_id, month
+      order by updated_at desc, created_at desc, id desc
+    ) as rn
+  from public.payments
+)
+delete from public.payments
+where id in (
+  select id
+  from ranked
+  where rn > 1
+);`;
 
   return (
     <div className="space-y-6">
@@ -112,6 +153,90 @@ export default async function AdminHealthPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
+        <Card>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Missing phone helper</p>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">
+            Residents without phone numbers
+          </h3>
+          <p className="mt-2 text-base text-slate-600">
+            Export this list and update phone numbers in `Admin Users` so Call and WhatsApp follow-up actions can work.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-rose-100 px-3 py-1 text-sm font-bold text-rose-900">
+              {missingPhoneResidents.length} missing phone
+            </span>
+            {missingPhoneResidents.length > 0 ? (
+              <a
+                href={missingPhoneCsvHref}
+                download="desa-tanjung-missing-phone.csv"
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+              >
+                Export CSV
+              </a>
+            ) : null}
+          </div>
+          <div className="mt-5 space-y-3">
+            {missingPhoneResidents.length === 0 ? (
+              <div className="rounded-3xl bg-emerald-50 px-4 py-4 text-base font-semibold text-emerald-900">
+                All resident accounts already have phone numbers saved.
+              </div>
+            ) : (
+              missingPhoneResidents.slice(0, 6).map((resident) => (
+                <div key={resident.id} className="rounded-3xl bg-slate-50 px-4 py-4">
+                  <p className="text-base font-bold text-slate-950">
+                    {resident.house_number} - {resident.name}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">{resident.address}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Duplicate payment helper</p>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">
+            Resident-month duplicate scan
+          </h3>
+          <p className="mt-2 text-base text-slate-600">
+            Use this when live warnings say a resident has more than one payment row for the same month.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-rose-100 px-3 py-1 text-sm font-bold text-rose-900">
+              {duplicateGroups.length} duplicate group{duplicateGroups.length === 1 ? "" : "s"}
+            </span>
+            {duplicateGroups.length > 0 ? (
+              <a
+                href={duplicateCsvHref}
+                download="desa-tanjung-duplicate-payments.csv"
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+              >
+                Export duplicate report
+              </a>
+            ) : null}
+          </div>
+          <div className="mt-5 space-y-3">
+            {duplicateGroups.length === 0 ? (
+              <div className="rounded-3xl bg-emerald-50 px-4 py-4 text-base font-semibold text-emerald-900">
+                No duplicate resident-month payment rows were found.
+              </div>
+            ) : (
+              duplicateGroups.slice(0, 6).map((group) => (
+                <div key={`${group.user_id}-${group.month}`} className="rounded-3xl bg-slate-50 px-4 py-4">
+                  <p className="text-base font-bold text-slate-950">
+                    {group.house_number} - {group.name}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {formatMonthLabel(group.month)} - {group.count} rows found
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
         {checks.map((check) => {
           const presentation = statusPresentation[check.status];
           const Icon = presentation.icon;
@@ -141,6 +266,16 @@ export default async function AdminHealthPage() {
           );
         })}
       </section>
+
+      <Card>
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">SQL cleanup helper</p>
+        <p className="mt-2 text-base text-slate-600">
+          If duplicate payment groups are found, copy this SQL into Supabase SQL Editor after taking a backup or checking the duplicate export.
+        </p>
+        <pre className="mt-4 overflow-x-auto rounded-3xl bg-slate-950 p-4 text-sm leading-7 text-slate-100">
+          <code>{duplicateCleanupSql}</code>
+        </pre>
+      </Card>
 
       <Card>
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Quick admin checklist</p>

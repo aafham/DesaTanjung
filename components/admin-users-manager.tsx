@@ -192,7 +192,7 @@ export function AdminUsersManager({
           {neverLoggedInCount} users have never logged in yet. Users without a phone number or with no recent login are easier to spot below.
         </div>
         <div className="rounded-3xl border border-line bg-white px-4 py-3 text-sm font-semibold text-slate-700">
-          {activeRoleFilterLabel} • {activeFollowUpLabel}: {filteredUsers.length} shown
+          {activeRoleFilterLabel} - {activeFollowUpLabel}: {filteredUsers.length} shown
         </div>
       </div>
 
