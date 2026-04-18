@@ -30,6 +30,10 @@ export default async function ProfilePage({
         </p>
       </section>
 
+      <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-base leading-8 text-slate-700">
+        Keep your phone number and address current so the committee can contact you quickly when there is a payment issue, maintenance notice, or urgent update.
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <UserRound className="h-6 w-6 text-primary" />

@@ -96,6 +96,15 @@ export default async function DashboardPage() {
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
+          <Card className="border-slate-200 bg-slate-50/80">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-base font-bold text-muted">House number</p>
+                <p className="text-3xl font-bold text-slate-950">{profile.house_number}</p>
+              </div>
+              <StatusBadge status={currentPayment.display_status} />
+            </div>
+          </Card>
           <Card>
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-teal-50 p-3">

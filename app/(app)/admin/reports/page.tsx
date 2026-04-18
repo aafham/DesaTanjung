@@ -22,9 +22,43 @@ export default async function AdminReportsPage({
       : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-4">
       <PageToast message={params.message} error={params.error} />
       <DataWarning warnings={warnings} />
+
+      <section className="hidden rounded-3xl border border-slate-300 bg-white p-6 print:block">
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-600">
+          Desa Tanjung
+        </p>
+        <h1 className="mt-2 text-4xl font-bold text-slate-950">
+          Monthly Collection Report
+        </h1>
+        <p className="mt-2 text-lg text-slate-700">{currentMonthLabel}</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-slate-200 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Expected</p>
+            <p className="mt-1 text-2xl font-bold text-slate-950">
+              RM {totals.expectedCollection.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Collected</p>
+            <p className="mt-1 text-2xl font-bold text-slate-950">
+              RM {totals.collectedAmount.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Outstanding</p>
+            <p className="mt-1 text-2xl font-bold text-slate-950">
+              RM {totals.outstandingAmount.toFixed(2)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Due date</p>
+            <p className="mt-1 text-xl font-bold text-slate-950">{dueDateLabel}</p>
+          </div>
+        </div>
+      </section>
 
       <AdminPageHeader
         eyebrow="Reports"
@@ -38,7 +72,7 @@ export default async function AdminReportsPage({
         }
       />
 
-      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <section className="grid gap-4 print:grid-cols-5 md:grid-cols-3 xl:grid-cols-5">
         <Card
           className="text-white"
           style={{
@@ -78,6 +112,34 @@ export default async function AdminReportsPage({
           <p className="mt-2 text-base text-sky-900">Use this page for monthly committee review.</p>
         </Card>
       </section>
+
+      <Card className="print:border-slate-300 print:shadow-none">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+              Committee summary
+            </p>
+            <h3 className="mt-2 text-3xl font-bold text-slate-950">
+              Collection progress for {currentMonthLabel}
+            </h3>
+            <p className="mt-2 max-w-2xl text-base text-slate-600">
+              {totals.paidCount} houses have settled payment, while {totals.unsettledCount} still need follow-up before closing this month.
+            </p>
+          </div>
+          <div className="min-w-56 rounded-3xl bg-slate-50 px-5 py-4">
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
+              Overall progress
+            </p>
+            <p className="mt-2 text-4xl font-bold text-slate-950">{collectionRate}%</p>
+          </div>
+        </div>
+        <div className="mt-5 h-4 overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-primary"
+            style={{ width: `${collectionRate}%` }}
+          />
+        </div>
+      </Card>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card

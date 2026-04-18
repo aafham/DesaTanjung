@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import {
   deleteManagedUserAction,
   resetManagedUserPasswordAction,
@@ -60,18 +61,24 @@ export function AdminUsersManager({
           <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
             Manage every account in one place
           </h3>
+          <p className="mt-2 max-w-2xl text-base text-slate-600">
+            Use this page to keep phone numbers, account access, and resident records tidy without opening multiple admin pages.
+          </p>
         </div>
         <div className="w-full max-w-md">
           <label htmlFor="user-search" className="mb-2 block text-base font-bold text-slate-950">
             Search by house number, owner name, or phone number
           </label>
-          <input
-            id="user-search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search A-12, Nur Aisyah, or 0123456789"
-            className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
-          />
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <input
+              id="user-search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search A-12, Nur Aisyah, or 0123456789"
+              className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
+            />
+          </div>
         </div>
       </div>
 
@@ -80,8 +87,18 @@ export function AdminUsersManager({
           type="button"
           onClick={() => setRoleFilter("all")}
           className={`rounded-3xl px-4 py-3 text-left text-base font-bold transition ${
-            roleFilter === "all" ? "bg-slate-950 text-white" : "bg-slate-50 text-muted"
+            roleFilter === "all"
+              ? "border border-slate-900 text-white"
+              : "border border-slate-200 bg-slate-50 text-muted"
           }`}
+          style={
+            roleFilter === "all"
+              ? {
+                  background:
+                    "linear-gradient(135deg, #07111f 0%, #10263a 45%, #134e4a 100%)",
+                }
+              : undefined
+          }
         >
           <span className="block font-semibold">{users.length}</span>
           All users
@@ -90,7 +107,9 @@ export function AdminUsersManager({
           type="button"
           onClick={() => setRoleFilter("user")}
           className={`rounded-3xl px-4 py-3 text-left text-base font-bold transition ${
-            roleFilter === "user" ? "bg-primary text-primary-foreground" : "bg-slate-50 text-muted"
+            roleFilter === "user"
+              ? "border border-teal-700 bg-primary text-primary-foreground"
+              : "border border-slate-200 bg-slate-50 text-muted"
           }`}
         >
           <span className="block font-semibold">{residentCount}</span>
@@ -100,21 +119,23 @@ export function AdminUsersManager({
           type="button"
           onClick={() => setRoleFilter("admin")}
           className={`rounded-3xl px-4 py-3 text-left text-base font-bold transition ${
-            roleFilter === "admin" ? "bg-primary text-primary-foreground" : "bg-slate-50 text-muted"
+            roleFilter === "admin"
+              ? "border border-teal-700 bg-primary text-primary-foreground"
+              : "border border-slate-200 bg-slate-50 text-muted"
           }`}
         >
           <span className="block font-semibold">{adminCount}</span>
           Admins
         </button>
-        <div className="rounded-3xl bg-amber-50 px-4 py-3 text-base font-bold text-amber-900">
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-3 text-base font-bold text-amber-900">
           <span className="block font-semibold">{passwordResetCount}</span>
           Need password change
         </div>
-        <div className="rounded-3xl bg-rose-50 px-4 py-3 text-base font-bold text-rose-900">
+        <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-base font-bold text-rose-900">
           <span className="block font-semibold">{missingPhoneCount}</span>
           Missing phone
         </div>
-        <div className="rounded-3xl bg-slate-100 px-4 py-3 text-base font-bold text-slate-900">
+        <div className="rounded-3xl border border-slate-200 bg-slate-100 px-4 py-3 text-base font-bold text-slate-900">
           <span className="block font-semibold">{inactiveCount}</span>
           Inactive 30+ days
         </div>
@@ -137,7 +158,7 @@ export function AdminUsersManager({
           filteredUsers.map((user) => (
             <Card key={user.id} className="p-0">
               <details className="group">
-                <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3 px-6 py-5">
+                <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-4 px-6 py-5">
                   <div>
                     <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
                       {user.role === "admin" ? "Admin" : "Resident"}
@@ -196,7 +217,7 @@ export function AdminUsersManager({
                       </div>
                     </div>
                     <div className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white">
-                      Open
+                      Open details
                     </div>
                   </div>
                 </summary>
@@ -270,7 +291,10 @@ export function AdminUsersManager({
                         <option value="admin">Admin</option>
                       </select>
                     </div>
-                    <div className="md:col-span-2 flex flex-wrap gap-3">
+                    <div className="md:col-span-2 rounded-3xl bg-slate-50 p-4">
+                      <p className="mb-3 text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
+                        Account update
+                      </p>
                       <FormSubmitButton className="rounded-full px-5 py-3" pendingLabel="Saving changes...">
                         Save changes
                       </FormSubmitButton>

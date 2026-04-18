@@ -32,6 +32,13 @@ export default async function PaymentsPage() {
             <StatusBadge status={currentPayment.display_status} />
           </div>
 
+          <div className="rounded-3xl border border-amber-100 bg-amber-50 px-4 py-4 text-base text-amber-950">
+            <p className="font-bold">Transfer guide for {profile.house_number}</p>
+            <p className="mt-1">
+              Use the bank details or scan QR, then upload your receipt on the right so the committee can review it quickly.
+            </p>
+          </div>
+
           <div className="grid gap-4 rounded-4xl bg-slate-50 p-4 sm:grid-cols-2">
             <div className="rounded-3xl bg-white p-5">
               <Landmark className="h-6 w-6 text-primary" />
@@ -159,6 +166,10 @@ export default async function PaymentsPage() {
               </p>
             </div>
           ) : null}
+
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-700">
+            Good upload tips: make sure the amount, date, and transaction reference are clearly visible before submitting the receipt.
+          </div>
 
           <PaymentUploadForm userId={profile.id} houseNumber={profile.house_number} />
         </Card>

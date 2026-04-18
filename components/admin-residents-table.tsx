@@ -99,7 +99,7 @@ export function AdminResidentsTable({
 
   const csvHref = useMemo(() => {
     const rows = [
-      ["House", "Owner", "Address", "Status", "Updated", "Payment method"],
+      ["House", "Owner", "Address", "Phone", "Status", "Updated", "Payment method"],
       ...filteredResidents.map((resident) => [
         resident.house_number,
         resident.name,
@@ -114,6 +114,16 @@ export function AdminResidentsTable({
 
     return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
   }, [filteredResidents]);
+
+  const settledCount = filteredResidents.filter(
+    (resident) => getDisplayStatus(resident) === "paid",
+  ).length;
+  const followUpCount = filteredResidents.filter((resident) =>
+    ["unpaid", "overdue", "rejected"].includes(getDisplayStatus(resident)),
+  ).length;
+  const reviewedCount = filteredResidents.filter((resident) =>
+    ["paid", "rejected"].includes(getStatus(resident)),
+  ).length;
 
   return (
     <Card className="overflow-hidden p-0">
@@ -177,6 +187,27 @@ export function AdminResidentsTable({
 
       <div className="border-b border-line bg-slate-50 px-4 py-3 text-base text-muted">
         Showing {filteredResidents.length} of {residents.length} residents for {currentMonthLabel}.
+      </div>
+
+      <div className="grid gap-3 border-b border-line bg-white p-4 md:grid-cols-3">
+        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-emerald-800">
+            Settled in list
+          </p>
+          <p className="mt-2 text-3xl font-bold text-emerald-950">{settledCount}</p>
+        </div>
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-800">
+            Reviewed records
+          </p>
+          <p className="mt-2 text-3xl font-bold text-amber-950">{reviewedCount}</p>
+        </div>
+        <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-4">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-800">
+            Need follow-up
+          </p>
+          <p className="mt-2 text-3xl font-bold text-rose-950">{followUpCount}</p>
+        </div>
       </div>
 
       <form
@@ -365,14 +396,19 @@ export function AdminResidentsTable({
 
       <div className="border-t border-line bg-slate-50 p-4">
         <p className="mb-3 text-base font-bold text-slate-950">Payment notes</p>
-        <div className="grid gap-3 lg:grid-cols-2">
-          {filteredResidents
-            .filter((resident) => resident.currentPayment)
-            .map((resident) => (
+        {filteredResidents.filter((resident) => resident.currentPayment).length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-line bg-white px-4 py-6 text-base text-slate-600">
+            No payment records are available in the current filtered list yet, so there are no notes to update.
+          </div>
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {filteredResidents
+              .filter((resident) => resident.currentPayment)
+              .map((resident) => (
               <form
                 key={resident.id}
                 action={updatePaymentNotesAction}
-                className="rounded-3xl bg-white p-4"
+                className="rounded-3xl border border-line bg-white p-4 shadow-sm"
               >
                 <input type="hidden" name="payment_id" value={resident.currentPayment!.id} />
                 <label className="block text-sm font-bold text-slate-950">
@@ -397,7 +433,8 @@ export function AdminResidentsTable({
                 </button>
               </form>
             ))}
-        </div>
+          </div>
+        )}
       </div>
     </Card>
   );
