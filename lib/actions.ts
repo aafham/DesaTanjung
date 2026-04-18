@@ -306,7 +306,37 @@ export async function markResidentNotificationsReadAction() {
 
   revalidatePath("/dashboard");
   revalidatePath("/payments");
+  revalidatePath("/notifications");
+  revalidatePath("/profile");
   redirectWithMessage("/dashboard", "Notifications marked as read.");
+}
+
+export async function markSingleResidentNotificationReadAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  const notificationId = String(formData.get("notification_id") ?? "").trim();
+  const redirectPath = String(formData.get("redirect_path") ?? "/notifications").trim() || "/notifications";
+
+  if (!notificationId) {
+    redirectWithError(redirectPath, "Invalid notification selected.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", notificationId)
+    .eq("user_id", profile.id)
+    .eq("scope", "resident");
+
+  if (error) {
+    redirectWithError(redirectPath, error.message);
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/payments");
+  revalidatePath("/notifications");
+  revalidatePath("/profile");
+  redirectWithMessage(redirectPath, "Notification marked as read.");
 }
 
 export async function markCashPaymentAction(formData: FormData) {

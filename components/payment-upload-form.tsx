@@ -25,9 +25,26 @@ export function PaymentUploadForm({
   const [isUploading, setIsUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  function resetSelection() {
+    setFile(null);
+    setPreview(null);
+  }
+
   async function handleUpload() {
     if (!file) {
       setError("Please choose an image file first.");
+      setMessage(null);
+      return;
+    }
+
+    if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+      setError("Only PNG and JPG receipt images are allowed.");
+      setMessage(null);
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Receipt image must be 10MB or smaller.");
       setMessage(null);
       return;
     }
@@ -68,8 +85,7 @@ export function PaymentUploadForm({
     });
 
     setMessage("Payment proof uploaded successfully. It is now waiting for approval.");
-    setFile(null);
-    setPreview(null);
+    resetSelection();
     setIsUploading(false);
   }
 
@@ -98,6 +114,20 @@ export function PaymentUploadForm({
             setMessage(null);
 
             if (selected) {
+              if (!["image/png", "image/jpeg", "image/jpg"].includes(selected.type)) {
+                setFile(null);
+                setPreview(null);
+                setError("Only PNG and JPG receipt images are allowed.");
+                return;
+              }
+
+              if (selected.size > 10 * 1024 * 1024) {
+                setFile(null);
+                setPreview(null);
+                setError("Receipt image must be 10MB or smaller.");
+                return;
+              }
+
               setPreview(URL.createObjectURL(selected));
             } else {
               setPreview(null);
@@ -116,14 +146,46 @@ export function PaymentUploadForm({
             className="h-auto w-full object-cover"
             unoptimized
           />
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-white px-4 py-3">
+            <p className="text-sm font-semibold text-slate-700">
+              Preview your receipt carefully before submitting.
+            </p>
+            <button
+              type="button"
+              onClick={resetSelection}
+              className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-slate-200"
+            >
+              Remove image
+            </button>
+          </div>
         </div>
       ) : null}
 
       {error ? (
-        <p className="flex items-center gap-2 rounded-2xl bg-rose-50 px-4 py-3 text-base font-bold text-rose-800">
-          <AlertCircle className="h-4 w-4" />
-          {error}
-        </p>
+        <div className="rounded-2xl bg-rose-50 px-4 py-3 text-rose-800">
+          <p className="flex items-center gap-2 text-base font-bold">
+            <AlertCircle className="h-4 w-4" />
+            {error}
+          </p>
+          {file ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleUpload}
+                className="rounded-full bg-rose-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-rose-800"
+              >
+                Try upload again
+              </button>
+              <button
+                type="button"
+                onClick={resetSelection}
+                className="rounded-full bg-white px-4 py-2 text-sm font-bold text-rose-800 transition hover:bg-rose-100"
+              >
+                Choose another image
+              </button>
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       {message ? (

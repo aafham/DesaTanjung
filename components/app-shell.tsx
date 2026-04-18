@@ -47,9 +47,11 @@ const navItems: Record<
 
 export function AppShell({
   profile,
+  badgeCounts,
   children,
 }: {
   profile: UserProfile;
+  badgeCounts?: Partial<Record<"notifications" | "approvals", number>>;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -94,7 +96,25 @@ export function AppShell({
                   )}
                 >
                   <Icon className="h-5 w-5" />
-                  {item.label}
+                  <span className="flex flex-1 items-center justify-between gap-3">
+                    <span>{item.label}</span>
+                    {profile.role === "user" && item.href === "/notifications" && (badgeCounts?.notifications ?? 0) > 0 ? (
+                      <span className={cn(
+                        "rounded-full px-2.5 py-1 text-xs font-bold",
+                        active ? "bg-white/20 text-white" : "bg-amber-100 text-amber-900",
+                      )}>
+                        {badgeCounts?.notifications}
+                      </span>
+                    ) : null}
+                    {profile.role === "admin" && item.href === "/admin/approvals" && (badgeCounts?.approvals ?? 0) > 0 ? (
+                      <span className={cn(
+                        "rounded-full px-2.5 py-1 text-xs font-bold",
+                        active ? "bg-white/20 text-white" : "bg-amber-100 text-amber-900",
+                      )}>
+                        {badgeCounts?.approvals}
+                      </span>
+                    ) : null}
+                  </span>
                 </Link>
               );
             })}

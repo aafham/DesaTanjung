@@ -100,14 +100,28 @@ export function AdminReminderTools({
   }, [currentMonthLabel, unpaidResidents]);
 
   const whatsappComposeLink = useMemo(() => {
-    const firstResident = whatsappResidents[0];
-    if (!firstResident?.phone_number) {
+    if (whatsappResidents.length === 0) {
       return null;
     }
 
-    const links = getPhoneActionLinks(firstResident.phone_number);
-    return links?.whatsappCompose(reminderText) ?? null;
+    return `https://wa.me/?text=${encodeURIComponent(reminderText)}`;
   }, [reminderText, whatsappResidents]);
+
+  const overdueWhatsAppLink = useMemo(() => {
+    if (overdueResidents.length === 0) {
+      return null;
+    }
+
+    return `https://wa.me/?text=${encodeURIComponent(overdueReminderText)}`;
+  }, [overdueReminderText, overdueResidents.length]);
+
+  const unpaidWhatsAppLink = useMemo(() => {
+    if (unpaidResidents.length === 0) {
+      return null;
+    }
+
+    return `https://wa.me/?text=${encodeURIComponent(unpaidReminderText)}`;
+  }, [unpaidReminderText, unpaidResidents.length]);
 
   async function copyReminder() {
     await navigator.clipboard.writeText(reminderText);
@@ -179,32 +193,62 @@ export function AdminReminderTools({
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => copyPresetReminder("overdue")}
-            className="rounded-3xl border border-rose-300/30 bg-rose-500/10 px-4 py-4 text-left"
-          >
+          <div className="rounded-3xl border border-rose-300/30 bg-rose-500/10 px-4 py-4 text-left">
             <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-200">
               Overdue list
             </p>
             <p className="mt-2 text-2xl font-bold text-white">{overdueResidents.length}</p>
             <p className="mt-2 text-sm text-slate-200">
-              {copiedKind === "overdue" ? "Copied overdue reminder." : "Copy overdue WhatsApp text."}
+              {copiedKind === "overdue" ? "Copied overdue reminder." : "Copy or open WhatsApp draft for overdue residents."}
             </p>
-          </button>
-          <button
-            type="button"
-            onClick={() => copyPresetReminder("unpaid")}
-            className="rounded-3xl border border-amber-300/30 bg-amber-500/10 px-4 py-4 text-left"
-          >
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => copyPresetReminder("overdue")}
+                className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20"
+              >
+                Copy text
+              </button>
+              {overdueWhatsAppLink ? (
+                <a
+                  href={overdueWhatsAppLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20"
+                >
+                  Open draft
+                </a>
+              ) : null}
+            </div>
+          </div>
+          <div className="rounded-3xl border border-amber-300/30 bg-amber-500/10 px-4 py-4 text-left">
             <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-200">
               Unpaid / rejected
             </p>
             <p className="mt-2 text-2xl font-bold text-white">{unpaidResidents.length}</p>
             <p className="mt-2 text-sm text-slate-200">
-              {copiedKind === "unpaid" ? "Copied follow-up reminder." : "Copy follow-up text for residents who still need action."}
+              {copiedKind === "unpaid" ? "Copied follow-up reminder." : "Copy or open a follow-up draft for residents who still need action."}
             </p>
-          </button>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => copyPresetReminder("unpaid")}
+                className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20"
+              >
+                Copy text
+              </button>
+              {unpaidWhatsAppLink ? (
+                <a
+                  href={unpaidWhatsAppLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20"
+                >
+                  Open draft
+                </a>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
     </Card>

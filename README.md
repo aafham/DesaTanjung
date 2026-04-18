@@ -73,7 +73,149 @@ Tujuan utama portal ini:
   - nombor akaun
   - jumlah yuran bulanan
   - hari due date
-  - upload QR image
+- upload QR image
+
+## Status checklist projek
+
+Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project.
+
+### Sudah siap
+
+- [x] Login menggunakan `nombor rumah / username`
+- [x] Login admin menggunakan `admin`
+- [x] Paksa tukar kata laluan pada login pertama
+- [x] Dashboard resident
+- [x] Page pembayaran resident
+- [x] Muat naik resit ke Supabase Storage
+- [x] Sejarah bayaran resident
+- [x] Timeline aktiviti bayaran
+- [x] Resident notification inbox
+- [x] Resident profile update:
+  - [x] nama
+  - [x] alamat
+  - [x] nombor telefon
+- [x] Dashboard admin
+- [x] Approval queue admin
+- [x] Approve payment
+- [x] Reject payment dengan sebab reject
+- [x] Nota admin pada payment
+- [x] Mark cash paid
+- [x] Bulk mark cash paid
+- [x] Residents page dengan search, filter, CSV export
+- [x] Resident detail page
+- [x] Users page:
+  - [x] add user
+  - [x] edit user
+  - [x] reset password
+  - [x] delete user
+  - [x] last login
+  - [x] last logout
+- [x] Admin global search
+- [x] Admin activity page
+- [x] Admin reports page
+- [x] Admin notices / announcements
+- [x] Admin settings page
+- [x] Upload QR image dalam settings
+- [x] Dropdown bank Malaysia dalam settings
+- [x] Admin health page
+- [x] Activity log resident untuk:
+  - [x] login
+  - [x] logout
+  - [x] update profile
+  - [x] tukar password
+  - [x] upload payment proof
+- [x] Call / WhatsApp action
+- [x] Bulk WhatsApp reminder draft
+- [x] Preview resit lama
+- [x] Loading state untuk action penting
+- [x] Login page kemas
+- [x] Konsistensi font seluruh app
+- [x] README setup + walkthrough admin + resident
+
+### Masih perlu dibuat / boleh dipertingkatkan
+
+- [ ] Filter admin yang lebih mendalam:
+  - [x] `missing phone`
+  - [x] `never logged in`
+  - [x] `inactive users`
+  - [ ] `overdue only`
+  - [ ] `rejected only`
+- [ ] Resident upload UX lebih baik:
+  - [x] preview gambar sebelum submit
+  - [x] mesej saiz / jenis fail lebih jelas
+  - [x] retry flow yang lebih mesra
+- [ ] Bulk WhatsApp ikut selection dengan pilihan template mesej:
+  - [x] unpaid
+  - [x] overdue
+  - [x] rejected
+- [ ] Data health helper yang lebih action-oriented:
+  - [ ] duplicate payment cleanup helper
+  - [ ] missing phone export
+  - [ ] schema mismatch detector yang lebih spesifik
+- [ ] Report versi lebih formal untuk mesyuarat:
+  - [ ] layout A4 penuh
+  - [ ] ruang tandatangan AJK
+  - [ ] ruang catatan mesyuarat
+  - [ ] PDF-ready styling
+- [ ] Final polish `Users` dan `Search` untuk filter lanjutan
+- [ ] Resident notification management:
+  - [x] mark as read
+  - [x] filter by type
+  - [x] badge count lebih jelas
+- [ ] Accessibility pass akhir:
+  - [ ] focus state
+  - [ ] contrast audit
+  - [ ] keyboard flow
+
+### Checklist test flow utama
+
+#### Resident
+
+- [ ] Login guna nombor rumah
+- [ ] Tukar password kali pertama
+- [ ] Lihat dashboard bulan semasa
+- [ ] Semak due date dan monthly fee
+- [ ] Buka page payments
+- [ ] Nampak bank info dan QR
+- [ ] Upload resit
+- [ ] Status jadi `pending`
+- [ ] Notification resident masuk
+- [ ] Profile update berjaya
+- [ ] History payment dipaparkan
+- [ ] Sign out direkod
+
+#### Admin
+
+- [ ] Login sebagai admin
+- [ ] Nampak resident upload di approvals
+- [ ] Approve payment
+- [ ] Reject payment
+- [ ] Mark cash paid
+- [ ] Lihat update status di residents
+- [ ] Lihat activity log resident
+- [ ] Search resident / payment / activity
+- [ ] Update settings
+- [ ] Upload QR baru
+- [ ] Tambah user baru
+- [ ] Reset password user
+- [ ] Delete user ujian
+- [ ] Buka health page dan semak semua check penting
+- [ ] Print report
+
+### Checklist deployment / live environment
+
+- [ ] `NEXT_PUBLIC_SUPABASE_URL` betul
+- [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` betul
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` betul
+- [ ] `supabase/schema.sql` versi terbaru sudah dirun
+- [ ] bucket `payment-proofs` wujud
+- [ ] bucket `app-assets` wujud
+- [ ] monthly fee sudah diisi
+- [ ] QR bukan placeholder
+- [ ] admin user boleh login
+- [ ] resident user boleh login
+- [ ] upload resit berfungsi di live
+- [ ] admin approve / reject berfungsi di live
 
 ## Cara login
 

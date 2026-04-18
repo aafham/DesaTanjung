@@ -23,21 +23,31 @@ export function AdminUsersManager({
 }) {
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
+  const [followUpFilter, setFollowUpFilter] = useState<
+    "all" | "missing-phone" | "never-logged-in" | "inactive"
+  >("all");
 
   const filteredUsers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
 
     return users.filter((user) => {
       const matchesRole = roleFilter === "all" || user.role === roleFilter;
+      const matchesFollowUp =
+        followUpFilter === "all" ||
+        (followUpFilter === "missing-phone" && !user.phone_number) ||
+        (followUpFilter === "never-logged-in" && !user.last_login_at) ||
+        (followUpFilter === "inactive" &&
+          !!user.last_login_at &&
+          Date.now() - new Date(user.last_login_at).getTime() >= 1000 * 60 * 60 * 24 * 30);
       const matchesSearch =
         !normalized ||
         user.house_number.toLowerCase().includes(normalized) ||
         user.name.toLowerCase().includes(normalized) ||
         user.phone_number?.toLowerCase().includes(normalized);
 
-      return matchesRole && matchesSearch;
+      return matchesRole && matchesFollowUp && matchesSearch;
     });
-  }, [query, roleFilter, users]);
+  }, [followUpFilter, query, roleFilter, users]);
 
   const adminCount = users.filter((user) => user.role === "admin").length;
   const residentCount = users.filter((user) => user.role === "user").length;
@@ -52,6 +62,16 @@ export function AdminUsersManager({
     return age >= 1000 * 60 * 60 * 24 * 30;
   }).length;
   const neverLoggedInCount = users.filter((user) => !user.last_login_at).length;
+  const activeRoleFilterLabel =
+    roleFilter === "all" ? "All users" : roleFilter === "admin" ? "Admins only" : "Residents only";
+  const activeFollowUpLabel =
+    followUpFilter === "all"
+      ? "All conditions"
+      : followUpFilter === "missing-phone"
+        ? "Missing phone"
+        : followUpFilter === "never-logged-in"
+          ? "Never logged in"
+          : "Inactive 30+ days";
 
   return (
     <section className="space-y-4">
@@ -141,12 +161,39 @@ export function AdminUsersManager({
         </div>
       </div>
 
-      <div className="rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted">
-        {neverLoggedInCount} users have never logged in yet. Users without a phone number or with no recent login are easier to spot below.
+      <div className="flex flex-wrap gap-2">
+        {[
+          { value: "all", label: "All conditions" },
+          { value: "missing-phone", label: "Missing phone" },
+          { value: "never-logged-in", label: "Never logged in" },
+          { value: "inactive", label: "Inactive 30+ days" },
+        ].map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() =>
+              setFollowUpFilter(
+                option.value as "all" | "missing-phone" | "never-logged-in" | "inactive",
+              )
+            }
+            className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+              followUpFilter === option.value
+                ? "bg-slate-950 text-white"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
 
-      <div className="rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted">
-        Showing {filteredUsers.length} of {users.length} users. Click a card to open or close details.
+      <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+        <div className="rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted">
+          {neverLoggedInCount} users have never logged in yet. Users without a phone number or with no recent login are easier to spot below.
+        </div>
+        <div className="rounded-3xl border border-line bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+          {activeRoleFilterLabel} • {activeFollowUpLabel}: {filteredUsers.length} shown
+        </div>
       </div>
 
       <div className="grid gap-4">
@@ -223,7 +270,15 @@ export function AdminUsersManager({
                 </summary>
 
                 <div className="border-t border-line px-6 py-5">
-                  <p className="mb-5 text-base text-muted">{user.email}</p>
+                  <div className="mb-5 flex flex-col gap-3 rounded-3xl bg-slate-50 px-4 py-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Login email</p>
+                      <p className="mt-1 text-base font-semibold text-slate-950">{user.email}</p>
+                    </div>
+                    <div className="rounded-2xl bg-white px-3 py-2 text-sm text-slate-700">
+                      Created {formatTimestamp(user.created_at)}
+                    </div>
+                  </div>
 
                   <form action={updateManagedUserAction} className="grid gap-4 md:grid-cols-2">
                     <input type="hidden" name="user_id" value={user.id} />

@@ -73,10 +73,20 @@ export function AdminGlobalSearch({
   return (
     <div className="space-y-6">
       <Card>
-        <label htmlFor="admin-global-search" className="mb-2 block text-base font-bold text-slate-950">
-          Search by house number, owner, address, phone, note, or activity
-        </label>
-        <div className="relative">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <label htmlFor="admin-global-search" className="mb-2 block text-base font-bold text-slate-950">
+              Search by house number, owner, address, phone, note, or activity
+            </label>
+            <p className="text-sm text-slate-600">
+              Start typing once and compare resident records, payment records, and activity logs side by side.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+            {query.trim() ? "Live filtered results" : "Showing latest records first"}
+          </div>
+        </div>
+        <div className="relative mt-4">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
           <input
             id="admin-global-search"
@@ -120,12 +130,17 @@ export function AdminGlobalSearch({
                       </p>
                       <ContactActions phoneNumber={resident.phone_number} compact className="mt-3" />
                     </div>
-                    <Link
-                      href={`/admin/residents/${resident.id}`}
-                      className="rounded-full bg-slate-950 px-3 py-1 text-sm font-semibold text-white"
-                    >
-                      Open
-                    </Link>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
+                        {resident.role}
+                      </span>
+                      <Link
+                        href={`/admin/residents/${resident.id}`}
+                        className="rounded-full bg-slate-950 px-3 py-1 text-sm font-semibold text-white"
+                      >
+                        Open
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))
@@ -170,7 +185,15 @@ export function AdminGlobalSearch({
                         <p className="mt-2 text-sm text-slate-700">Note: {payment.notes}</p>
                       ) : null}
                     </div>
-                    <StatusBadge status={payment.display_status} />
+                    <div className="flex flex-col items-end gap-2">
+                      <StatusBadge status={payment.display_status} />
+                      <Link
+                        href={`/admin/residents/${payment.user_id}?month=${payment.month}`}
+                        className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700"
+                      >
+                        View resident
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))
@@ -213,6 +236,14 @@ export function AdminGlobalSearch({
                   <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                     {formatTimestamp(activity.created_at)}
                   </p>
+                  {activity.user_id ? (
+                    <Link
+                      href={`/admin/residents/${activity.user_id}`}
+                      className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700"
+                    >
+                      Open resident
+                    </Link>
+                  ) : null}
                 </div>
               ))
             )}

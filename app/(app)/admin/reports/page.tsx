@@ -60,6 +60,24 @@ export default async function AdminReportsPage({
         </div>
       </section>
 
+      <section className="hidden rounded-3xl border border-slate-300 bg-white p-6 print:block">
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Community</p>
+            <p className="mt-1 text-lg font-bold text-slate-950">{settings.community_name}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Bank account</p>
+            <p className="mt-1 text-lg font-bold text-slate-950">{settings.bank_name}</p>
+            <p className="text-sm text-slate-700">{settings.bank_account_number}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Meeting use</p>
+            <p className="mt-1 text-lg font-bold text-slate-950">Committee review copy</p>
+          </div>
+        </div>
+      </section>
+
       <AdminPageHeader
         eyebrow="Reports"
         title={`Monthly report for ${currentMonthLabel}`}

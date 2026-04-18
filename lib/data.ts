@@ -154,6 +154,32 @@ export async function requireUserProfile() {
   return profile;
 }
 
+export async function getAppShellBadgeCounts(profile: UserProfile) {
+  const supabase = await createClient();
+
+  if (profile.role === "user") {
+    const { count } = await supabase
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", profile.id)
+      .eq("scope", "resident")
+      .eq("is_read", false);
+
+    return {
+      notifications: count ?? 0,
+    };
+  }
+
+  const { count } = await supabase
+    .from("payments")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "pending");
+
+  return {
+    approvals: count ?? 0,
+  };
+}
+
 export async function ensureCurrentMonthPayment(userId: string) {
   const supabase = await createClient();
   const month = getMonthKey();

@@ -1,5 +1,5 @@
 import { AppShell } from "@/components/app-shell";
-import { requireUserProfile } from "@/lib/data";
+import { getAppShellBadgeCounts, requireUserProfile } from "@/lib/data";
 
 export default async function AppLayout({
   children,
@@ -7,6 +7,7 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const profile = await requireUserProfile();
+  const badgeCounts = await getAppShellBadgeCounts(profile);
 
-  return <AppShell profile={profile}>{children}</AppShell>;
+  return <AppShell profile={profile} badgeCounts={badgeCounts}>{children}</AppShell>;
 }
