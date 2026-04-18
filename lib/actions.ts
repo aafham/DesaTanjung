@@ -9,6 +9,7 @@ import {
   formatMonthLabel,
   getMonthKey,
   identifierToEmail,
+  normalizeMalaysianPhoneNumber,
   slugifyHouseNumber,
 } from "@/lib/utils";
 import { DEFAULT_ADMIN_PASSWORD, DEFAULT_USER_PASSWORD } from "@/lib/constants";
@@ -73,9 +74,14 @@ export async function loginAction(formData: FormData) {
 export async function changePasswordAction(formData: FormData) {
   const profile = await requireUserProfile();
   const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirm_password") ?? "");
 
   if (password.length < 8) {
     redirectWithError("/change-password", "Password must be at least 8 characters.");
+  }
+
+  if (password !== confirmPassword) {
+    redirectWithError("/change-password", "New password and confirm password must match.");
   }
 
   const supabase = await createClient();
@@ -99,10 +105,15 @@ export async function updateProfileAction(formData: FormData) {
   const profile = await requireUserProfile();
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
-  const phoneNumber = String(formData.get("phone_number") ?? "").trim();
+  const phoneNumberInput = String(formData.get("phone_number") ?? "").trim();
+  const phoneNumber = normalizeMalaysianPhoneNumber(phoneNumberInput);
 
-  if (!name || !address || !phoneNumber) {
+  if (!name || !address || !phoneNumberInput) {
     redirectWithError("/profile", "Please complete your name, address, and phone number.");
+  }
+
+  if (!phoneNumber) {
+    redirectWithError("/profile", "Please enter a valid Malaysian mobile number.");
   }
 
   const supabase = await createClient();
@@ -504,11 +515,16 @@ export async function createManagedUserAction(formData: FormData) {
   const houseNumber = String(formData.get("house_number") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
-  const phoneNumber = String(formData.get("phone_number") ?? "").trim();
+  const phoneNumberInput = String(formData.get("phone_number") ?? "").trim();
+  const phoneNumber = normalizeMalaysianPhoneNumber(phoneNumberInput);
   const role = "user";
 
-  if (!houseNumber || !name || !address || !phoneNumber) {
+  if (!houseNumber || !name || !address || !phoneNumberInput) {
     redirectWithError("/admin/users", "Please fill in all user fields correctly.");
+  }
+
+  if (!phoneNumber) {
+    redirectWithError("/admin/users", "Please enter a valid Malaysian mobile number.");
   }
 
   const adminClient = createAdminClient();
@@ -561,7 +577,8 @@ export async function updateManagedUserAction(formData: FormData) {
   const houseNumber = String(formData.get("house_number") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
-  const phoneNumber = String(formData.get("phone_number") ?? "").trim();
+  const phoneNumberInput = String(formData.get("phone_number") ?? "").trim();
+  const phoneNumber = normalizeMalaysianPhoneNumber(phoneNumberInput);
   const role = String(formData.get("role") ?? "user").trim();
 
   if (
@@ -569,10 +586,14 @@ export async function updateManagedUserAction(formData: FormData) {
     !houseNumber ||
     !name ||
     !address ||
-    !phoneNumber ||
+    !phoneNumberInput ||
     !["user", "admin"].includes(role)
   ) {
     redirectWithError("/admin/users", "Please fill in all user fields correctly.");
+  }
+
+  if (!phoneNumber) {
+    redirectWithError("/admin/users", "Please enter a valid Malaysian mobile number.");
   }
 
   const adminClient = createAdminClient();

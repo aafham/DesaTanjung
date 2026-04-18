@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { KeyRound, MapPinned, Phone, UserRound } from "lucide-react";
+import { formatMalaysianPhoneNumber } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { PageToast } from "@/components/page-toast";
 import { requireUserProfile } from "@/lib/data";
@@ -48,7 +49,9 @@ export default async function ProfilePage({
           <Phone className="h-6 w-6 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">Phone number</p>
           <p className="text-2xl font-bold leading-tight text-slate-950">
-            {profile.phone_number || "Not saved yet"}
+            {profile.phone_number
+              ? formatMalaysianPhoneNumber(profile.phone_number)
+              : "Not saved yet"}
           </p>
         </Card>
       </div>
@@ -108,10 +111,11 @@ export default async function ProfilePage({
               id="profile-phone"
               name="phone_number"
               required
-              defaultValue={profile.phone_number ?? ""}
+              defaultValue={profile.phone_number ? formatMalaysianPhoneNumber(profile.phone_number) : ""}
               placeholder="012-345 6789"
               className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
             />
+            <p className="mt-2 text-sm text-muted">Use Malaysian mobile format such as 012-345 6789.</p>
           </div>
           <div className="md:col-span-2">
             <button

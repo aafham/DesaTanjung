@@ -1,13 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clock3, Home, Phone, ReceiptText, UserRound } from "lucide-react";
+import { ContactActions } from "@/components/contact-actions";
 import { DataWarning } from "@/components/data-warning";
 import { MonthFilter } from "@/components/month-filter";
 import { PaymentTimeline } from "@/components/payment-timeline";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getAdminResidentDetailData } from "@/lib/data";
-import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
+import { formatMalaysianPhoneNumber, formatMonthLabel, formatTimestamp } from "@/lib/utils";
 
 export default async function AdminResidentDetailPage({
   params,
@@ -72,8 +73,11 @@ export default async function AdminResidentDetailPage({
           <Phone className="h-5 w-5 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">Phone number</p>
           <p className="text-xl font-bold text-slate-950">
-            {resident.phone_number || "No phone number saved yet"}
+            {resident.phone_number
+              ? formatMalaysianPhoneNumber(resident.phone_number)
+              : "No phone number saved yet"}
           </p>
+          <ContactActions phoneNumber={resident.phone_number} className="mt-4" />
         </Card>
         <Card>
           <Clock3 className="h-5 w-5 text-primary" />

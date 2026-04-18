@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { KeyRound, ShieldCheck, UserRound } from "lucide-react";
 import { AuthPanel } from "@/components/auth-panel";
+import { PasswordInput } from "@/components/password-input";
 import { getCurrentUserProfile } from "@/lib/data";
 import { loginAction } from "@/lib/actions";
 
@@ -75,13 +76,14 @@ export default async function LoginPage({
               <label htmlFor="password" className="mb-2 block text-base font-bold text-white">
                 Password
               </label>
-              <input
+              <PasswordInput
                 id="password"
                 name="password"
-                type="password"
                 required
                 placeholder="Enter password"
-                className="min-h-14 w-full rounded-3xl border border-slate-600 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none placeholder:text-slate-400 focus:border-teal-400"
+                autoComplete="current-password"
+                inputClassName="min-h-14 w-full rounded-3xl border border-slate-600 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none placeholder:text-slate-400 focus:border-teal-400"
+                buttonClassName="text-slate-300 hover:bg-white/10 hover:text-white"
               />
             </div>
 

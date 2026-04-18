@@ -8,6 +8,7 @@ import { PaymentTimeline } from "@/components/payment-timeline";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getUserDashboardData } from "@/lib/data";
+import { formatMalaysianPhoneNumber } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const {
@@ -123,7 +124,9 @@ export default async function DashboardPage() {
               <div>
                 <p className="text-base font-bold text-muted">Phone number</p>
                 <p className="text-xl font-bold text-slate-950">
-                  {profile.phone_number || "Please update your profile"}
+                  {profile.phone_number
+                    ? formatMalaysianPhoneNumber(profile.phone_number)
+                    : "Please update your profile"}
                 </p>
               </div>
             </div>

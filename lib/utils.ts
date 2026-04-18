@@ -52,3 +52,65 @@ export function formatDateLabel(value: Date | string) {
     dateStyle: "full",
   }).format(new Date(value));
 }
+
+export function normalizeMalaysianPhoneNumber(value: string) {
+  const cleaned = value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+
+  let localBody = "";
+
+  if (cleaned.startsWith("+60")) {
+    localBody = cleaned.slice(3);
+  } else if (cleaned.startsWith("60")) {
+    localBody = cleaned.slice(2);
+  } else if (cleaned.startsWith("0")) {
+    localBody = cleaned.slice(1);
+  } else {
+    return null;
+  }
+
+  if (!/^1\d{8,9}$/.test(localBody)) {
+    return null;
+  }
+
+  return `+60${localBody}`;
+}
+
+export function formatMalaysianPhoneNumber(value: string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  const normalized = normalizeMalaysianPhoneNumber(value);
+
+  if (!normalized) {
+    return value;
+  }
+
+  const localNumber = `0${normalized.slice(3)}`;
+
+  if (localNumber.length === 10) {
+    return `${localNumber.slice(0, 3)}-${localNumber.slice(3, 6)} ${localNumber.slice(6)}`;
+  }
+
+  if (localNumber.length === 11) {
+    return `${localNumber.slice(0, 3)}-${localNumber.slice(3, 7)} ${localNumber.slice(7)}`;
+  }
+
+  return localNumber;
+}
+
+export function getPhoneActionLinks(value: string | null | undefined) {
+  const normalized = value ? normalizeMalaysianPhoneNumber(value) : null;
+
+  if (!normalized) {
+    return null;
+  }
+
+  const whatsappNumber = normalized.replace(/^\+/, "");
+
+  return {
+    tel: `tel:${normalized}`,
+    whatsapp: `https://wa.me/${whatsappNumber}`,
+    display: formatMalaysianPhoneNumber(normalized),
+  };
+}

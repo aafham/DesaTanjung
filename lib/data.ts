@@ -12,6 +12,7 @@ import type {
   PaymentRecord,
   ResidentPaymentRecord,
   ResidentWithPayment,
+  UserActivityWithUser,
   UserActivityLog,
   UserProfile,
 } from "@/lib/types";
@@ -237,6 +238,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
     { data: notifications, error: notificationsError },
     { data: residents, error: residentsError },
     { data: monthlyRecords, error: monthlyRecordsError },
+    { data: recentActivity, error: recentActivityError },
     settings,
     announcements,
   ] = await Promise.all([
@@ -264,6 +266,11 @@ export async function getAdminDashboardData(filterMonth?: string) {
         "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
       )
       .eq("month", month),
+    supabase
+      .from("user_activity_logs")
+      .select("id, user_id, action, message, created_at, users(house_number, name, role)")
+      .order("created_at", { ascending: false })
+      .limit(12),
     getAppSettings(),
     getAnnouncements({
       audience: "admins",
@@ -283,6 +290,9 @@ export async function getAdminDashboardData(filterMonth?: string) {
   }
   if (monthlyRecordsError) {
     warnings.push(createWarningMessage("Monthly records", monthlyRecordsError.message));
+  }
+  if (recentActivityError) {
+    warnings.push(createWarningMessage("Recent resident activity", recentActivityError.message));
   }
 
   const residentRows = ((residents as UserProfile[] | null) ?? []).map((resident) => {
@@ -319,6 +329,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
     pendingPayments: pendingWithReceipts,
     notifications: (notifications as NotificationRecord[] | null) ?? [],
     residents: residentRows,
+    recentActivity: (recentActivity as UserActivityWithUser[] | null) ?? [],
     announcements,
     warnings,
   };

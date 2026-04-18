@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { approvePaymentAction, rejectPaymentAction } from "@/lib/actions";
-import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
+import { formatMalaysianPhoneNumber, formatMonthLabel, formatTimestamp } from "@/lib/utils";
+import { ContactActions } from "@/components/contact-actions";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
 import { Card } from "@/components/ui/card";
@@ -43,7 +44,12 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
             {payment.users.name}
           </h3>
           <p className="mt-1 text-base text-muted">{payment.users.address}</p>
-          <p className="mt-1 text-sm text-muted">{payment.users.phone_number || "No phone number saved yet"}</p>
+          <p className="mt-1 text-sm text-muted">
+            {payment.users.phone_number
+              ? formatMalaysianPhoneNumber(payment.users.phone_number)
+              : "No phone number saved yet"}
+          </p>
+          <ContactActions phoneNumber={payment.users.phone_number} compact className="mt-3" />
         </div>
         <StatusBadge status={payment.display_status ?? payment.status} />
       </div>

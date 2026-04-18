@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
 import { Copy, Download, Search } from "lucide-react";
+import { ContactActions } from "@/components/contact-actions";
 import {
   bulkMarkCashPaymentAction,
   markCashPaymentAction,
   updatePaymentNotesAction,
 } from "@/lib/actions";
 import type { PaymentStatus, ResidentWithPayment } from "@/lib/types";
-import { formatTimestamp } from "@/lib/utils";
+import { formatMalaysianPhoneNumber, formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -215,7 +216,12 @@ export function AdminResidentsTable({
 
             <div className="mt-4 space-y-3 border-t border-line pt-4">
               <p className="text-base text-slate-800">{resident.address}</p>
-              <p className="text-sm text-muted">{resident.phone_number || "No phone number saved yet"}</p>
+              <p className="text-sm text-muted">
+                {resident.phone_number
+                  ? formatMalaysianPhoneNumber(resident.phone_number)
+                  : "No phone number saved yet"}
+              </p>
+              <ContactActions phoneNumber={resident.phone_number} compact className="pt-1" />
               <Link
                 href={`/admin/residents/${resident.id}?month=${currentMonth}`}
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
@@ -291,7 +297,11 @@ export function AdminResidentsTable({
                   </td>
                   <td className="px-4 py-5 font-semibold text-slate-950">{resident.name}</td>
                   <td className="px-4 py-4">{resident.address}</td>
-                  <td className="px-4 py-4">{resident.phone_number || "-"}</td>
+                  <td className="px-4 py-4">
+                    {resident.phone_number
+                      ? formatMalaysianPhoneNumber(resident.phone_number)
+                      : "-"}
+                  </td>
                   <td className="px-4 py-5">
                     <StatusBadge status={getDisplayStatus(resident)} />
                   </td>
@@ -343,6 +353,7 @@ export function AdminResidentsTable({
                         <Copy className="h-4 w-4" />
                         {copiedResidentId === resident.id ? "Copied" : "Reminder"}
                       </button>
+                      <ContactActions phoneNumber={resident.phone_number} compact />
                     </div>
                   </td>
                 </tr>

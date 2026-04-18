@@ -1,5 +1,6 @@
 import { requireUserProfile } from "@/lib/data";
 import { changePasswordAction } from "@/lib/actions";
+import { PasswordInput } from "@/components/password-input";
 
 export default async function ChangePasswordPage({
   searchParams,
@@ -28,15 +29,31 @@ export default async function ChangePasswordPage({
             <label htmlFor="password" className="mb-2 block text-base font-bold text-slate-950">
               New password
             </label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               required
               minLength={8}
-              className="min-h-14 w-full rounded-3xl border border-line bg-white px-4 py-3 text-lg font-semibold text-slate-950 outline-none focus:border-primary"
+              autoComplete="new-password"
+              inputClassName="min-h-14 w-full rounded-3xl border border-line bg-white px-4 py-3 text-lg font-semibold text-slate-950 outline-none focus:border-primary"
+              buttonClassName="text-slate-500 hover:bg-slate-100 hover:text-slate-950"
             />
             <p className="mt-2 text-sm text-muted">Use at least 8 characters.</p>
+          </div>
+          <div>
+            <label htmlFor="confirm-password" className="mb-2 block text-base font-bold text-slate-950">
+              Confirm new password
+            </label>
+            <PasswordInput
+              id="confirm-password"
+              name="confirm_password"
+              required
+              minLength={8}
+              autoComplete="new-password"
+              inputClassName="min-h-14 w-full rounded-3xl border border-line bg-white px-4 py-3 text-lg font-semibold text-slate-950 outline-none focus:border-primary"
+              buttonClassName="text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+            />
+            <p className="mt-2 text-sm text-muted">Enter the same password again to confirm.</p>
           </div>
 
           {params.error ? (

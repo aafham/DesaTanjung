@@ -34,6 +34,7 @@ export default async function AdminDashboardPage({
     dueDateLabel,
     notifications,
     pendingPayments,
+    recentActivity,
     residents,
     settings,
     warnings,
@@ -252,6 +253,50 @@ export default async function AdminDashboardPage({
                     <p className="text-base font-bold text-slate-950">{notification.message}</p>
                     <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                       {formatTimestamp(notification.created_at)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+          <Card>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Recent activity</p>
+                <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
+                  Resident actions
+                </h3>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+                {recentActivity.length} items
+              </span>
+            </div>
+
+            <div className="mt-5 max-h-[360px] space-y-3 overflow-y-auto pr-1">
+              {recentActivity.length === 0 ? (
+                <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
+                  No resident activity has been recorded yet.
+                </div>
+              ) : (
+                recentActivity.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-base font-bold text-slate-950">
+                          {activity.users?.house_number ?? "Resident"} {activity.users?.name ? `- ${activity.users.name}` : ""}
+                        </p>
+                        <p className="mt-1 text-base text-slate-800">{activity.message}</p>
+                      </div>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
+                        {activity.action.replaceAll("_", " ")}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                      {formatTimestamp(activity.created_at)}
                     </p>
                   </div>
                 ))

@@ -83,6 +83,7 @@ export default async function AdminUsersPage({
               placeholder="012-345 6789"
               className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
             />
+            <p className="mt-2 text-sm text-muted">Use Malaysian mobile format such as 012-345 6789.</p>
           </div>
           <div className="md:col-span-2 flex items-center justify-between gap-3 rounded-3xl bg-slate-50 px-4 py-4">
             <p className="text-base text-muted">

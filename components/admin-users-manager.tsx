@@ -6,8 +6,9 @@ import {
   resetManagedUserPasswordAction,
   updateManagedUserAction,
 } from "@/lib/actions";
+import { ContactActions } from "@/components/contact-actions";
 import type { ManagedUser } from "@/lib/types";
-import { formatTimestamp } from "@/lib/utils";
+import { formatMalaysianPhoneNumber, formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
 
@@ -122,7 +123,11 @@ export function AdminUsersManager({
                       {user.house_number}
                     </h4>
                     <p className="mt-1 text-base text-muted">{user.name}</p>
-                    <p className="mt-1 text-sm text-muted">{user.phone_number || "No phone number saved yet"}</p>
+                    <p className="mt-1 text-sm text-muted">
+                      {user.phone_number
+                        ? formatMalaysianPhoneNumber(user.phone_number)
+                        : "No phone number saved yet"}
+                    </p>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <div className="rounded-2xl bg-slate-50 px-3 py-2">
                         <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
@@ -141,6 +146,11 @@ export function AdminUsersManager({
                         </p>
                       </div>
                     </div>
+                    <ContactActions
+                      phoneNumber={user.phone_number}
+                      compact
+                      className="mt-3"
+                    />
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-800">
@@ -201,10 +211,11 @@ export function AdminUsersManager({
                         id={`phone-${user.id}`}
                         name="phone_number"
                         required
-                        defaultValue={user.phone_number ?? ""}
+                        defaultValue={user.phone_number ? formatMalaysianPhoneNumber(user.phone_number) : ""}
                         placeholder="012-345 6789"
                         className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
                       />
+                      <p className="mt-2 text-sm text-muted">Use Malaysian mobile format such as 012-345 6789.</p>
                     </div>
                     <div>
                       <label htmlFor={`role-${user.id}`} className="mb-2 block text-base font-bold text-slate-950">

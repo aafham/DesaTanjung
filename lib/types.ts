@@ -79,6 +79,10 @@ export type UserActivityLog = {
   created_at: string;
 };
 
+export type UserActivityWithUser = UserActivityLog & {
+  users: Pick<UserProfile, "house_number" | "name" | "role"> | null;
+};
+
 export type AnnouncementRecord = {
   id: string;
   title: string;
