@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
-import { Copy, Download, Search } from "lucide-react";
+import { Copy, Download, MessageCircle, Search } from "lucide-react";
 import { ContactActions } from "@/components/contact-actions";
 import {
   bulkMarkCashPaymentAction,
@@ -10,7 +10,11 @@ import {
   updatePaymentNotesAction,
 } from "@/lib/actions";
 import type { PaymentStatus, ResidentWithPayment } from "@/lib/types";
-import { formatMalaysianPhoneNumber, formatTimestamp } from "@/lib/utils";
+import {
+  formatMalaysianPhoneNumber,
+  formatTimestamp,
+  getPhoneActionLinks,
+} from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -115,6 +119,47 @@ export function AdminResidentsTable({
     return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
   }, [filteredResidents]);
 
+  const selectedResidents = useMemo(
+    () => filteredResidents.filter((resident) => selectedResidentIds.includes(resident.id)),
+    [filteredResidents, selectedResidentIds],
+  );
+
+  const selectedResidentsWithPhone = useMemo(
+    () =>
+      selectedResidents
+        .map((resident) => ({
+          resident,
+          links: getPhoneActionLinks(resident.phone_number),
+        }))
+        .filter(
+          (
+            item,
+          ): item is {
+            resident: ResidentWithPayment;
+            links: NonNullable<ReturnType<typeof getPhoneActionLinks>>;
+          } => Boolean(item.links),
+        ),
+    [selectedResidents],
+  );
+
+  const bulkWhatsappHref = useMemo(() => {
+    if (selectedResidentsWithPhone.length === 0) {
+      return null;
+    }
+
+    const lines = [
+      `Salam, peringatan bayaran ${currentMonthLabel} untuk rumah berikut masih perlu tindakan:`,
+      "",
+      ...selectedResidentsWithPhone.map(
+        ({ resident }) => `- ${resident.house_number} - ${resident.name}`,
+      ),
+      "",
+      "Sila buat bayaran dan muat naik resit ke portal Desa Tanjung. Terima kasih.",
+    ];
+
+    return `https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`;
+  }, [currentMonthLabel, selectedResidentsWithPhone]);
+
   const settledCount = filteredResidents.filter(
     (resident) => getDisplayStatus(resident) === "paid",
   ).length;
@@ -217,21 +262,38 @@ export function AdminResidentsTable({
         <div>
           <p className="font-bold text-slate-950">Bulk action</p>
           <p className="text-sm text-muted">
-            Select unpaid residents, then mark all selected as paid by cash.
+            Select residents to mark cash paid or prepare one reminder draft for follow-up.
           </p>
         </div>
         <input type="hidden" name="month" value={currentMonth} />
         {selectedResidentIds.map((residentId) => (
           <input key={residentId} type="hidden" name="resident_ids" value={residentId} />
         ))}
-        <ConfirmSubmitButton
-          confirmMessage={`Mark ${selectedResidentIds.length} selected residents as paid by cash?`}
-          confirmTitle="Confirm bulk cash update"
-          disabled={selectedResidentIds.length === 0}
-          className="bg-slate-950 text-white"
-        >
-          Mark selected cash paid
-        </ConfirmSubmitButton>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {bulkWhatsappHref ? (
+            <a
+              href={bulkWhatsappHref}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-100 px-5 py-3 text-sm font-bold text-emerald-950 transition hover:bg-emerald-200"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp selected
+            </a>
+          ) : (
+            <span className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-100 px-5 py-3 text-sm font-bold text-slate-500">
+              Select residents with phone numbers
+            </span>
+          )}
+          <ConfirmSubmitButton
+            confirmMessage={`Mark ${selectedResidentIds.length} selected residents as paid by cash?`}
+            confirmTitle="Confirm bulk cash update"
+            disabled={selectedResidentIds.length === 0}
+            className="bg-slate-950 text-white"
+          >
+            Mark selected cash paid
+          </ConfirmSubmitButton>
+        </div>
       </form>
 
       <div className="grid gap-4 p-4 md:hidden">
@@ -295,10 +357,10 @@ export function AdminResidentsTable({
               <th className="px-4 py-3">House</th>
               <th className="px-4 py-3">Owner</th>
               <th className="px-4 py-3">Address</th>
-                <th className="px-4 py-3">Phone</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Updated</th>
-                <th className="px-4 py-3">Action</th>
+              <th className="px-4 py-3">Phone</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Updated</th>
+              <th className="px-4 py-3">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line text-base text-slate-800">

@@ -73,21 +73,16 @@ export default async function AdminReportsPage({
       />
 
       <section className="grid gap-4 print:grid-cols-5 md:grid-cols-3 xl:grid-cols-5">
-        <Card
-          className="text-white"
-          style={{
-            background:
-              "linear-gradient(135deg, #07111f 0%, #12324a 55%, #115e59 100%)",
-          }}
-        >
-          <p className="text-base font-bold text-slate-100">Collection rate</p>
-          <p className="mt-2 font-display text-5xl font-bold text-white">{collectionRate}%</p>
-          <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/20">
+        <Card className="border-slate-200 bg-slate-50">
+          <p className="text-base font-bold text-slate-700">Collection rate</p>
+          <p className="mt-2 font-display text-5xl font-bold text-slate-950">{collectionRate}%</p>
+          <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-200">
             <div
               className="h-full rounded-full bg-teal-200"
               style={{ width: `${collectionRate}%` }}
             />
           </div>
+          <p className="mt-3 text-base text-slate-600">Share of houses settled for the selected month.</p>
         </Card>
         <Card className="border-emerald-200 bg-emerald-50">
           <p className="text-base font-bold text-emerald-800">Residents settled</p>
@@ -142,18 +137,12 @@ export default async function AdminReportsPage({
       </Card>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card
-          className="text-white"
-          style={{
-            background:
-              "linear-gradient(135deg, #07111f 0%, #12324a 100%)",
-          }}
-        >
-          <p className="text-base font-bold text-slate-100">Expected collection</p>
-          <p className="mt-2 font-display text-4xl font-bold text-white">
+        <Card className="border-sky-200 bg-sky-50">
+          <p className="text-base font-bold text-sky-800">Expected collection</p>
+          <p className="mt-2 font-display text-4xl font-bold text-sky-950">
             RM {totals.expectedCollection.toFixed(2)}
           </p>
-          <p className="mt-2 text-base text-slate-200">
+          <p className="mt-2 text-base text-sky-900">
             RM {(settings.monthly_fee ?? 0).toFixed(2)} x {totals.totalResidents} residents
           </p>
         </Card>
@@ -193,15 +182,10 @@ export default async function AdminReportsPage({
           <p className="text-base font-bold text-slate-700">Unpaid</p>
           <p className="mt-2 font-display text-4xl font-bold text-slate-950">{totals.unpaidCount}</p>
         </Card>
-        <Card
-          className="text-white"
-          style={{
-            background:
-              "linear-gradient(135deg, #5f1020 0%, #8b1538 100%)",
-          }}
-        >
-          <p className="text-base font-bold text-rose-100">Overdue</p>
-          <p className="mt-2 font-display text-4xl font-bold text-white">{totals.overdueCount}</p>
+        <Card className="border-rose-200 bg-rose-50">
+          <p className="text-base font-bold text-rose-800">Overdue</p>
+          <p className="mt-2 font-display text-4xl font-bold text-rose-950">{totals.overdueCount}</p>
+          <p className="mt-2 text-sm text-rose-900">Past due date and still unpaid</p>
         </Card>
         <Card className="border-rose-200 bg-rose-50">
           <p className="text-base font-bold text-rose-800">Rejected</p>
@@ -253,6 +237,30 @@ export default async function AdminReportsPage({
           </table>
         </div>
       </Card>
+
+      <section className="hidden rounded-3xl border border-slate-300 bg-white p-6 print:block">
+        <div className="grid gap-10 md:grid-cols-2">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+              Prepared by
+            </p>
+            <div className="mt-10 border-t border-slate-300 pt-3 text-base text-slate-700">
+              Committee / Treasurer Signature
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+              Generated at
+            </p>
+            <div className="mt-4 text-base font-semibold text-slate-950">
+              {formatTimestamp(new Date().toISOString())}
+            </div>
+            <div className="mt-6 border-t border-slate-300 pt-3 text-base text-slate-700">
+              Meeting review notes
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -39,20 +39,16 @@ export default async function AdminApprovalsPage({
         <Card className="border-amber-200 bg-amber-50">
           <p className="text-base font-bold text-amber-800">Pending proof</p>
           <p className="mt-2 font-display text-4xl font-bold text-amber-950">{pendingCount}</p>
+          <p className="mt-2 text-sm text-amber-900">Receipts uploaded and waiting for review.</p>
         </Card>
         <Card className="border-rose-200 bg-rose-50">
           <p className="text-base font-bold text-rose-800">Rejected follow-up</p>
           <p className="mt-2 font-display text-4xl font-bold text-rose-950">{rejectedCount}</p>
+          <p className="mt-2 text-sm text-rose-900">Residents who need to upload a clearer proof.</p>
         </Card>
-        <Card
-          className="text-white"
-          style={{
-            background:
-              "linear-gradient(135deg, #07111f 0%, #1f3650 45%, #0f766e 100%)",
-          }}
-        >
-          <p className="text-base font-bold text-slate-200">Review tip</p>
-          <p className="mt-2 text-base font-bold leading-relaxed">
+        <Card className="border-teal-200 bg-teal-50">
+          <p className="text-base font-bold text-teal-800">Review tip</p>
+          <p className="mt-2 text-base font-bold leading-relaxed text-teal-950">
             Open each receipt, check image clearly, then approve or reject proof.
           </p>
         </Card>
@@ -61,8 +57,8 @@ export default async function AdminApprovalsPage({
       <section className="grid gap-4 xl:grid-cols-2">
         {pendingPayments.length === 0 ? (
           <div className="rounded-4xl border border-dashed border-line bg-slate-50 px-6 py-10 text-center text-base leading-8 text-slate-600">
-            No uploaded receipts are waiting for review this month. The reject button will appear
-            inside a receipt card after a resident uploads payment proof.
+            No uploaded receipts are waiting for review this month. Once a resident uploads proof,
+            the approval and reject actions will appear inside the receipt card automatically.
           </div>
         ) : (
           pendingPayments.map((payment) => <AdminApprovalCard key={payment.id} payment={payment} />)

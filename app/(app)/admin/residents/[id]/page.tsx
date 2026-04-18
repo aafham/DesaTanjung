@@ -1,10 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Clock3, Home, Phone, ReceiptText, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Clock3,
+  Home,
+  MessageCircleWarning,
+  Phone,
+  ReceiptText,
+  UserRound,
+} from "lucide-react";
 import { ContactActions } from "@/components/contact-actions";
 import { DataWarning } from "@/components/data-warning";
 import { MonthFilter } from "@/components/month-filter";
 import { PaymentTimeline } from "@/components/payment-timeline";
+import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getAdminResidentDetailData } from "@/lib/data";
@@ -58,6 +68,100 @@ export default async function AdminResidentDetailPage({
         </div>
       </section>
 
+      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card
+          className="border-slate-900 text-white"
+          style={{
+            background:
+              "linear-gradient(135deg, #07111f 0%, #0f2d3d 50%, #0f766e 100%)",
+          }}
+        >
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">
+                Resident command view
+              </p>
+              <h3 className="mt-2 text-3xl font-bold leading-tight text-white">
+                {resident.house_number} needs {currentPayment ? "payment review context" : "monthly follow-up"}
+              </h3>
+              <p className="mt-3 max-w-2xl text-base text-slate-100">
+                Check the latest status, contact the resident quickly, and jump straight to the next admin action without leaving this page.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {currentPayment?.status === "pending" ? (
+                <Link
+                  href={`/admin/approvals?month=${currentMonth}`}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-amber-200 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-white"
+                >
+                  Open approvals
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : null}
+              {currentPayment?.signed_proof_url ? (
+                <ReceiptPreviewModal
+                  src={currentPayment.signed_proof_url}
+                  alt={`Receipt for ${resident.house_number}`}
+                  triggerLabel="View receipt"
+                  inline
+                />
+              ) : null}
+            </div>
+          </div>
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            <div className="rounded-3xl bg-white/10 px-4 py-4 backdrop-blur">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-teal-100">Current status</p>
+              <div className="mt-3">
+                <StatusBadge status={currentPayment?.display_status ?? "unpaid"} />
+              </div>
+            </div>
+            <div className="rounded-3xl bg-white/10 px-4 py-4 backdrop-blur">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-teal-100">Last updated</p>
+              <p className="mt-3 text-lg font-bold text-white">
+                {currentPayment?.updated_at
+                  ? formatTimestamp(currentPayment.updated_at)
+                  : "No record yet"}
+              </p>
+            </div>
+            <div className="rounded-3xl bg-white/10 px-4 py-4 backdrop-blur">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-teal-100">Payment method</p>
+              <p className="mt-3 text-lg font-bold capitalize text-white">
+                {currentPayment?.payment_method ?? "online"}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="bg-slate-50">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Contact and follow-up</p>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">Resident contact details</h3>
+          <div className="mt-5 space-y-4">
+            <div className="rounded-3xl bg-white px-4 py-4 shadow-sm">
+              <p className="text-sm font-bold text-muted">Phone number</p>
+              <p className="mt-1 text-xl font-bold text-slate-950">
+                {resident.phone_number
+                  ? formatMalaysianPhoneNumber(resident.phone_number)
+                  : "No phone number saved yet"}
+              </p>
+            </div>
+            <ContactActions phoneNumber={resident.phone_number} />
+            <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4">
+              <div className="flex items-start gap-3">
+                <MessageCircleWarning className="mt-0.5 h-5 w-5 text-amber-700" />
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-800">
+                    Follow-up note
+                  </p>
+                  <p className="mt-1 text-base text-amber-950">
+                    Use WhatsApp or Call when payment is overdue, rejected, or still missing after the due date.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </section>
+
       <section className="grid gap-4 md:grid-cols-4">
         <Card>
           <UserRound className="h-5 w-5 text-primary" />
@@ -77,7 +181,6 @@ export default async function AdminResidentDetailPage({
               ? formatMalaysianPhoneNumber(resident.phone_number)
               : "No phone number saved yet"}
           </p>
-          <ContactActions phoneNumber={resident.phone_number} className="mt-4" />
         </Card>
         <Card>
           <Clock3 className="h-5 w-5 text-primary" />
@@ -194,7 +297,17 @@ export default async function AdminResidentDetailPage({
                   <td className="px-4 py-4 capitalize">{payment.payment_method}</td>
                   <td className="px-4 py-4">{formatTimestamp(payment.updated_at)}</td>
                   <td className="px-4 py-4">
-                    {payment.notes || payment.reject_reason || "-"}
+                    <div className="space-y-2">
+                      <p>{payment.notes || payment.reject_reason || "-"}</p>
+                      {payment.signed_proof_url ? (
+                        <ReceiptPreviewModal
+                          src={payment.signed_proof_url}
+                          alt={`Receipt for ${resident.house_number} in ${payment.month}`}
+                          triggerLabel="View receipt"
+                          inline
+                        />
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -12,7 +12,7 @@ export function PrintPageButton({
     <Button
       type="button"
       variant="secondary"
-      className={`print:hidden ${className ?? ""}`}
+      className={`border border-slate-200 bg-white text-slate-950 hover:bg-slate-50 print:hidden ${className ?? ""}`}
       onClick={() => window.print()}
     >
       <Printer className="mr-2 h-4 w-4" />

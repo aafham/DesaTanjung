@@ -181,11 +181,13 @@ export default async function AdminDashboardPage({
           <CircleCheckBig className="h-5 w-5 text-emerald-700" />
           <p className="mt-4 text-base font-bold text-emerald-800">Paid</p>
           <p className="font-display text-4xl font-bold text-emerald-950">{paidCount}</p>
+          <p className="mt-2 text-sm text-emerald-900">Residents already settled for this month.</p>
         </Card>
         <Card className="bg-amber-50">
           <Clock3 className="h-5 w-5 text-amber-700" />
           <p className="mt-4 text-base font-bold text-amber-800">Pending</p>
           <p className="font-display text-4xl font-bold text-amber-950">{pendingCount}</p>
+          <p className="mt-2 text-sm text-amber-900">Proof uploaded and waiting for committee review.</p>
         </Card>
         <Card className="bg-rose-50">
           <TriangleAlert className="h-5 w-5 text-rose-700" />
@@ -193,17 +195,13 @@ export default async function AdminDashboardPage({
           <p className="font-display text-4xl font-bold text-rose-950">
             {needsAttentionResidents.length}
           </p>
+          <p className="mt-2 text-sm text-rose-900">Unpaid, overdue, or rejected houses to follow up.</p>
         </Card>
-        <Card
-          className="text-white"
-          style={{
-            background:
-              "linear-gradient(135deg, #60121f 0%, #8f1238 100%)",
-          }}
-        >
-          <TriangleAlert className="h-5 w-5 text-red-200" />
-          <p className="mt-4 text-base font-bold text-red-100">Overdue</p>
-          <p className="font-display text-4xl font-bold text-white">{overdueCount}</p>
+        <Card className="border-rose-200 bg-rose-50">
+          <TriangleAlert className="h-5 w-5 text-rose-700" />
+          <p className="mt-4 text-base font-bold text-rose-800">Overdue</p>
+          <p className="font-display text-4xl font-bold text-rose-950">{overdueCount}</p>
+          <p className="mt-2 text-sm text-rose-900">Past due date and still not marked as settled.</p>
         </Card>
       </section>
 
