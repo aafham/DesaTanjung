@@ -34,7 +34,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-atkinson)", "sans-serif"],
-        display: ["var(--font-lexend)", "sans-serif"],
+        display: ["var(--font-atkinson)", "sans-serif"],
       },
     },
   },
