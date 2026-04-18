@@ -3,6 +3,7 @@
     "house_number": "admin",
     "name": "Community Admin",
     "address": "Committee Office",
+    "phone_number": "012-800 0001",
     "role": "admin",
     "password": "passwordadmin"
   },
@@ -10,6 +11,7 @@
     "house_number": "A-12",
     "name": "Nur Aisyah",
     "address": "Jalan Tanjung 1",
+    "phone_number": "012-345 6789",
     "role": "user",
     "password": "password"
   },
@@ -17,6 +19,7 @@
     "house_number": "B-08",
     "name": "Farid Iskandar",
     "address": "Jalan Tanjung 2",
+    "phone_number": "017-456 7890",
     "role": "user",
     "password": "password"
   }

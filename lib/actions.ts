@@ -66,6 +66,36 @@ export async function changePasswordAction(formData: FormData) {
   redirect(profile.role === "admin" ? "/admin" : "/dashboard");
 }
 
+export async function updateProfileAction(formData: FormData) {
+  const profile = await requireUserProfile();
+  const name = String(formData.get("name") ?? "").trim();
+  const address = String(formData.get("address") ?? "").trim();
+  const phoneNumber = String(formData.get("phone_number") ?? "").trim();
+
+  if (!name || !address || !phoneNumber) {
+    redirectWithError("/profile", "Please complete your name, address, and phone number.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("users")
+    .update({
+      name,
+      address,
+      phone_number: phoneNumber,
+    })
+    .eq("id", profile.id);
+
+  if (error) {
+    redirectWithError("/profile", error.message);
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/payments");
+  revalidatePath("/profile");
+  redirectWithMessage("/profile", "Profile updated successfully.");
+}
+
 export async function approvePaymentAction(formData: FormData) {
   const profile = await requireUserProfile();
 
@@ -407,9 +437,10 @@ export async function createManagedUserAction(formData: FormData) {
   const houseNumber = String(formData.get("house_number") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
+  const phoneNumber = String(formData.get("phone_number") ?? "").trim();
   const role = "user";
 
-  if (!houseNumber || !name || !address) {
+  if (!houseNumber || !name || !address || !phoneNumber) {
     redirectWithError("/admin/users", "Please fill in all user fields correctly.");
   }
 
@@ -440,6 +471,7 @@ export async function createManagedUserAction(formData: FormData) {
     email,
     name,
     address,
+    phone_number: phoneNumber,
     role,
     must_change_password: true,
   });
@@ -462,9 +494,17 @@ export async function updateManagedUserAction(formData: FormData) {
   const houseNumber = String(formData.get("house_number") ?? "").trim();
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
+  const phoneNumber = String(formData.get("phone_number") ?? "").trim();
   const role = String(formData.get("role") ?? "user").trim();
 
-  if (!userId || !houseNumber || !name || !address || !["user", "admin"].includes(role)) {
+  if (
+    !userId ||
+    !houseNumber ||
+    !name ||
+    !address ||
+    !phoneNumber ||
+    !["user", "admin"].includes(role)
+  ) {
     redirectWithError("/admin/users", "Please fill in all user fields correctly.");
   }
 
@@ -491,6 +531,7 @@ export async function updateManagedUserAction(formData: FormData) {
       email,
       name,
       address,
+      phone_number: phoneNumber,
       role,
     })
     .eq("id", userId);

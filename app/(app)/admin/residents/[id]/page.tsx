@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Clock3, Home, ReceiptText, UserRound } from "lucide-react";
+import { ArrowLeft, Clock3, Home, Phone, ReceiptText, UserRound } from "lucide-react";
 import { DataWarning } from "@/components/data-warning";
 import { MonthFilter } from "@/components/month-filter";
 import { PaymentTimeline } from "@/components/payment-timeline";
@@ -57,7 +57,7 @@ export default async function AdminResidentDetailPage({
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 md:grid-cols-4">
         <Card>
           <UserRound className="h-5 w-5 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">Owner</p>
@@ -67,6 +67,13 @@ export default async function AdminResidentDetailPage({
           <Home className="h-5 w-5 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">Address</p>
           <p className="text-xl font-bold text-slate-950">{resident.address}</p>
+        </Card>
+        <Card>
+          <Phone className="h-5 w-5 text-primary" />
+          <p className="mt-4 text-base font-bold text-muted">Phone number</p>
+          <p className="text-xl font-bold text-slate-950">
+            {resident.phone_number || "No phone number saved yet"}
+          </p>
         </Card>
         <Card>
           <Clock3 className="h-5 w-5 text-primary" />

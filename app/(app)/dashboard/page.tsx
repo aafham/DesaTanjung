@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Clock3, Home, Info, Wallet } from "lucide-react";
+import { ArrowRight, Clock3, Home, Info, Phone, Wallet } from "lucide-react";
 import { AnnouncementFeed } from "@/components/announcement-feed";
 import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
           </Link>
         </Card>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-1">
           <Card>
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-teal-50 p-3">
@@ -112,6 +112,19 @@ export default async function DashboardPage() {
               <div>
                 <p className="text-base font-bold text-muted">Address</p>
                 <p className="text-xl font-bold text-slate-950">{profile.address}</p>
+              </div>
+            </div>
+          </Card>
+          <Card>
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-sky-50 p-3">
+                <Phone className="h-5 w-5 text-sky-700" />
+              </div>
+              <div>
+                <p className="text-base font-bold text-muted">Phone number</p>
+                <p className="text-xl font-bold text-slate-950">
+                  {profile.phone_number || "Please update your profile"}
+                </p>
               </div>
             </div>
           </Card>

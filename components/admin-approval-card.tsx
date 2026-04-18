@@ -26,6 +26,7 @@ type ApprovalCardProps = {
       house_number: string;
       name: string;
       address: string;
+      phone_number: string | null;
     };
   };
 };
@@ -42,6 +43,7 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
             {payment.users.name}
           </h3>
           <p className="mt-1 text-base text-muted">{payment.users.address}</p>
+          <p className="mt-1 text-sm text-muted">{payment.users.phone_number || "No phone number saved yet"}</p>
         </div>
         <StatusBadge status={payment.display_status ?? payment.status} />
       </div>

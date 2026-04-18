@@ -21,11 +21,15 @@ create table if not exists public.users (
   email text not null unique,
   name text not null,
   address text not null,
+  phone_number text,
   role public.user_role not null default 'user',
   must_change_password boolean not null default true,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
+
+alter table public.users
+add column if not exists phone_number text;
 
 comment on table public.users is 'Resident and committee profile data linked to Supabase Auth users.';
 comment on column public.users.email is 'Synthetic login email derived from the visible username/house number.';

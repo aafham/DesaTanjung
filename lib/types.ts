@@ -10,6 +10,7 @@ export type UserProfile = {
   email?: string;
   name: string;
   address: string;
+  phone_number: string | null;
   role: Role;
   must_change_password: boolean;
 };

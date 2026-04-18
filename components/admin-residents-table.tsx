@@ -73,7 +73,8 @@ export function AdminResidentsTable({
         !normalized ||
         resident.house_number.toLowerCase().includes(normalized) ||
         resident.name.toLowerCase().includes(normalized) ||
-        resident.address.toLowerCase().includes(normalized);
+        resident.address.toLowerCase().includes(normalized) ||
+        resident.phone_number?.toLowerCase().includes(normalized);
 
       return matchesStatus && matchesMethod && matchesSearch;
     });
@@ -102,6 +103,7 @@ export function AdminResidentsTable({
         resident.house_number,
         resident.name,
         resident.address,
+        resident.phone_number ?? "",
         getDisplayStatus(resident),
         resident.currentPayment ? formatTimestamp(resident.currentPayment.updated_at) : "No record yet",
         resident.currentPayment?.payment_method ?? "-",
@@ -125,7 +127,7 @@ export function AdminResidentsTable({
               id="resident-search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by house, owner, or address"
+              placeholder="Search by house, owner, address, or phone number"
               className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
             />
           </div>
@@ -213,6 +215,7 @@ export function AdminResidentsTable({
 
             <div className="mt-4 space-y-3 border-t border-line pt-4">
               <p className="text-base text-slate-800">{resident.address}</p>
+              <p className="text-sm text-muted">{resident.phone_number || "No phone number saved yet"}</p>
               <Link
                 href={`/admin/residents/${resident.id}?month=${currentMonth}`}
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
@@ -255,15 +258,16 @@ export function AdminResidentsTable({
               <th className="px-4 py-3">House</th>
               <th className="px-4 py-3">Owner</th>
               <th className="px-4 py-3">Address</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Updated</th>
-              <th className="px-4 py-3">Action</th>
+                <th className="px-4 py-3">Phone</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Updated</th>
+                <th className="px-4 py-3">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line text-base text-slate-800">
             {filteredResidents.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-muted">
+                <td colSpan={7} className="px-4 py-10 text-center text-muted">
                   No residents matched this search or filter.
                 </td>
               </tr>
@@ -287,6 +291,7 @@ export function AdminResidentsTable({
                   </td>
                   <td className="px-4 py-5 font-semibold text-slate-950">{resident.name}</td>
                   <td className="px-4 py-4">{resident.address}</td>
+                  <td className="px-4 py-4">{resident.phone_number || "-"}</td>
                   <td className="px-4 py-5">
                     <StatusBadge status={getDisplayStatus(resident)} />
                   </td>

@@ -28,7 +28,8 @@ export function AdminUsersManager({
       const matchesSearch =
         !normalized ||
         user.house_number.toLowerCase().includes(normalized) ||
-        user.name.toLowerCase().includes(normalized);
+        user.name.toLowerCase().includes(normalized) ||
+        user.phone_number?.toLowerCase().includes(normalized);
 
       return matchesRole && matchesSearch;
     });
@@ -49,13 +50,13 @@ export function AdminUsersManager({
         </div>
         <div className="w-full max-w-md">
           <label htmlFor="user-search" className="mb-2 block text-base font-bold text-slate-950">
-            Search by house number or owner name
+            Search by house number, owner name, or phone number
           </label>
           <input
             id="user-search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search A-12 or Nur Aisyah"
+            placeholder="Search A-12, Nur Aisyah, or 0123456789"
             className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
           />
         </div>
@@ -120,6 +121,7 @@ export function AdminUsersManager({
                       {user.house_number}
                     </h4>
                     <p className="mt-1 text-base text-muted">{user.name}</p>
+                    <p className="mt-1 text-sm text-muted">{user.phone_number || "No phone number saved yet"}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-800">
@@ -169,6 +171,19 @@ export function AdminUsersManager({
                         name="address"
                         required
                         defaultValue={user.address}
+                        className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor={`phone-${user.id}`} className="mb-2 block text-base font-bold text-slate-950">
+                        Phone number
+                      </label>
+                      <input
+                        id={`phone-${user.id}`}
+                        name="phone_number"
+                        required
+                        defaultValue={user.phone_number ?? ""}
+                        placeholder="012-345 6789"
                         className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
                       />
                     </div>

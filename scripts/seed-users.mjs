@@ -81,6 +81,7 @@ for (const entry of users) {
     email,
     name: entry.name,
     address: entry.address,
+    phone_number: entry.phone_number ?? null,
     role: entry.role,
     must_change_password: true,
   });

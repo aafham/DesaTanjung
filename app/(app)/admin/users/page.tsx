@@ -72,6 +72,18 @@ export default async function AdminUsersPage({
               className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
             />
           </div>
+          <div>
+            <label htmlFor="new-phone-number" className="mb-2 block text-base font-bold text-slate-950">
+              Phone number
+            </label>
+            <input
+              id="new-phone-number"
+              name="phone_number"
+              required
+              placeholder="012-345 6789"
+              className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
+            />
+          </div>
           <div className="md:col-span-2 flex items-center justify-between gap-3 rounded-3xl bg-slate-50 px-4 py-4">
             <p className="text-base text-muted">
               Every new resident is created with username based on house number and default

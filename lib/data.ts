@@ -24,7 +24,7 @@ import { createClient } from "@/lib/supabase/server";
 
 type PendingApprovalPayment = ResidentPaymentRecord & {
   status: "pending" | "rejected";
-  users: Pick<UserProfile, "house_number" | "name" | "address">;
+  users: Pick<UserProfile, "house_number" | "name" | "address" | "phone_number">;
   auditLogs?: PaymentAuditLog[];
 };
 
@@ -94,7 +94,7 @@ export const getCurrentUserProfile = cache(async () => {
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, house_number, name, address, role, must_change_password")
+    .select("id, house_number, name, address, phone_number, role, must_change_password")
     .eq("id", user.id)
     .single();
 
@@ -242,7 +242,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
     supabase
       .from("payments")
       .select(
-        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason, users!payments_user_id_fkey(house_number, name, address)",
+        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason, users!payments_user_id_fkey(house_number, name, address, phone_number)",
       )
       .eq("month", month)
       .in("status", ["pending", "rejected"])
@@ -254,7 +254,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
       .limit(12),
     supabase
       .from("users")
-      .select("id, house_number, name, address, role, must_change_password")
+      .select("id, house_number, name, address, phone_number, role, must_change_password")
       .eq("role", "user")
       .order("house_number", { ascending: true }),
     supabase
@@ -421,7 +421,7 @@ export async function getAdminUserManagementData() {
   const supabase = await createClient();
   const { data: users } = await supabase
     .from("users")
-    .select("id, house_number, email, name, address, role, must_change_password, created_at")
+    .select("id, house_number, email, name, address, phone_number, role, must_change_password, created_at")
     .order("role", { ascending: false })
     .order("house_number", { ascending: true });
 
@@ -511,7 +511,7 @@ export async function getAdminResidentDetailData(residentId: string, filterMonth
     await Promise.all([
       supabase
         .from("users")
-        .select("id, house_number, email, name, address, role, must_change_password")
+        .select("id, house_number, email, name, address, phone_number, role, must_change_password")
         .eq("id", residentId)
         .single(),
       supabase
