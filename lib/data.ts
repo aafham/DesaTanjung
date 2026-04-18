@@ -12,6 +12,7 @@ import type {
   PaymentRecord,
   ResidentPaymentRecord,
   ResidentWithPayment,
+  UserActivityLog,
   UserProfile,
 } from "@/lib/types";
 import {
@@ -419,15 +420,37 @@ export async function getAdminUserManagementData() {
   }
 
   const supabase = await createClient();
-  const { data: users } = await supabase
-    .from("users")
-    .select("id, house_number, email, name, address, phone_number, role, must_change_password, created_at")
-    .order("role", { ascending: false })
-    .order("house_number", { ascending: true });
+  const [{ data: users }, { data: activityLogs }] = await Promise.all([
+    supabase
+      .from("users")
+      .select(
+        "id, house_number, email, name, address, phone_number, role, must_change_password, created_at, last_login_at, last_logout_at",
+      )
+      .order("role", { ascending: false })
+      .order("house_number", { ascending: true }),
+    supabase
+      .from("user_activity_logs")
+      .select("id, user_id, action, message, created_at")
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const logsByUser = new Map<string, UserActivityLog[]>();
+
+  for (const log of ((activityLogs as UserActivityLog[] | null) ?? [])) {
+    const current = logsByUser.get(log.user_id) ?? [];
+
+    if (current.length < 6) {
+      current.push(log);
+      logsByUser.set(log.user_id, current);
+    }
+  }
 
   return {
     profile,
-    users: (users as ManagedUser[] | null) ?? [],
+    users: (((users as ManagedUser[] | null) ?? []).map((user) => ({
+      ...user,
+      activityLogs: logsByUser.get(user.id) ?? [],
+    }))),
   };
 }
 

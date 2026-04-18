@@ -23,6 +23,19 @@ function redirectWithMessage(path: string, message: string) {
   redirect(`${path}${separator}message=${encodeURIComponent(message)}`);
 }
 
+async function logUserActivity(
+  userId: string,
+  action: string,
+  message: string,
+) {
+  const supabase = await createClient();
+  await supabase.from("user_activity_logs").insert({
+    user_id: userId,
+    action,
+    message,
+  });
+}
+
 export async function loginAction(formData: FormData) {
   const identifier = String(formData.get("identifier") ?? "");
   const password = String(formData.get("password") ?? "");
@@ -38,6 +51,17 @@ export async function loginAction(formData: FormData) {
   }
 
   const profile = await requireUserProfile();
+
+  const loginTime = new Date().toISOString();
+  await supabase
+    .from("users")
+    .update({ last_login_at: loginTime })
+    .eq("id", profile.id);
+  await logUserActivity(
+    profile.id,
+    "login",
+    `${profile.house_number} signed in to the portal.`,
+  );
 
   if (profile.must_change_password) {
     redirect("/change-password");
@@ -62,6 +86,11 @@ export async function changePasswordAction(formData: FormData) {
   }
 
   await supabase.from("users").update({ must_change_password: false }).eq("id", profile.id);
+  await logUserActivity(
+    profile.id,
+    "password_changed",
+    `${profile.house_number} changed the account password.`,
+  );
 
   redirect(profile.role === "admin" ? "/admin" : "/dashboard");
 }
@@ -90,10 +119,43 @@ export async function updateProfileAction(formData: FormData) {
     redirectWithError("/profile", error.message);
   }
 
+  const changedFields = [
+    profile.name !== name ? "owner name" : null,
+    profile.address !== address ? "address" : null,
+    profile.phone_number !== phoneNumber ? "phone number" : null,
+  ].filter(Boolean);
+
+  await logUserActivity(
+    profile.id,
+    "profile_updated",
+    changedFields.length > 0
+      ? `${profile.house_number} updated ${changedFields.join(", ")}.`
+      : `${profile.house_number} saved the profile without changing details.`,
+  );
+
   revalidatePath("/dashboard");
   revalidatePath("/payments");
   revalidatePath("/profile");
   redirectWithMessage("/profile", "Profile updated successfully.");
+}
+
+export async function signOutAction() {
+  const profile = await requireUserProfile();
+  const supabase = await createClient();
+  const logoutTime = new Date().toISOString();
+
+  await supabase
+    .from("users")
+    .update({ last_logout_at: logoutTime })
+    .eq("id", profile.id);
+  await logUserActivity(
+    profile.id,
+    "logout",
+    `${profile.house_number} signed out of the portal.`,
+  );
+  await supabase.auth.signOut();
+
+  redirect("/login");
 }
 
 export async function approvePaymentAction(formData: FormData) {
@@ -418,6 +480,11 @@ export async function submitPaymentProofAction(
     payment_id: paymentId,
     message: `House ${houseNumber} submitted payment for ${formatMonthLabel(month)}.`,
   });
+  await logUserActivity(
+    profile.id,
+    "payment_uploaded",
+    `${houseNumber} uploaded payment proof for ${formatMonthLabel(month)}.`,
+  );
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");

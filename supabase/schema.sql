@@ -24,12 +24,20 @@ create table if not exists public.users (
   phone_number text,
   role public.user_role not null default 'user',
   must_change_password boolean not null default true,
+  last_login_at timestamptz,
+  last_logout_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
 
 alter table public.users
 add column if not exists phone_number text;
+
+alter table public.users
+add column if not exists last_login_at timestamptz;
+
+alter table public.users
+add column if not exists last_logout_at timestamptz;
 
 comment on table public.users is 'Resident and committee profile data linked to Supabase Auth users.';
 comment on column public.users.email is 'Synthetic login email derived from the visible username/house number.';
@@ -67,6 +75,14 @@ create table if not exists public.payment_audit_logs (
   payment_id uuid references public.payments (id) on delete cascade,
   user_id uuid references public.users (id) on delete cascade,
   actor_id uuid references public.users (id) on delete set null,
+  action text not null,
+  message text not null,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists public.user_activity_logs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.users (id) on delete cascade,
   action text not null,
   message text not null,
   created_at timestamptz not null default timezone('utc', now())
@@ -274,6 +290,7 @@ alter table public.users enable row level security;
 alter table public.payments enable row level security;
 alter table public.notifications enable row level security;
 alter table public.payment_audit_logs enable row level security;
+alter table public.user_activity_logs enable row level security;
 alter table public.app_settings enable row level security;
 alter table public.announcements enable row level security;
 
@@ -349,6 +366,20 @@ on public.payment_audit_logs
 for insert
 to authenticated
 with check (public.is_admin());
+
+drop policy if exists "Users can view own activity logs or admins can view all" on public.user_activity_logs;
+create policy "Users can view own activity logs or admins can view all"
+on public.user_activity_logs
+for select
+to authenticated
+using (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists "Authenticated users can insert own activity logs" on public.user_activity_logs;
+create policy "Authenticated users can insert own activity logs"
+on public.user_activity_logs
+for insert
+to authenticated
+with check (user_id = auth.uid() or public.is_admin());
 
 drop policy if exists "Authenticated users can view app settings" on public.app_settings;
 create policy "Authenticated users can view app settings"

@@ -7,6 +7,7 @@ import {
   updateManagedUserAction,
 } from "@/lib/actions";
 import type { ManagedUser } from "@/lib/types";
+import { formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
 
@@ -122,6 +123,24 @@ export function AdminUsersManager({
                     </h4>
                     <p className="mt-1 text-base text-muted">{user.name}</p>
                     <p className="mt-1 text-sm text-muted">{user.phone_number || "No phone number saved yet"}</p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <div className="rounded-2xl bg-slate-50 px-3 py-2">
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Last login
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-slate-950">
+                          {user.last_login_at ? formatTimestamp(user.last_login_at) : "No login recorded yet"}
+                        </p>
+                      </div>
+                      <div className="rounded-2xl bg-slate-50 px-3 py-2">
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                          Last logout
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-slate-950">
+                          {user.last_logout_at ? formatTimestamp(user.last_logout_at) : "No logout recorded yet"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-800">
@@ -238,6 +257,28 @@ export function AdminUsersManager({
                         Delete user
                       </ConfirmSubmitButton>
                     </form>
+                  </div>
+
+                  <div className="mt-5 border-t border-line pt-4">
+                    <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+                      Resident activity log
+                    </p>
+                    <div className="mt-3 space-y-3">
+                      {(user.activityLogs ?? []).length === 0 ? (
+                        <div className="rounded-2xl bg-slate-50 px-4 py-3 text-base text-muted">
+                          No resident activity has been recorded yet.
+                        </div>
+                      ) : (
+                        (user.activityLogs ?? []).map((log) => (
+                          <div key={log.id} className="rounded-2xl bg-slate-50 px-4 py-3">
+                            <p className="text-base font-bold text-slate-950">{log.message}</p>
+                            <p className="mt-1 text-sm text-muted">
+                              {formatTimestamp(log.created_at)}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </div>
               </details>

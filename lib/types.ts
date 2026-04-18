@@ -66,6 +66,17 @@ export type NotificationRecord = {
 export type ManagedUser = UserProfile & {
   email: string;
   created_at: string;
+  last_login_at: string | null;
+  last_logout_at: string | null;
+  activityLogs?: UserActivityLog[];
+};
+
+export type UserActivityLog = {
+  id: string;
+  user_id: string;
+  action: string;
+  message: string;
+  created_at: string;
 };
 
 export type AnnouncementRecord = {
