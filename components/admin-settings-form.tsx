@@ -54,7 +54,11 @@ export function AdminSettingsForm({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <form action={action} className="grid gap-5 md:grid-cols-2 rounded-4xl border border-line bg-white p-6 shadow-soft">
+      <form
+        action={action}
+        encType="multipart/form-data"
+        className="grid gap-5 rounded-4xl border border-line bg-white p-6 shadow-soft md:grid-cols-2"
+      >
         <div>
           <label htmlFor="community_name" className="mb-2 block text-base font-bold text-slate-950">
             Community name
@@ -183,6 +187,11 @@ export function AdminSettingsForm({
           <p className="mt-2 text-sm text-muted">
             Upload a new QR image if bank QR changes.
           </p>
+          {settings.payment_qr_url ? (
+            <p className="mt-2 text-sm font-semibold text-slate-700">
+              Current saved QR source is ready and will be used for residents after you save changes.
+            </p>
+          ) : null}
         </div>
 
         <div className="md:col-span-2">

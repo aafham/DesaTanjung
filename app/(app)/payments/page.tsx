@@ -3,6 +3,7 @@ import { CreditCard, Landmark, QrCode, UploadCloud } from "lucide-react";
 import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentUploadForm } from "@/components/payment-upload-form";
+import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getAppSettings, getUserDashboardData } from "@/lib/data";
@@ -12,6 +13,7 @@ export default async function PaymentsPage() {
     getUserDashboardData(),
     getAppSettings(),
   ]);
+  const usingPlaceholderQr = settings.payment_qr_url.includes("placehold.co");
 
   return (
     <div className="space-y-6">
@@ -61,15 +63,41 @@ export default async function PaymentsPage() {
                 Scan QR
               </div>
               <div className="mt-4 overflow-hidden rounded-3xl border border-line">
-                <Image
-                  src={settings.payment_qr_url}
-                  alt="Community payment QR code"
-                  width={800}
-                  height={800}
-                  className="h-auto w-full object-cover"
-                  unoptimized
-                />
+                {!usingPlaceholderQr ? (
+                  <div className="relative">
+                    <ReceiptPreviewModal
+                      src={settings.payment_qr_url}
+                      alt="Community payment QR code"
+                    />
+                    <Image
+                      src={settings.payment_qr_url}
+                      alt="Community payment QR code"
+                      width={800}
+                      height={800}
+                      className="h-auto w-full object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ) : (
+                  <Image
+                    src={settings.payment_qr_url}
+                    alt="Community payment QR code"
+                    width={800}
+                    height={800}
+                    className="h-auto w-full object-cover"
+                    unoptimized
+                  />
+                )}
               </div>
+              {usingPlaceholderQr ? (
+                <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-3 text-sm font-bold text-amber-950">
+                  The admin has not saved the final QR image yet. Please use the bank details shown on the left for now.
+                </p>
+              ) : (
+                <p className="mt-3 text-sm font-semibold text-slate-700">
+                  Tap <span className="font-bold">View larger</span> on the QR image if you need a bigger scan view.
+                </p>
+              )}
             </div>
           </div>
         </Card>
