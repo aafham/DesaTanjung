@@ -2,9 +2,10 @@ import Link from "next/link";
 import { KeyRound, MapPinned, Phone, UserRound } from "lucide-react";
 import { formatMalaysianPhoneNumber } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { ResidentNotificationList } from "@/components/resident-notification-list";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { PageToast } from "@/components/page-toast";
-import { requireUserProfile } from "@/lib/data";
+import { getResidentNotifications, requireUserProfile } from "@/lib/data";
 import { updateProfileAction } from "@/lib/actions";
 
 export default async function ProfilePage({
@@ -14,6 +15,7 @@ export default async function ProfilePage({
 }) {
   const params = await searchParams;
   const profile = await requireUserProfile();
+  const notifications = await getResidentNotifications(profile.id, 3);
 
   return (
     <div className="space-y-6">
@@ -144,6 +146,8 @@ export default async function ProfilePage({
           Update password
         </Link>
       </Card>
+
+      <ResidentNotificationList notifications={notifications} compact />
     </div>
   );
 }

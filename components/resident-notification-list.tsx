@@ -1,16 +1,65 @@
 "use client";
 
-import { BellRing } from "lucide-react";
+import { BellRing, CheckCircle2, Clock3, Megaphone, ShieldAlert, Wallet } from "lucide-react";
 import { markResidentNotificationsReadAction } from "@/lib/actions";
 import type { NotificationRecord } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
 
+function getNotificationPresentation(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("approved")) {
+    return {
+      label: "Approved",
+      icon: CheckCircle2,
+      tones: "border-emerald-200 bg-emerald-50 text-emerald-950",
+      badge: "bg-emerald-100 text-emerald-900",
+    };
+  }
+
+  if (normalized.includes("rejected")) {
+    return {
+      label: "Needs action",
+      icon: ShieldAlert,
+      tones: "border-rose-200 bg-rose-50 text-rose-950",
+      badge: "bg-rose-100 text-rose-900",
+    };
+  }
+
+  if (normalized.includes("waiting for committee review") || normalized.includes("submitted")) {
+    return {
+      label: "Pending review",
+      icon: Clock3,
+      tones: "border-amber-200 bg-amber-50 text-amber-950",
+      badge: "bg-amber-100 text-amber-900",
+    };
+  }
+
+  if (normalized.includes("cash")) {
+    return {
+      label: "Cash update",
+      icon: Wallet,
+      tones: "border-sky-200 bg-sky-50 text-sky-950",
+      badge: "bg-sky-100 text-sky-900",
+    };
+  }
+
+  return {
+    label: "Update",
+    icon: Megaphone,
+    tones: "border-line bg-slate-50 text-slate-950",
+    badge: "bg-slate-100 text-slate-700",
+  };
+}
+
 export function ResidentNotificationList({
   notifications,
+  compact = false,
 }: {
   notifications: NotificationRecord[];
+  compact?: boolean;
 }) {
   const unreadCount = notifications.filter((notification) => !notification.is_read).length;
 
@@ -56,21 +105,46 @@ export function ResidentNotificationList({
             No resident notifications yet. Approval updates and payment reminders will appear here.
           </div>
         ) : (
-          notifications.map((notification) => (
+          notifications.map((notification) => {
+            const presentation = getNotificationPresentation(notification.message);
+            const Icon = presentation.icon;
+
+            return (
             <div
               key={notification.id}
               className={`rounded-3xl border px-4 py-4 ${
                 notification.is_read
-                  ? "border-line bg-slate-50"
-                  : "border-amber-200 bg-amber-50/70"
+                  ? presentation.tones
+                  : `${presentation.tones} ring-1 ring-amber-200/60`
               }`}
             >
-              <p className="text-base font-bold text-slate-950">{notification.message}</p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-white/80 p-2">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${presentation.badge}`}>
+                        {presentation.label}
+                      </span>
+                      {!notification.is_read ? (
+                        <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white">
+                          New
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className={`mt-3 text-base font-bold ${compact ? "line-clamp-2" : ""}`}>
+                      {notification.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                 {formatTimestamp(notification.created_at)}
               </p>
             </div>
-          ))
+          )})
         )}
       </div>
     </Card>

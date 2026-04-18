@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Download } from "lucide-react";
 import type { UserActivityWithUser } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -14,6 +15,23 @@ const ACTION_OPTIONS = [
   { value: "payment_uploaded", label: "Payment uploaded" },
 ] as const;
 
+const ROLE_OPTIONS = [
+  { value: "all", label: "All roles" },
+  { value: "user", label: "Residents" },
+  { value: "admin", label: "Admins" },
+] as const;
+
+const DATE_OPTIONS = [
+  { value: "all", label: "All time" },
+  { value: "today", label: "Today" },
+  { value: "7d", label: "Last 7 days" },
+  { value: "30d", label: "Last 30 days" },
+] as const;
+
+function escapeCsv(value: string) {
+  return `"${value.replaceAll('"', '""')}"`;
+}
+
 export function AdminActivityLog({
   activityLogs,
 }: {
@@ -22,13 +40,20 @@ export function AdminActivityLog({
   const [query, setQuery] = useState("");
   const [actionFilter, setActionFilter] =
     useState<(typeof ACTION_OPTIONS)[number]["value"]>("all");
+  const [roleFilter, setRoleFilter] =
+    useState<(typeof ROLE_OPTIONS)[number]["value"]>("all");
+  const [dateFilter, setDateFilter] =
+    useState<(typeof DATE_OPTIONS)[number]["value"]>("all");
 
   const filteredActivity = useMemo(() => {
     const normalized = query.trim().toLowerCase();
+    const now = Date.now();
 
     return activityLogs.filter((activity) => {
       const matchesAction =
         actionFilter === "all" || activity.action === actionFilter;
+      const matchesRole =
+        roleFilter === "all" || activity.users?.role === roleFilter;
       const searchable = [
         activity.users?.house_number,
         activity.users?.name,
@@ -38,9 +63,38 @@ export function AdminActivityLog({
         .join(" ")
         .toLowerCase();
 
-      return matchesAction && (!normalized || searchable.includes(normalized));
+      const age = now - new Date(activity.created_at).getTime();
+      const matchesDate =
+        dateFilter === "all" ||
+        (dateFilter === "today" && age < 1000 * 60 * 60 * 24) ||
+        (dateFilter === "7d" && age < 1000 * 60 * 60 * 24 * 7) ||
+        (dateFilter === "30d" && age < 1000 * 60 * 60 * 24 * 30);
+
+      return (
+        matchesAction &&
+        matchesRole &&
+        matchesDate &&
+        (!normalized || searchable.includes(normalized))
+      );
     });
-  }, [actionFilter, activityLogs, query]);
+  }, [actionFilter, activityLogs, dateFilter, query, roleFilter]);
+
+  const csvHref = useMemo(() => {
+    const rows = [
+      ["Date", "House", "Resident", "Role", "Action", "Message"],
+      ...filteredActivity.map((activity) => [
+        formatTimestamp(activity.created_at),
+        activity.users?.house_number ?? "",
+        activity.users?.name ?? "",
+        activity.users?.role ?? "",
+        activity.action,
+        activity.message,
+      ]),
+    ];
+    const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
+
+    return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
+  }, [filteredActivity]);
 
   return (
     <section className="space-y-4">
@@ -51,7 +105,7 @@ export function AdminActivityLog({
             Resident activity timeline
           </h3>
         </div>
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px] lg:w-[560px]">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 lg:w-full xl:max-w-5xl">
           <div>
             <label htmlFor="activity-search" className="mb-2 block text-base font-bold text-slate-950">
               Search house number or resident name
@@ -83,11 +137,57 @@ export function AdminActivityLog({
               ))}
             </select>
           </div>
+          <div>
+            <label htmlFor="role-filter" className="mb-2 block text-base font-bold text-slate-950">
+              Filter role
+            </label>
+            <select
+              id="role-filter"
+              value={roleFilter}
+              onChange={(event) =>
+                setRoleFilter(event.target.value as (typeof ROLE_OPTIONS)[number]["value"])
+              }
+              className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
+            >
+              {ROLE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="date-filter" className="mb-2 block text-base font-bold text-slate-950">
+              Filter date
+            </label>
+            <select
+              id="date-filter"
+              value={dateFilter}
+              onChange={(event) =>
+                setDateFilter(event.target.value as (typeof DATE_OPTIONS)[number]["value"])
+              }
+              className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
+            >
+              {DATE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted">
-        Showing {filteredActivity.length} of {activityLogs.length} recorded resident actions.
+      <div className="flex flex-col gap-3 rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted sm:flex-row sm:items-center sm:justify-between">
+        <p>Showing {filteredActivity.length} of {activityLogs.length} recorded resident actions.</p>
+        <a
+          href={csvHref}
+          download="resident-activity-log.csv"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </a>
       </div>
 
       <div className="grid gap-3">

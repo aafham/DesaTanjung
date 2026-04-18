@@ -1,6 +1,7 @@
 import { MonthFilter } from "@/components/month-filter";
 import { DataWarning } from "@/components/data-warning";
 import { PageToast } from "@/components/page-toast";
+import { PrintPageButton } from "@/components/print-page-button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getAdminReportData } from "@/lib/data";
@@ -14,6 +15,10 @@ export default async function AdminReportsPage({
   const params = await searchParams;
   const { currentMonth, currentMonthLabel, dueDateLabel, residents, settings, totals, warnings } =
     await getAdminReportData(params.month);
+  const collectionRate =
+    totals.totalResidents > 0
+      ? Math.round((totals.paidCount / totals.totalResidents) * 100)
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -30,9 +35,45 @@ export default async function AdminReportsPage({
             Review collection progress, overdue houses, and expected versus collected amount in one page.
           </p>
         </div>
-        <div className="w-full max-w-sm">
+        <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
           <MonthFilter currentMonth={currentMonth} />
+          <PrintPageButton className="min-h-14" />
         </div>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+        <Card className="border-slate-900 bg-slate-950 text-white">
+          <p className="text-base font-bold text-slate-100">Collection rate</p>
+          <p className="mt-2 font-display text-5xl font-bold text-white">{collectionRate}%</p>
+          <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/20">
+            <div
+              className="h-full rounded-full bg-teal-200"
+              style={{ width: `${collectionRate}%` }}
+            />
+          </div>
+        </Card>
+        <Card className="border-emerald-200 bg-emerald-50">
+          <p className="text-base font-bold text-emerald-800">Residents settled</p>
+          <p className="mt-2 font-display text-4xl font-bold text-emerald-950">{totals.paidCount}</p>
+          <p className="mt-2 text-base text-emerald-900">Out of {totals.totalResidents} total houses</p>
+        </Card>
+        <Card className="border-amber-200 bg-amber-50">
+          <p className="text-base font-bold text-amber-800">Awaiting review</p>
+          <p className="mt-2 font-display text-4xl font-bold text-amber-950">{totals.pendingCount}</p>
+          <p className="mt-2 text-base text-amber-900">Receipts uploaded but not reviewed yet</p>
+        </Card>
+        <Card className="border-rose-200 bg-rose-50">
+          <p className="text-base font-bold text-rose-800">Need follow-up</p>
+          <p className="mt-2 font-display text-4xl font-bold text-rose-950">{totals.unsettledCount}</p>
+          <p className="mt-2 text-base text-rose-900">Unpaid, overdue, or rejected houses</p>
+        </Card>
+        <Card className="border-sky-200 bg-sky-50">
+          <p className="text-base font-bold text-sky-800">Meeting summary</p>
+          <p className="mt-2 text-2xl font-bold text-sky-950">
+            {totals.paidCount} paid / {totals.unsettledCount} unsettled
+          </p>
+          <p className="mt-2 text-base text-sky-900">Use this page for monthly committee review.</p>
+        </Card>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

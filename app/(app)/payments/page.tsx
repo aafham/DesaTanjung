@@ -4,12 +4,13 @@ import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentUploadForm } from "@/components/payment-upload-form";
 import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
+import { ResidentNotificationList } from "@/components/resident-notification-list";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getAppSettings, getUserDashboardData } from "@/lib/data";
 
 export default async function PaymentsPage() {
-  const [{ currentMonthLabel, currentPayment, dueDateLabel, profile, warnings }, settings] = await Promise.all([
+  const [{ currentMonthLabel, currentPayment, dueDateLabel, notifications, profile, warnings }, settings] = await Promise.all([
     getUserDashboardData(),
     getAppSettings(),
   ]);
@@ -162,6 +163,8 @@ export default async function PaymentsPage() {
           <PaymentUploadForm userId={profile.id} houseNumber={profile.house_number} />
         </Card>
       </section>
+
+      <ResidentNotificationList notifications={notifications.slice(0, 4)} compact />
     </div>
   );
 }

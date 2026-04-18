@@ -376,6 +376,23 @@ export async function getAnnouncements({
   return (data as ManagedAnnouncement[] | null) ?? [];
 }
 
+export async function getResidentNotifications(userId: string, limit = 8) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("id, user_id, payment_id, message, is_read, scope, created_at")
+    .eq("user_id", userId)
+    .eq("scope", "resident")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    return [];
+  }
+
+  return (data as NotificationRecord[] | null) ?? [];
+}
+
 export async function getPaymentAuditLogs(paymentId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
