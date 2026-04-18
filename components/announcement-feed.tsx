@@ -38,7 +38,7 @@ export function AnnouncementFeed({
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-lg font-bold text-slate-950">{announcement.title}</p>
                 {announcement.is_pinned ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-amber-900">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap text-amber-900">
                     <Pin className="h-3 w-3" />
                     Pinned
                   </span>

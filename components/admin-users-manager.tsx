@@ -323,24 +323,24 @@ export function AdminUsersManager({
                   <div className="flex items-center gap-3">
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       {!user.phone_number ? (
-                        <div className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-rose-800">
+                        <div className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap text-rose-800">
                           Missing phone
                         </div>
                       ) : null}
                       {!user.last_login_at ? (
-                        <div className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-amber-900">
+                        <div className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap text-amber-900">
                           Never logged in
                         </div>
                       ) : Date.now() - new Date(user.last_login_at).getTime() >= 1000 * 60 * 60 * 24 * 30 ? (
-                        <div className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-800">
+                        <div className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap text-slate-800">
                           Inactive 30+ days
                         </div>
                       ) : null}
-                      <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-800">
+                      <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap text-slate-800">
                         {user.must_change_password ? "Needs password change" : "Password active"}
                       </div>
                     </div>
-                    <div className="rounded-full bg-slate-950 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
+                    <div className="rounded-full bg-slate-950 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap text-white">
                       Open details
                     </div>
                   </div>

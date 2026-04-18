@@ -209,7 +209,7 @@ export function AdminActivityLog({
         <a
           href={csvHref}
           download="resident-activity-log.csv"
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold whitespace-nowrap text-white"
         >
           <Download className="h-4 w-4" />
           Export CSV
@@ -233,7 +233,7 @@ export function AdminActivityLog({
                     {activity.users?.name ? (
                       <span className="text-base text-muted">{activity.users.name}</span>
                     ) : null}
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap text-slate-700">
                       {activity.action.replaceAll("_", " ")}
                     </span>
                   </div>

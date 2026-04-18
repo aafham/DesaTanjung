@@ -296,13 +296,13 @@ export function AdminResidentsTable({
               href={bulkWhatsappHref}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-100 px-5 py-3 text-sm font-bold text-emerald-950 transition hover:bg-emerald-200"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-emerald-100 px-5 py-3 text-sm font-bold whitespace-nowrap text-emerald-950 transition hover:bg-emerald-200"
             >
               <MessageCircle className="h-4 w-4" />
               WhatsApp selected
             </a>
           ) : (
-            <span className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-100 px-5 py-3 text-sm font-bold text-slate-500">
+            <span className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-100 px-5 py-3 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-500">
               Select residents with phone numbers
             </span>
           )}
@@ -338,7 +338,7 @@ export function AdminResidentsTable({
               <ContactActions phoneNumber={resident.phone_number} compact className="pt-1" />
               <Link
                 href={`/admin/residents/${resident.id}?month=${currentMonth}`}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-white"
               >
                 Open resident detail
               </Link>
@@ -361,7 +361,7 @@ export function AdminResidentsTable({
               <button
                 type="button"
                 onClick={() => copyReminder(resident)}
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-sm font-bold text-teal-950"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-teal-950"
               >
                 <Copy className="h-4 w-4" />
                 {copiedResidentId === resident.id ? "Copied reminder" : "Copy reminder"}
@@ -429,7 +429,7 @@ export function AdminResidentsTable({
                       {getStatus(resident) === "pending" ? (
                         <Link
                           href={`/admin/approvals?month=${currentMonth}`}
-                          className="inline-flex min-h-11 items-center justify-center rounded-full bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950"
+                          className="inline-flex min-h-11 items-center justify-center rounded-full bg-amber-500 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
                         >
                           Review proof
                         </Link>
@@ -437,7 +437,7 @@ export function AdminResidentsTable({
 
                       <Link
                         href={`/admin/residents/${resident.id}?month=${currentMonth}`}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-950"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
                       >
                         View detail
                       </Link>
@@ -455,14 +455,14 @@ export function AdminResidentsTable({
                           </ConfirmSubmitButton>
                         </form>
                       ) : (
-                        <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-900">
+                        <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-emerald-900">
                           Settled
                         </span>
                       )}
                       <button
                         type="button"
                         onClick={() => copyReminder(resident)}
-                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-sm font-bold text-teal-950"
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-teal-950"
                       >
                         <Copy className="h-4 w-4" />
                         {copiedResidentId === resident.id ? "Copied" : "Reminder"}

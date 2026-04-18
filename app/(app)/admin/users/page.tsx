@@ -95,7 +95,7 @@ export default async function AdminUsersPage({
                   Every new resident is created with username based on house number and default
                   password <span className="font-semibold text-slate-900">password</span>.
                 </p>
-                <FormSubmitButton className="min-h-14 px-6 py-3" pendingLabel="Adding user...">
+                <FormSubmitButton className="min-h-14 shrink-0 px-6 py-3 sm:min-w-[10rem]" pendingLabel="Adding user...">
                   Add user
                 </FormSubmitButton>
               </div>

@@ -170,7 +170,7 @@ export function AdminReminderTools({
           <Button
             type="button"
             onClick={copyReminder}
-            className="w-full gap-2 bg-teal-300 text-slate-950 hover:bg-teal-200"
+            className="w-full gap-2 bg-teal-300 px-6 text-slate-950 hover:bg-teal-200 sm:min-w-[15rem]"
           >
             <Copy className="h-4 w-4" />
             {copied ? "Copied" : "Copy reminder text"}
@@ -180,7 +180,7 @@ export function AdminReminderTools({
               href={whatsappComposeLink}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white/10 px-5 py-3 text-base font-bold text-white transition hover:bg-white/20"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white/10 px-6 py-3 text-center text-base font-bold leading-tight text-white transition hover:bg-white/20 sm:min-w-[15rem]"
             >
               <MessageSquareText className="h-4 w-4" />
               Open WhatsApp draft
@@ -205,7 +205,7 @@ export function AdminReminderTools({
               <button
                 type="button"
                 onClick={() => copyPresetReminder("overdue")}
-                className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20"
+                className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold whitespace-nowrap text-white transition hover:bg-white/20"
               >
                 Copy text
               </button>
@@ -214,7 +214,7 @@ export function AdminReminderTools({
                   href={overdueWhatsAppLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20"
+                  className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold whitespace-nowrap text-white transition hover:bg-white/20"
                 >
                   Open draft
                 </a>
@@ -233,7 +233,7 @@ export function AdminReminderTools({
               <button
                 type="button"
                 onClick={() => copyPresetReminder("unpaid")}
-                className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20"
+                className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold whitespace-nowrap text-white transition hover:bg-white/20"
               >
                 Copy text
               </button>
@@ -242,7 +242,7 @@ export function AdminReminderTools({
                   href={unpaidWhatsAppLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/20"
+                  className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold whitespace-nowrap text-white transition hover:bg-white/20"
                 >
                   Open draft
                 </a>
