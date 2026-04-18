@@ -7,9 +7,13 @@ import { Expand, X } from "lucide-react";
 export function ReceiptPreviewModal({
   src,
   alt,
+  triggerLabel = "View larger",
+  inline = false,
 }: {
   src: string;
   alt: string;
+  triggerLabel?: string;
+  inline?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -18,10 +22,14 @@ export function ReceiptPreviewModal({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="absolute right-3 top-3 inline-flex items-center gap-2 rounded-full bg-slate-950/80 px-3 py-2 text-sm font-bold text-white backdrop-blur transition hover:bg-slate-950"
+        className={
+          inline
+            ? "inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-sm font-bold text-white transition hover:bg-slate-800"
+            : "absolute right-3 top-3 inline-flex items-center gap-2 rounded-full bg-slate-950/80 px-3 py-2 text-sm font-bold text-white backdrop-blur transition hover:bg-slate-950"
+        }
       >
         <Expand className="h-4 w-4" />
-        View larger
+        {triggerLabel}
       </button>
 
       {open ? (

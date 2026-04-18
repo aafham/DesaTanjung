@@ -111,6 +111,8 @@ export function getPhoneActionLinks(value: string | null | undefined) {
   return {
     tel: `tel:${normalized}`,
     whatsapp: `https://wa.me/${whatsappNumber}`,
+    whatsappCompose: (text: string) =>
+      `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`,
     display: formatMalaysianPhoneNumber(normalized),
   };
 }

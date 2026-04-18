@@ -1,3 +1,4 @@
+import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
 import type { ResidentPaymentRecord } from "@/lib/types";
 import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -12,6 +13,7 @@ export function PaymentHistoryTable({ history }: { history: ResidentPaymentRecor
               <th className="px-4 py-4">Month</th>
               <th className="px-4 py-4">Status</th>
               <th className="px-4 py-4">Method</th>
+              <th className="px-4 py-4">Receipt</th>
               <th className="px-4 py-4">Updated</th>
             </tr>
           </thead>
@@ -25,6 +27,18 @@ export function PaymentHistoryTable({ history }: { history: ResidentPaymentRecor
                   <StatusBadge status={payment.display_status} />
                 </td>
                 <td className="px-4 py-5 capitalize">{payment.payment_method}</td>
+                <td className="px-4 py-5">
+                  {payment.signed_proof_url ? (
+                    <ReceiptPreviewModal
+                      src={payment.signed_proof_url}
+                      alt={`Receipt for ${formatMonthLabel(payment.month)}`}
+                      triggerLabel="View receipt"
+                      inline
+                    />
+                  ) : (
+                    <span className="text-sm text-muted">No receipt</span>
+                  )}
+                </td>
                 <td className="px-4 py-5">{formatTimestamp(payment.updated_at)}</td>
               </tr>
             ))}

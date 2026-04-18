@@ -1,11 +1,13 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { PAYMENT_BUCKET } from "@/lib/constants";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   AnnouncementAudience,
   AnnouncementRecord,
   AppSettings,
   DisplayPaymentStatus,
+  HealthCheckItem,
   ManagedUser,
   NotificationRecord,
   PaymentAuditLog,
@@ -66,6 +68,10 @@ function getSystemHealthWarnings(settings: AppSettings) {
   return warnings;
 }
 
+function getWhatsAppResidents(residents: ResidentWithPayment[]) {
+  return residents.filter((resident) => !!resident.phone_number);
+}
+
 function getDisplayStatus(
   status: PaymentRecord["status"] | null | undefined,
   month: string,
@@ -111,6 +117,7 @@ function enrichPaymentRecord(
     ...payment,
     display_status: displayStatus,
     is_overdue: displayStatus === "overdue",
+    signed_proof_url: null,
   };
 }
 
@@ -249,9 +256,14 @@ export async function getUserDashboardData() {
     dueDateLabel: formatDateLabel(getDueDateForMonth(currentMonth, settings.due_day)),
     currentPayment: resolvedCurrentPayment,
     currentProofUrl: signedProof,
-    history: ((history as PaymentRecord[] | null) ?? []).map((payment) =>
-      enrichPaymentRecord(payment, payment.month, settings.due_day),
-    ) as ResidentPaymentRecord[],
+    history: await Promise.all(
+      (((history as PaymentRecord[] | null) ?? []).map(async (payment) => ({
+        ...(enrichPaymentRecord(payment, payment.month, settings.due_day) as ResidentPaymentRecord),
+        signed_proof_url: payment.proof_url
+          ? await getSignedReceiptUrl(payment.proof_url)
+          : null,
+      }))),
+    ),
     notifications: (notifications as NotificationRecord[] | null) ?? [],
     auditLogs: (auditLogs as PaymentAuditLog[] | null) ?? [],
     announcements,
@@ -614,6 +626,160 @@ export async function getAdminReportData(filterMonth?: string) {
   };
 }
 
+export async function getAdminHealthData() {
+  const profile = await requireUserProfile();
+
+  if (profile.role !== "admin") {
+    redirect("/dashboard");
+  }
+
+  if (profile.must_change_password) {
+    redirect("/change-password");
+  }
+
+  const supabase = await createClient();
+  const adminClient = createAdminClient();
+  const settings = await getAppSettings();
+  const warnings = getSystemHealthWarnings(settings);
+
+  const [
+    { count: userCount, error: userCountError },
+    { count: missingPhoneCount, error: missingPhoneError },
+    { error: settingsError },
+    { data: payments, error: paymentsError },
+    { data: buckets, error: bucketsError },
+  ] = await Promise.all([
+    supabase.from("users").select("*", { count: "exact", head: true }).eq("role", "user"),
+    supabase
+      .from("users")
+      .select("*", { count: "exact", head: true })
+      .eq("role", "user")
+      .is("phone_number", null),
+    supabase
+      .from("app_settings")
+      .select("id", { count: "exact", head: true })
+      .like("payment_qr_url", "%placehold.co%"),
+    supabase
+      .from("payments")
+      .select("id, user_id, month, proof_url, status, updated_at")
+      .order("updated_at", { ascending: false }),
+    adminClient.storage.listBuckets(),
+  ]);
+
+  const duplicatePayments = new Map<string, number>();
+  for (const payment of ((payments as PaymentRecord[] | null) ?? [])) {
+    const key = `${payment.user_id}:${payment.month}`;
+    duplicatePayments.set(key, (duplicatePayments.get(key) ?? 0) + 1);
+  }
+  const duplicateCount = Array.from(duplicatePayments.values()).filter((count) => count > 1).length;
+
+  const unresolvedProofCount = ((payments as PaymentRecord[] | null) ?? []).filter(
+    (payment) => !!payment.proof_url && payment.status === "pending",
+  ).length;
+
+  const checks: HealthCheckItem[] = [
+    {
+      id: "env-public-url",
+      label: "Supabase public URL",
+      status: process.env.NEXT_PUBLIC_SUPABASE_URL ? "healthy" : "error",
+      detail: process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? "NEXT_PUBLIC_SUPABASE_URL is configured."
+        : "NEXT_PUBLIC_SUPABASE_URL is missing.",
+      action: "Set the value in Vercel and local .env.local if needed.",
+    },
+    {
+      id: "env-service-role",
+      label: "Service role key",
+      status: process.env.SUPABASE_SERVICE_ROLE_KEY ? "healthy" : "error",
+      detail: process.env.SUPABASE_SERVICE_ROLE_KEY
+        ? "SUPABASE_SERVICE_ROLE_KEY is available on the server."
+        : "SUPABASE_SERVICE_ROLE_KEY is missing on the server.",
+      action: "Add the secret key to Vercel and local server env values.",
+    },
+    {
+      id: "monthly-fee",
+      label: "Monthly fee",
+      status: settings.monthly_fee && settings.monthly_fee > 0 ? "healthy" : "warning",
+      detail:
+        settings.monthly_fee && settings.monthly_fee > 0
+          ? `Monthly fee is set to RM ${settings.monthly_fee.toFixed(2)}.`
+          : "Monthly fee has not been configured yet.",
+      action: "Open Settings and set the monthly fee before residents start paying.",
+    },
+    {
+      id: "payment-qr",
+      label: "Payment QR image",
+      status: !settings.payment_qr_url.includes("placehold.co") ? "healthy" : "warning",
+      detail: !settings.payment_qr_url.includes("placehold.co")
+        ? "Resident payment page is using the uploaded QR image."
+        : "Resident payment page is still using the placeholder QR image.",
+      action: "Upload a final QR image in Settings and save the form.",
+    },
+    {
+      id: "payment-proofs-bucket",
+      label: "Storage bucket: payment-proofs",
+      status: buckets?.some((bucket) => bucket.name === "payment-proofs") ? "healthy" : "error",
+      detail: buckets?.some((bucket) => bucket.name === "payment-proofs")
+        ? "Bucket exists for resident receipt uploads."
+        : "Bucket payment-proofs was not found.",
+      action: "Run supabase/schema.sql again to recreate storage policies and buckets.",
+    },
+    {
+      id: "app-assets-bucket",
+      label: "Storage bucket: app-assets",
+      status: buckets?.some((bucket) => bucket.name === "app-assets") ? "healthy" : "warning",
+      detail: buckets?.some((bucket) => bucket.name === "app-assets")
+        ? "Bucket exists for QR image and app assets."
+        : "Bucket app-assets was not found.",
+      action: "Run supabase/schema.sql again so QR uploads work properly.",
+    },
+    {
+      id: "duplicate-payments",
+      label: "Duplicate monthly payments",
+      status: duplicateCount === 0 ? "healthy" : "error",
+      detail:
+        duplicateCount === 0
+          ? "No duplicate payment rows were found for the same resident and month."
+          : `${duplicateCount} duplicate resident-month payment group(s) were found.`,
+      action: "Clean duplicate rows and rerun schema to enforce the unique constraint.",
+    },
+    {
+      id: "resident-phone-numbers",
+      label: "Resident phone numbers",
+      status: (missingPhoneCount ?? 0) === 0 ? "healthy" : "warning",
+      detail:
+        (missingPhoneCount ?? 0) === 0
+          ? `All ${userCount ?? 0} resident accounts have phone numbers saved.`
+          : `${missingPhoneCount ?? 0} resident account(s) are missing phone numbers.`,
+      action: "Open Admin Users and complete missing phone numbers for follow-up actions.",
+    },
+    {
+      id: "pending-proofs",
+      label: "Pending uploaded proofs",
+      status: unresolvedProofCount === 0 ? "healthy" : "warning",
+      detail:
+        unresolvedProofCount === 0
+          ? "No uploaded proofs are waiting for review."
+          : `${unresolvedProofCount} uploaded proof(s) are waiting for committee review.`,
+      action: "Open Approvals and review the latest resident uploads.",
+    },
+  ];
+
+  const queryWarnings = [
+    ...(userCountError ? [createWarningMessage("Resident count", userCountError.message)] : []),
+    ...(missingPhoneError ? [createWarningMessage("Missing phone numbers", missingPhoneError.message)] : []),
+    ...(settingsError ? [createWarningMessage("QR settings", settingsError.message)] : []),
+    ...(paymentsError ? [createWarningMessage("Payment scan", paymentsError.message)] : []),
+    ...(bucketsError ? [createWarningMessage("Storage buckets", bucketsError.message)] : []),
+  ];
+
+  return {
+    profile,
+    checks,
+    warnings: [...warnings, ...queryWarnings],
+  };
+}
+
 export async function getResidentNotificationsPageData() {
   const profile = await requireUserProfile();
 
@@ -765,9 +931,12 @@ export async function getAdminResidentDetailData(residentId: string, filterMonth
     dueDateLabel: formatDateLabel(getDueDateForMonth(month, settings.due_day)),
     currentPayment: resolvedPayment,
     currentProofUrl: signedProof,
-    history: ((history as PaymentRecord[] | null) ?? []).map((entry) =>
-      enrichPaymentRecord(entry, entry.month, settings.due_day),
-    ) as ResidentPaymentRecord[],
+    history: await Promise.all(
+      (((history as PaymentRecord[] | null) ?? []).map(async (entry) => ({
+        ...(enrichPaymentRecord(entry, entry.month, settings.due_day) as ResidentPaymentRecord),
+        signed_proof_url: entry.proof_url ? await getSignedReceiptUrl(entry.proof_url) : null,
+      }))),
+    ),
     auditLogs: (auditLogs as PaymentAuditLog[] | null) ?? [],
     settings,
     warnings,

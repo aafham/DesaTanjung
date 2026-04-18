@@ -1,31 +1,44 @@
 # Desa Tanjung Payment Portal
 
-Portal bayaran bulanan penduduk taman yang dibina dengan `Next.js App Router`, `Tailwind CSS`, `Supabase`, dan sesuai untuk deploy di `Vercel`.
+Portal bayaran bulanan untuk penduduk taman yang dibina menggunakan `Next.js App Router`, `Tailwind CSS`, `Supabase`, dan sesuai untuk deployment di `Vercel`.
 
-Project ini direka untuk dua peranan:
+Sistem ini direka untuk dua jenis pengguna:
 
 - `Resident / Penduduk`
 - `Admin / Jawatankuasa`
 
-Tujuan utama sistem:
+Tujuan utama portal ini:
 
 - semak status bayaran bulanan
 - muat naik resit bayaran
 - semakan dan kelulusan oleh jawatankuasa
-- rekod aktiviti dan notifikasi yang lebih jelas
+- rekod aktiviti pengguna
+- notifikasi yang jelas untuk admin dan resident
+- pengurusan data penduduk yang lebih teratur
+
+## Tech stack
+
+- `Next.js 15`
+- `React 19`
+- `Tailwind CSS`
+- `Supabase Auth`
+- `Supabase Postgres`
+- `Supabase Storage`
+- `Vercel`
 
 ## Ringkasan fungsi
 
 ### Resident
 
-- log masuk guna nombor rumah, contoh `A-12`
+- log masuk guna nombor rumah
 - tukar kata laluan pada login pertama
 - lihat status bayaran bulan semasa
-- lihat sejarah bayaran
+- lihat due date dan jumlah yuran bulanan
+- lihat nombor akaun bank dan QR pembayaran
+- muat naik resit bayaran
 - lihat notifikasi resident
 - lihat timeline aktiviti bayaran
-- lihat maklumat bank dan QR bayaran
-- muat naik resit bayaran
+- lihat sejarah bayaran
 - kemas kini profil:
   - nombor rumah
   - nama pemilik
@@ -38,8 +51,8 @@ Tujuan utama sistem:
 - dashboard kutipan bulanan
 - approval queue untuk semak resit
 - approve / reject payment proof
-- letak sebab reject
-- tambah nota admin pada bayaran
+- simpan sebab reject
+- simpan nota admin pada bayaran
 - tanda bayaran cash secara manual
 - bulk mark cash paid
 - urus resident dan user:
@@ -48,7 +61,8 @@ Tujuan utama sistem:
   - reset password
   - delete user
   - lihat last login / last logout
-  - lihat activity log resident
+  - lihat log aktiviti resident
+- global search admin
 - halaman reports
 - halaman activity log
 - halaman notices / announcements
@@ -63,7 +77,7 @@ Tujuan utama sistem:
 
 ## Cara login
 
-Walaupun pengguna nampak login dengan `username`, Supabase Auth sebenarnya guna `email + password`.
+Walaupun pengguna nampak login dengan `username`, Supabase Auth sebenarnya menggunakan `email + password`.
 
 Project ini map username kepada email dalaman:
 
@@ -71,7 +85,7 @@ Project ini map username kepada email dalaman:
 - `A-12` -> `a-12@desatanjung.local`
 - `B-08` -> `b-08@desatanjung.local`
 
-Pengguna tetap hanya masukkan:
+Pengguna tetap hanya perlu masukkan:
 
 - `username / nombor rumah`
 - `password`
@@ -92,16 +106,6 @@ Nota:
 
 - semua akaun seed akan dipaksa tukar kata laluan pada login pertama
 
-## Tech stack
-
-- `Next.js 15`
-- `React 19`
-- `Tailwind CSS`
-- `Supabase Auth`
-- `Supabase Postgres`
-- `Supabase Storage`
-- `Vercel`
-
 ## Project structure
 
 ```text
@@ -118,9 +122,11 @@ Nota:
 |   |   |   |-- reports/page.tsx
 |   |   |   |-- residents/page.tsx
 |   |   |   |-- residents/[id]/page.tsx
+|   |   |   |-- search/page.tsx
 |   |   |   |-- settings/page.tsx
 |   |   |   `-- users/page.tsx
 |   |   |-- dashboard/page.tsx
+|   |   |-- notifications/page.tsx
 |   |   |-- payments/page.tsx
 |   |   |-- profile/page.tsx
 |   |   |-- layout.tsx
@@ -131,6 +137,8 @@ Nota:
 |-- components
 |   |-- admin-activity-log.tsx
 |   |-- admin-approval-card.tsx
+|   |-- admin-global-search.tsx
+|   |-- admin-page-header.tsx
 |   |-- admin-reminder-tools.tsx
 |   |-- admin-residents-table.tsx
 |   |-- admin-settings-form.tsx
@@ -204,7 +212,7 @@ Pergi `Supabase > SQL Editor` dan run fail ini:
 
 - [supabase/schema.sql](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\supabase\schema.sql)
 
-Ini akan cipta:
+Schema ini akan cipta dan kemas kini:
 
 - `public.users`
 - `public.payments`
@@ -230,7 +238,7 @@ Copy fail contoh:
 copy scripts\seed-users.json.example scripts\seed-users.json
 ```
 
-Kemudian edit `scripts/seed-users.json` ikut user sebenar.
+Kemudian edit `scripts/seed-users.json` ikut data sebenar.
 
 Run:
 
@@ -251,7 +259,7 @@ npm run lint
 npm run build
 ```
 
-## Cara guna sistem
+## Flow penggunaan sistem
 
 ## Flow resident
 
@@ -264,7 +272,7 @@ Resident login guna:
 
 Jika login pertama:
 
-- resident akan dibawa ke `Change password`
+- resident akan dibawa ke page `Change password`
 
 ### 2. Dashboard
 
@@ -272,9 +280,13 @@ Resident boleh lihat:
 
 - status bulan semasa
 - due date
-- phone number yang disimpan
-- announcement
-- notification inbox
+- monthly fee
+- nombor rumah
+- nama pemilik
+- alamat
+- nombor telefon
+- notice board
+- resident inbox
 - payment timeline
 - payment history
 
@@ -284,18 +296,29 @@ Resident boleh:
 
 - lihat nama bank
 - lihat nombor akaun
-- lihat jumlah yuran bulanan
-- scan QR
-- upload resit bayaran
+- lihat nama pemegang akaun
+- lihat QR pembayaran
+- buka QR dalam saiz lebih besar
+- lihat panduan pembayaran
+- muat naik resit bayaran
 
 Bila resit diupload:
 
-- imej pergi ke Supabase Storage
-- rekod bayaran diupdate jadi `pending`
+- imej akan disimpan dalam Supabase Storage
+- rekod payment akan diupdate kepada `pending`
 - admin akan nampak di approval queue
-- resident dapat notification bahawa resit sedang menunggu semakan
+- resident akan dapat notifikasi bahawa resit sedang menunggu semakan
 
-### 4. Profile
+### 4. Notifications
+
+Resident boleh buka page `Notifications` untuk lihat semua update penting seperti:
+
+- resit berjaya dihantar
+- bayaran diluluskan
+- bayaran ditolak
+- bayaran ditanda cash paid
+
+### 5. Profile
 
 Resident boleh update:
 
@@ -303,13 +326,13 @@ Resident boleh update:
 - alamat
 - nombor telefon
 
-Semua perubahan ini akan direkod dalam activity log admin.
+Semua perubahan ini direkod dalam activity log admin.
 
-### 5. Password
+### 6. Password
 
-Resident boleh tukar password pada:
+Resident boleh tukar password:
 
-- login pertama
+- pada login pertama
 - bila klik `Update password` di profile
 
 ## Flow admin
@@ -326,12 +349,14 @@ Admin login guna:
 Admin boleh lihat:
 
 - collection rate
-- total paid / pending / overdue / needs attention
+- total paid / pending / needs attention / overdue
 - latest notifications
 - latest resident activity
 - pending uploaded proofs
 - resident belum settle
+- notice board
 - reminder helper
+- health warnings jika setting penting belum lengkap
 
 ### 3. Approvals
 
@@ -339,6 +364,7 @@ Admin boleh:
 
 - lihat resit yang resident upload
 - lihat nombor rumah, nama, alamat, phone number
+- preview resit
 - approve payment
 - reject payment
 - pilih sebab reject
@@ -397,16 +423,29 @@ Admin boleh:
   - never logged in
   - inactive 30+ days
 
-### 7. Activity
+### 7. Search
 
-Halaman `Admin Activity` digunakan untuk audit.
+Halaman `Admin Search` digunakan untuk cari maklumat dengan cepat tanpa lompat banyak page.
+
+Admin boleh search:
+
+- nombor rumah
+- nama pemilik
+- alamat
+- nombor telefon
+- payment bulan semasa
+- activity log
+
+### 8. Activity
+
+Halaman `Admin Activity` digunakan untuk audit aktiviti portal.
 
 Admin boleh:
 
 - search ikut nama / nombor rumah
 - filter ikut action
 - filter ikut role
-- filter ikut tarikh
+- filter ikut tempoh masa
 - export CSV
 
 Action yang direkod:
@@ -417,7 +456,7 @@ Action yang direkod:
 - password changed
 - payment uploaded
 
-### 8. Reports
+### 9. Reports
 
 Admin boleh lihat:
 
@@ -426,10 +465,11 @@ Admin boleh lihat:
 - outstanding amount
 - due date
 - collection rate
+- meeting summary
 - resident breakdown
 - print report
 
-### 9. Notices
+### 10. Notices
 
 Admin boleh:
 
@@ -441,7 +481,7 @@ Admin boleh:
 - pin notice
 - delete notice
 
-### 10. Settings
+### 11. Settings
 
 Admin boleh update:
 
@@ -453,9 +493,9 @@ Admin boleh update:
 - due day
 - payment QR image
 
-## Activity log yang direkod
+## Log aktiviti yang direkod
 
-Sistem sekarang rekod aktiviti resident seperti:
+Sistem sekarang merekod aktiviti resident seperti:
 
 - resident login
 - resident logout
@@ -473,7 +513,7 @@ Admin boleh nampak aktiviti ini pada:
 
 ### Admin notifications
 
-Admin akan dapat feed untuk:
+Admin akan nampak feed notifikasi untuk:
 
 - resident submit payment proof
 
@@ -485,6 +525,7 @@ Resident akan nampak inbox untuk:
 - payment approved
 - payment rejected
 - payment marked as cash paid
+- update sistem berkaitan payment semasa
 
 ## Loading states yang ada
 
@@ -567,8 +608,6 @@ Selepas deploy:
 
 ## Checklist selepas deploy
 
-Test satu per satu:
-
 ### Resident
 
 1. login
@@ -578,6 +617,7 @@ Test satu per satu:
 5. upload resit
 6. lihat status jadi `pending`
 7. lihat notifikasi masuk
+8. semak page notifications
 
 ### Admin
 
@@ -587,10 +627,12 @@ Test satu per satu:
 4. reject payment
 5. mark cash paid
 6. lihat resident activity log
-7. lihat reports
-8. tambah user baru
-9. reset password user
-10. update settings
+7. guna global search
+8. lihat reports
+9. tambah user baru
+10. reset password user
+11. update settings
+12. semak notices
 
 ## Common masalah dan cara semak
 
@@ -626,6 +668,17 @@ Pastikan constraint ini wujud:
 
 Dan run semula schema jika perlu.
 
+### 5. Lint error berkaitan `.next/types`
+
+Kadang-kadang selepas route baru ditambah, `npm run lint` boleh tersandung sementara jika `.next/types` belum digenerate.
+
+Biasanya selesai dengan urutan ini:
+
+```bash
+npm run build
+npm run lint
+```
+
 ## Files penting untuk semak dahulu
 
 - [supabase/schema.sql](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\supabase\schema.sql)
@@ -633,6 +686,7 @@ Dan run semula schema jika perlu.
 - [lib/data.ts](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\lib\data.ts)
 - [lib/types.ts](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\lib\types.ts)
 - [app/(app)/admin/page.tsx](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\app\(app)\admin\page.tsx)
+- [app/(app)/admin/reports/page.tsx](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\app\(app)\admin\reports\page.tsx)
 - [app/(app)/dashboard/page.tsx](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\app\(app)\dashboard\page.tsx)
 - [app/(app)/payments/page.tsx](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\app\(app)\payments\page.tsx)
 - [app/(app)/profile/page.tsx](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\app\(app)\profile\page.tsx)

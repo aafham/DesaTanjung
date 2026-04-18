@@ -33,6 +33,7 @@ export type PaymentRecord = {
 export type ResidentPaymentRecord = PaymentRecord & {
   display_status: DisplayPaymentStatus;
   is_overdue: boolean;
+  signed_proof_url?: string | null;
 };
 
 export type PaymentAuditLog = {
@@ -83,6 +84,14 @@ export type UserActivityLog = {
 
 export type UserActivityWithUser = UserActivityLog & {
   users: Pick<UserProfile, "house_number" | "name" | "role"> | null;
+};
+
+export type HealthCheckItem = {
+  id: string;
+  label: string;
+  status: "healthy" | "warning" | "error";
+  detail: string;
+  action?: string;
 };
 
 export type AnnouncementRecord = {
