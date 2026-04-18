@@ -142,7 +142,13 @@ export default async function AdminResidentDetailPage({
             </div>
           </div>
           <div className="mt-5">
-            <PaymentTimeline payment={currentPayment} auditLogs={auditLogs} />
+            {currentPayment ? (
+              <PaymentTimeline payment={currentPayment} auditLogs={auditLogs} />
+            ) : (
+              <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
+                No payment timeline exists yet for this resident in the selected month.
+              </div>
+            )}
           </div>
         </Card>
       </section>
