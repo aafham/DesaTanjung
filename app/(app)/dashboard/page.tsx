@@ -43,22 +43,33 @@ export default async function DashboardPage() {
       <LiveRefresh />
       <DataWarning warnings={warnings} />
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="bg-slate-950 text-white">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-200">Current month</p>
-          <h2 className="mt-3 font-display text-5xl font-bold leading-tight">{currentMonthLabel}</h2>
-          <p className="mt-4 max-w-lg text-lg text-slate-200">
+        <Card
+          className="border-slate-900 text-white"
+          style={{
+            background:
+              "linear-gradient(135deg, #07111f 0%, #0b2f2d 55%, #064e48 100%)",
+          }}
+        >
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">Current month</p>
+          <h2 className="mt-3 font-display text-5xl font-bold leading-tight text-white">
+            {currentMonthLabel}
+          </h2>
+          <p className="mt-4 max-w-lg text-lg text-slate-100">
             Track this month&apos;s payment status and upload your proof as soon as you complete the transfer.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
-            <StatusBadge status={currentPayment.display_status} className="bg-white/10 text-white" />
-            <span className="rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-100">
+            <StatusBadge
+              status={currentPayment.display_status}
+              className="border border-white/15 bg-white/10 text-white ring-0"
+            />
+            <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
               House {profile.house_number}
             </span>
-            <span className="rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-100">
+            <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
               Due {dueDateLabel}
             </span>
           </div>
-          <div className="mt-5 flex items-start gap-3 rounded-3xl bg-white/10 p-4 text-base text-slate-100">
+          <div className="mt-5 flex items-start gap-3 rounded-3xl border border-white/10 bg-white/10 p-4 text-base text-white">
             <Info className="mt-1 h-5 w-5 shrink-0 text-teal-200" />
             <p>{statusMessage}</p>
           </div>
@@ -68,13 +79,13 @@ export default async function DashboardPage() {
             </div>
           ) : null}
           {currentPayment.notes ? (
-            <div className="mt-4 rounded-3xl bg-white/10 p-4 text-base text-slate-100">
+            <div className="mt-4 rounded-3xl border border-white/10 bg-white/10 p-4 text-base text-white">
               Committee note: {currentPayment.notes}
             </div>
           ) : null}
           <Link
             href="/payments"
-            className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-teal-300 px-6 py-3 text-lg font-bold text-slate-950 transition hover:bg-teal-200"
+            className="mt-8 inline-flex min-h-14 items-center gap-2 rounded-full bg-teal-200 px-6 py-3 text-lg font-bold text-slate-950 transition hover:bg-white"
           >
             PAY NOW
             <ArrowRight className="h-4 w-4" />
