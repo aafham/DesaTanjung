@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { Building2, KeyRound, ShieldCheck, UserRound } from "lucide-react";
-import { AuthPanel } from "@/components/auth-panel";
+import { KeyRound, ShieldCheck, UserRound } from "lucide-react";
 import { PasswordInput } from "@/components/password-input";
 import { getCurrentUserProfile } from "@/lib/data";
 import { loginAction } from "@/lib/actions";
@@ -20,27 +19,19 @@ export default async function LoginPage({
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-hero-glow px-4 py-8">
-      <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+      <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <section className="rounded-4xl border border-line bg-surface/95 p-6 shadow-soft backdrop-blur sm:p-8">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">
             Desa Tanjung
           </p>
-          <h1 className="mt-4 max-w-2xl font-display text-4xl font-bold leading-tight text-slate-950 sm:text-5xl">
-            Portal bayaran bulanan penduduk taman.
+          <h1 className="mt-4 max-w-xl font-display text-4xl font-bold leading-tight text-slate-950 sm:text-[3.2rem]">
+            Portal bayaran bulanan komuniti.
           </h1>
-          <p className="mt-4 max-w-2xl text-lg text-muted">
-            Gunakan portal ini untuk semak status bayaran, muat naik resit, dan rujuk
-            maklumat bayaran bulanan komuniti dengan lebih teratur.
+          <p className="mt-4 max-w-lg text-lg text-muted">
+            Semak status bayaran, muat naik resit, dan rujuk maklumat bayaran bulanan dengan lebih teratur.
           </p>
 
-          <div className="mt-8 grid gap-3 rounded-4xl border border-line bg-slate-50 p-5 text-base text-slate-800">
-            <div className="flex items-start gap-3">
-              <Building2 className="mt-1 h-5 w-5 text-primary" />
-              <p>
-                Portal ini disediakan untuk kegunaan <span className="font-bold text-slate-950">penduduk dan jawatankuasa</span>{" "}
-                Desa Tanjung.
-              </p>
-            </div>
+          <div className="mt-8 space-y-4 rounded-4xl border border-line bg-white/80 p-5 text-base text-slate-800">
             <div className="flex items-start gap-3">
               <UserRound className="mt-1 h-5 w-5 text-primary" />
               <p>
@@ -57,10 +48,6 @@ export default async function LoginPage({
               <KeyRound className="mt-1 h-5 w-5 text-primary" />
               <p>Log masuk kali pertama akan meminta anda menukar kata laluan lalai.</p>
             </div>
-          </div>
-
-          <div className="mt-6">
-            <AuthPanel />
           </div>
         </section>
 
@@ -123,7 +110,7 @@ export default async function LoginPage({
 
           <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-base text-slate-200">
             <p className="font-bold text-white">Maklumat log masuk lalai</p>
-            <div className="mt-3 space-y-2">
+            <div className="mt-3 grid gap-2">
               <p>
                 Penduduk: <span className="font-bold text-white">password</span>
               </p>
@@ -131,9 +118,6 @@ export default async function LoginPage({
                 Admin: <span className="font-bold text-white">passwordadmin</span>
               </p>
             </div>
-            <p className="mt-3 text-slate-300">
-              Selepas log masuk kali pertama, sistem akan meminta anda menukar kata laluan.
-            </p>
           </div>
         </section>
       </div>
