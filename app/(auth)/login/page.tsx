@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { KeyRound, ShieldCheck, UserRound } from "lucide-react";
-import { PasswordInput } from "@/components/password-input";
+import { LoginForm } from "@/components/login-form";
 import { getCurrentUserProfile } from "@/lib/data";
 import { loginAction } from "@/lib/actions";
 
@@ -66,47 +66,7 @@ export default async function LoginPage({
             Masukkan nombor rumah atau username bersama kata laluan untuk masuk ke portal.
           </p>
 
-          <form action={loginAction} className="mt-8 space-y-5">
-            <div>
-              <label htmlFor="identifier" className="mb-2 block text-base font-bold text-white">
-                Nombor rumah / Username
-              </label>
-              <input
-                id="identifier"
-                name="identifier"
-                required
-                placeholder="Contoh: A-12 atau admin"
-                className="min-h-14 w-full rounded-3xl border border-slate-600 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none ring-0 placeholder:text-slate-400 focus:border-teal-400"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="mb-2 block text-base font-bold text-white">
-                Kata laluan
-              </label>
-              <PasswordInput
-                id="password"
-                name="password"
-                required
-                placeholder="Masukkan kata laluan"
-                autoComplete="current-password"
-                inputClassName="min-h-14 w-full rounded-3xl border border-slate-600 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none placeholder:text-slate-400 focus:border-teal-400"
-                buttonClassName="text-slate-300 hover:bg-white/10 hover:text-white"
-              />
-            </div>
-
-            {params.error ? (
-              <p className="rounded-2xl bg-rose-500/20 px-4 py-3 text-base font-bold text-rose-100">
-                {decodeURIComponent(params.error)}
-              </p>
-            ) : null}
-
-            <button
-              type="submit"
-              className="min-h-14 w-full rounded-full bg-teal-300 px-5 py-3 text-lg font-bold text-slate-950 transition hover:bg-teal-200"
-            >
-              Masuk portal
-            </button>
-          </form>
+          <LoginForm action={loginAction} error={params.error} />
 
           <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 p-5 text-base text-slate-200">
             <p className="font-bold text-white">Maklumat log masuk lalai</p>
