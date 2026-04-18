@@ -1,4 +1,5 @@
 import { MonthFilter } from "@/components/month-filter";
+import { DataWarning } from "@/components/data-warning";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -11,12 +12,13 @@ export default async function AdminReportsPage({
   searchParams: Promise<{ month?: string; error?: string; message?: string }>;
 }) {
   const params = await searchParams;
-  const { currentMonth, currentMonthLabel, dueDateLabel, residents, settings, totals } =
+  const { currentMonth, currentMonthLabel, dueDateLabel, residents, settings, totals, warnings } =
     await getAdminReportData(params.month);
 
   return (
     <div className="space-y-6">
       <PageToast message={params.message} error={params.error} />
+      <DataWarning warnings={warnings} />
 
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>

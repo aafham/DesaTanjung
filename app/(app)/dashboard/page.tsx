@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Clock3, Home, Info, Wallet } from "lucide-react";
 import { AnnouncementFeed } from "@/components/announcement-feed";
+import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentHistoryTable } from "@/components/payment-history-table";
 import { PaymentTimeline } from "@/components/payment-timeline";
@@ -18,6 +19,7 @@ export default async function DashboardPage() {
     history,
     profile,
     settings,
+    warnings,
   } =
     await getUserDashboardData();
   const statusMessage = {
@@ -39,6 +41,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <LiveRefresh />
+      <DataWarning warnings={warnings} />
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Card className="bg-slate-950 text-white">
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-200">Current month</p>

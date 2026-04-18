@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { CreditCard, Landmark, QrCode, UploadCloud } from "lucide-react";
+import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
 import { PaymentUploadForm } from "@/components/payment-upload-form";
 import { Card } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { getAppSettings, getUserDashboardData } from "@/lib/data";
 
 export default async function PaymentsPage() {
-  const [{ currentMonthLabel, currentPayment, dueDateLabel, profile }, settings] = await Promise.all([
+  const [{ currentMonthLabel, currentPayment, dueDateLabel, profile, warnings }, settings] = await Promise.all([
     getUserDashboardData(),
     getAppSettings(),
   ]);
@@ -15,6 +16,7 @@ export default async function PaymentsPage() {
   return (
     <div className="space-y-6">
       <LiveRefresh />
+      <DataWarning warnings={warnings} />
       <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="space-y-5">
           <div className="flex items-center justify-between gap-3">
@@ -24,7 +26,7 @@ export default async function PaymentsPage() {
                 {currentMonthLabel}
               </h2>
             </div>
-            <StatusBadge status={currentPayment.status} />
+            <StatusBadge status={currentPayment.display_status} />
           </div>
 
           <div className="grid gap-4 rounded-4xl bg-slate-50 p-4 sm:grid-cols-2">
@@ -108,6 +110,24 @@ export default async function PaymentsPage() {
           {currentPayment.display_status === "overdue" ? (
             <div className="rounded-3xl bg-rose-50 px-4 py-4 text-base font-bold text-rose-950">
               This month is already past the due date. Please upload your payment proof as soon as possible.
+            </div>
+          ) : null}
+          {currentPayment.status === "pending" ? (
+            <div className="rounded-3xl bg-amber-50 px-4 py-4 text-base font-bold text-amber-950">
+              Your receipt has been submitted and is waiting for committee review.
+            </div>
+          ) : null}
+          {currentPayment.status === "paid" ? (
+            <div className="rounded-3xl bg-emerald-50 px-4 py-4 text-base font-bold text-emerald-900">
+              Your payment has been approved. No further action is needed for this month.
+            </div>
+          ) : null}
+          {currentPayment.status === "rejected" ? (
+            <div className="rounded-3xl bg-rose-50 px-4 py-4 text-base text-rose-950">
+              <p className="font-bold">Your receipt was rejected.</p>
+              <p className="mt-1">
+                {currentPayment.reject_reason ?? "Please upload a clearer or corrected receipt."}
+              </p>
             </div>
           ) : null}
 

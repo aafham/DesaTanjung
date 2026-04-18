@@ -12,6 +12,7 @@ import { markAllNotificationsReadAction } from "@/lib/actions";
 import { AnnouncementFeed } from "@/components/announcement-feed";
 import { AdminReminderTools } from "@/components/admin-reminder-tools";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
 import { MonthFilter } from "@/components/month-filter";
 import { PageToast } from "@/components/page-toast";
@@ -35,6 +36,7 @@ export default async function AdminDashboardPage({
     pendingPayments,
     residents,
     settings,
+    warnings,
   } =
     await getAdminDashboardData(params.month);
 
@@ -64,6 +66,7 @@ export default async function AdminDashboardPage({
     <div className="space-y-6">
       <PageToast message={params.message} error={params.error} />
       <LiveRefresh />
+      <DataWarning warnings={warnings} />
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Admin dashboard</p>

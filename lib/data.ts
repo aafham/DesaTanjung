@@ -30,6 +30,10 @@ type PendingApprovalPayment = ResidentPaymentRecord & {
 
 type ManagedAnnouncement = AnnouncementRecord;
 
+function createWarningMessage(scope: string, message: string) {
+  return `${scope}: ${message}`;
+}
+
 function getDisplayStatus(
   status: PaymentRecord["status"] | null | undefined,
   month: string,
@@ -37,7 +41,7 @@ function getDisplayStatus(
 ): DisplayPaymentStatus {
   const resolvedStatus = status ?? "unpaid";
 
-  if (resolvedStatus === "paid" || resolvedStatus === "pending") {
+  if (resolvedStatus === "paid" || resolvedStatus === "pending" || resolvedStatus === "rejected") {
     return resolvedStatus;
   }
 
@@ -88,11 +92,15 @@ export const getCurrentUserProfile = cache(async () => {
     return null;
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("users")
     .select("id, house_number, name, address, role, must_change_password")
     .eq("id", user.id)
     .single();
+
+  if (error) {
+    return null;
+  }
 
   return (data as UserProfile | null) ?? null;
 });
@@ -144,7 +152,8 @@ export async function getUserDashboardData() {
   const supabase = await createClient();
   const settings = await getAppSettings();
   const currentMonth = getMonthKey();
-  const { data: currentPayment } = await supabase
+  const warnings: string[] = [];
+  const { data: currentPayment, error: currentPaymentError } = await supabase
     .from("payments")
     .select(
       "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
@@ -152,14 +161,20 @@ export async function getUserDashboardData() {
     .eq("user_id", profile.id)
     .eq("month", currentMonth)
     .single();
+  if (currentPaymentError) {
+    warnings.push(createWarningMessage("Current payment", currentPaymentError.message));
+  }
 
-  const { data: history } = await supabase
+  const { data: history, error: historyError } = await supabase
     .from("payments")
     .select(
       "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
     )
     .eq("user_id", profile.id)
     .order("month", { ascending: false });
+  if (historyError) {
+    warnings.push(createWarningMessage("Payment history", historyError.message));
+  }
 
   const signedProof = currentPayment?.proof_url
     ? await getSignedReceiptUrl(currentPayment.proof_url)
@@ -170,12 +185,15 @@ export async function getUserDashboardData() {
     settings.due_day,
   ) as ResidentPaymentRecord;
 
-  const { data: auditLogs } = await supabase
+  const { data: auditLogs, error: auditError } = await supabase
     .from("payment_audit_logs")
     .select("id, payment_id, user_id, actor_id, action, message, created_at")
     .eq("user_id", profile.id)
     .order("created_at", { ascending: false })
     .limit(8);
+  if (auditError) {
+    warnings.push(createWarningMessage("Activity log", auditError.message));
+  }
 
   const announcements = await getAnnouncements({
     audience: "residents",
@@ -195,6 +213,7 @@ export async function getUserDashboardData() {
     announcements,
     settings,
     profile,
+    warnings,
   };
 }
 
@@ -213,10 +232,10 @@ export async function getAdminDashboardData(filterMonth?: string) {
   const month = filterMonth ?? getMonthKey();
 
   const [
-    { data: pendingPayments },
-    { data: notifications },
-    { data: residents },
-    { data: monthlyRecords },
+    { data: pendingPayments, error: pendingPaymentsError },
+    { data: notifications, error: notificationsError },
+    { data: residents, error: residentsError },
+    { data: monthlyRecords, error: monthlyRecordsError },
     settings,
     announcements,
   ] = await Promise.all([
@@ -250,6 +269,20 @@ export async function getAdminDashboardData(filterMonth?: string) {
       limit: 5,
     }),
   ]);
+  const warnings: string[] = [];
+
+  if (pendingPaymentsError) {
+    warnings.push(createWarningMessage("Approval queue", pendingPaymentsError.message));
+  }
+  if (notificationsError) {
+    warnings.push(createWarningMessage("Notifications", notificationsError.message));
+  }
+  if (residentsError) {
+    warnings.push(createWarningMessage("Residents", residentsError.message));
+  }
+  if (monthlyRecordsError) {
+    warnings.push(createWarningMessage("Monthly records", monthlyRecordsError.message));
+  }
 
   const residentRows = ((residents as UserProfile[] | null) ?? []).map((resident) => {
     const currentPayment =
@@ -286,6 +319,7 @@ export async function getAdminDashboardData(filterMonth?: string) {
     notifications: (notifications as NotificationRecord[] | null) ?? [],
     residents: residentRows,
     announcements,
+    warnings,
   };
 }
 
@@ -300,7 +334,7 @@ export async function getAnnouncements({
   const audiences =
     audience === "all" ? ["all", "residents", "admins"] : ["all", audience];
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("announcements")
     .select(
       "id, title, body, audience, is_pinned, created_by, published_at, created_at, updated_at",
@@ -310,16 +344,24 @@ export async function getAnnouncements({
     .order("published_at", { ascending: false })
     .limit(limit);
 
+  if (error) {
+    return [];
+  }
+
   return (data as ManagedAnnouncement[] | null) ?? [];
 }
 
 export async function getPaymentAuditLogs(paymentId: string) {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("payment_audit_logs")
     .select("id, payment_id, user_id, actor_id, action, message, created_at")
     .eq("payment_id", paymentId)
     .order("created_at", { ascending: false });
+
+  if (error) {
+    return [];
+  }
 
   return (data as PaymentAuditLog[] | null) ?? [];
 }
@@ -403,6 +445,7 @@ export async function getAdminAnnouncementsData() {
   return {
     profile,
     announcements: await getAnnouncements({ audience: "all", limit: 20 }),
+    warnings: [] as string[],
   };
 }
 
@@ -493,6 +536,7 @@ export async function getAdminResidentDetailData(residentId: string, filterMonth
         .order("created_at", { ascending: false })
         .limit(16),
     ]);
+  const warnings: string[] = [];
 
   if (!resident) {
     redirect("/admin/residents");
@@ -518,6 +562,7 @@ export async function getAdminResidentDetailData(residentId: string, filterMonth
     ) as ResidentPaymentRecord[],
     auditLogs: (auditLogs as PaymentAuditLog[] | null) ?? [],
     settings,
+    warnings,
   };
 }
 

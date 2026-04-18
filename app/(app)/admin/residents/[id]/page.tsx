@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clock3, Home, ReceiptText, UserRound } from "lucide-react";
+import { DataWarning } from "@/components/data-warning";
 import { MonthFilter } from "@/components/month-filter";
 import { PaymentTimeline } from "@/components/payment-timeline";
 import { Card } from "@/components/ui/card";
@@ -26,10 +27,12 @@ export default async function AdminResidentDetailPage({
     history,
     resident,
     settings,
+    warnings,
   } = await getAdminResidentDetailData(id, query.month);
 
   return (
     <div className="space-y-6">
+      <DataWarning warnings={warnings} />
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <Link

@@ -1,5 +1,6 @@
 import { createAnnouncementAction, deleteAnnouncementAction } from "@/lib/actions";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { DataWarning } from "@/components/data-warning";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { getAdminAnnouncementsData } from "@/lib/data";
@@ -10,7 +11,7 @@ export default async function AdminAnnouncementsPage({
 }: {
   searchParams: Promise<{ error?: string; message?: string }>;
 }) {
-  const [{ announcements }, params] = await Promise.all([
+  const [{ announcements, warnings }, params] = await Promise.all([
     getAdminAnnouncementsData(),
     searchParams,
   ]);
@@ -18,6 +19,7 @@ export default async function AdminAnnouncementsPage({
   return (
     <div className="space-y-6">
       <PageToast message={params.message} error={params.error} />
+      <DataWarning warnings={warnings} />
 
       <section>
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Notice board</p>

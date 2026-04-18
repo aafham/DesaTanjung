@@ -1,4 +1,5 @@
 import { AdminApprovalCard } from "@/components/admin-approval-card";
+import { DataWarning } from "@/components/data-warning";
 import { LiveRefresh } from "@/components/live-refresh";
 import { MonthFilter } from "@/components/month-filter";
 import { PageToast } from "@/components/page-toast";
@@ -11,7 +12,7 @@ export default async function AdminApprovalsPage({
   searchParams: Promise<{ month?: string; message?: string; error?: string }>;
 }) {
   const params = await searchParams;
-  const { currentMonth, currentMonthLabel, pendingPayments } = await getAdminDashboardData(
+  const { currentMonth, currentMonthLabel, pendingPayments, warnings } = await getAdminDashboardData(
     params.month,
   );
   const pendingCount = pendingPayments.filter((payment) => payment.status === "pending").length;
@@ -21,6 +22,7 @@ export default async function AdminApprovalsPage({
     <div className="space-y-6">
       <PageToast message={params.message} error={params.error} />
       <LiveRefresh />
+      <DataWarning warnings={warnings} />
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Approval system</p>
