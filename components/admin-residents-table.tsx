@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Copy, Download, MessageCircle, Search } from "lucide-react";
 import { ContactActions } from "@/components/contact-actions";
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { StatusBadge } from "@/components/ui/status-badge";
 
 const filterOptions: Array<{ label: string; value: "all" | PaymentStatus | "overdue" }> = [
@@ -55,11 +56,13 @@ export function AdminResidentsTable({
   currentMonth: string;
   currentMonthLabel: string;
 }) {
+  const PAGE_SIZE = 5;
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | PaymentStatus | "overdue">("all");
   const [methodFilter, setMethodFilter] = useState<"all" | "online" | "cash">("all");
   const [selectedResidentIds, setSelectedResidentIds] = useState<string[]>([]);
   const [copiedResidentId, setCopiedResidentId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const deferredQuery = useDeferredValue(query);
 
   const filteredResidents = useMemo(() => {
@@ -169,6 +172,24 @@ export function AdminResidentsTable({
   const reviewedCount = filteredResidents.filter((resident) =>
     ["paid", "rejected"].includes(getStatus(resident)),
   ).length;
+  const totalPages = Math.max(1, Math.ceil(filteredResidents.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, statusFilter, methodFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedResidents = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredResidents.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, filteredResidents]);
+  const startItem = filteredResidents.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endItem = Math.min(currentPage * PAGE_SIZE, filteredResidents.length);
 
   return (
     <Card className="overflow-hidden p-0">
@@ -231,7 +252,7 @@ export function AdminResidentsTable({
       </div>
 
       <div className="border-b border-line bg-slate-50 px-4 py-3 text-base text-muted">
-        Showing {filteredResidents.length} of {residents.length} residents for {currentMonthLabel}.
+        Showing {startItem}-{endItem} of {filteredResidents.length} filtered residents for {currentMonthLabel}.
       </div>
 
       <div className="grid gap-3 border-b border-line bg-white p-4 md:grid-cols-3">
@@ -297,7 +318,7 @@ export function AdminResidentsTable({
       </form>
 
       <div className="grid gap-4 p-4 md:hidden">
-        {filteredResidents.map((resident) => (
+        {paginatedResidents.map((resident) => (
           <details key={resident.id} className="rounded-3xl border border-line bg-white p-4">
             <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
               <div>
@@ -371,7 +392,7 @@ export function AdminResidentsTable({
                 </td>
               </tr>
             ) : (
-              filteredResidents.map((resident) => (
+              paginatedResidents.map((resident) => (
                 <tr key={resident.id} className="align-top">
                   <td className="px-4 py-5">
                     <div className="flex items-center gap-3">
@@ -456,15 +477,23 @@ export function AdminResidentsTable({
         </table>
       </div>
 
+      <div className="border-t border-line bg-white px-4 py-4">
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </div>
+
       <div className="border-t border-line bg-slate-50 p-4">
         <p className="mb-3 text-base font-bold text-slate-950">Payment notes</p>
-        {filteredResidents.filter((resident) => resident.currentPayment).length === 0 ? (
+        {paginatedResidents.filter((resident) => resident.currentPayment).length === 0 ? (
           <div className="rounded-3xl border border-dashed border-line bg-white px-4 py-6 text-base text-slate-600">
-            No payment records are available in the current filtered list yet, so there are no notes to update.
+            No payment records are available on this page yet, so there are no notes to update.
           </div>
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
-            {filteredResidents
+            {paginatedResidents
               .filter((resident) => resident.currentPayment)
               .map((resident) => (
               <form

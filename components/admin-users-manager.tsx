@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import {
   deleteManagedUserAction,
@@ -12,6 +12,7 @@ import type { ManagedUser } from "@/lib/types";
 import { formatMalaysianPhoneNumber, formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { FormSubmitButton } from "@/components/form-submit-button";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Card } from "@/components/ui/card";
 
 export function AdminUsersManager({
@@ -21,11 +22,13 @@ export function AdminUsersManager({
   users: ManagedUser[];
   currentAdminId: string;
 }) {
+  const PAGE_SIZE = 5;
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
   const [followUpFilter, setFollowUpFilter] = useState<
     "all" | "missing-phone" | "never-logged-in" | "inactive"
   >("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredUsers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -72,6 +75,24 @@ export function AdminUsersManager({
         : followUpFilter === "never-logged-in"
           ? "Never logged in"
           : "Inactive 30+ days";
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, roleFilter, followUpFilter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredUsers.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, filteredUsers]);
+  const startItem = filteredUsers.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endItem = Math.min(currentPage * PAGE_SIZE, filteredUsers.length);
 
   return (
     <section className="space-y-4">
@@ -192,7 +213,7 @@ export function AdminUsersManager({
           {neverLoggedInCount} users have never logged in yet. Users without a phone number or with no recent login are easier to spot below.
         </div>
         <div className="rounded-3xl border border-line bg-white px-4 py-3 text-sm font-semibold text-slate-700">
-          {activeRoleFilterLabel} - {activeFollowUpLabel}: {filteredUsers.length} shown
+          {activeRoleFilterLabel} - {activeFollowUpLabel}: {startItem}-{endItem} of {filteredUsers.length} shown
         </div>
       </div>
 
@@ -202,7 +223,7 @@ export function AdminUsersManager({
             No users matched your search.
           </Card>
         ) : (
-          filteredUsers.map((user) => (
+          paginatedUsers.map((user) => (
             <Card key={user.id} className="p-0">
               <details className="group">
                 <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-4 px-6 py-5">
@@ -412,6 +433,8 @@ export function AdminUsersManager({
           ))
         )}
       </div>
+
+      <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
     </section>
   );
 }

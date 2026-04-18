@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import type { UserActivityWithUser } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Card } from "@/components/ui/card";
 
 const ACTION_OPTIONS = [
@@ -115,10 +115,6 @@ export function AdminActivityLog({
     const startIndex = (currentPage - 1) * PAGE_SIZE;
     return filteredActivity.slice(startIndex, startIndex + PAGE_SIZE);
   }, [currentPage, filteredActivity]);
-
-  const pageNumbers = useMemo(() => {
-    return Array.from({ length: totalPages }, (_, index) => index + 1);
-  }, [totalPages]);
 
   const startItem = filteredActivity.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const endItem = Math.min(currentPage * PAGE_SIZE, filteredActivity.length);
@@ -253,36 +249,11 @@ export function AdminActivityLog({
       </div>
 
       {filteredActivity.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-center gap-2 rounded-3xl border border-line bg-white px-4 py-4">
-          <Button
-            variant="secondary"
-            onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-            disabled={currentPage === 1}
-            className="min-h-11 px-4"
-          >
-            &lt;
-          </Button>
-
-          {pageNumbers.map((pageNumber) => (
-            <Button
-              key={pageNumber}
-              variant={currentPage === pageNumber ? "primary" : "secondary"}
-              onClick={() => setCurrentPage(pageNumber)}
-              className="min-h-11 min-w-11 px-4"
-            >
-              {pageNumber}
-            </Button>
-          ))}
-
-          <Button
-            variant="secondary"
-            onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-            disabled={currentPage === totalPages}
-            className="min-h-11 px-4"
-          >
-            &gt;
-          </Button>
-        </div>
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
       ) : null}
     </section>
   );

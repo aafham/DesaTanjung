@@ -177,19 +177,19 @@ export default async function AdminDashboardPage({
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="bg-emerald-50">
+        <Card className="min-h-52 border-emerald-200 bg-emerald-50">
           <CircleCheckBig className="h-5 w-5 text-emerald-700" />
           <p className="mt-4 text-base font-bold text-emerald-800">Paid</p>
           <p className="font-display text-4xl font-bold text-emerald-950">{paidCount}</p>
           <p className="mt-2 text-sm text-emerald-900">Residents already settled for this month.</p>
         </Card>
-        <Card className="bg-amber-50">
+        <Card className="min-h-52 border-amber-200 bg-amber-50">
           <Clock3 className="h-5 w-5 text-amber-700" />
           <p className="mt-4 text-base font-bold text-amber-800">Pending</p>
           <p className="font-display text-4xl font-bold text-amber-950">{pendingCount}</p>
           <p className="mt-2 text-sm text-amber-900">Proof uploaded and waiting for committee review.</p>
         </Card>
-        <Card className="bg-rose-50">
+        <Card className="min-h-52 border-rose-200 bg-rose-50">
           <TriangleAlert className="h-5 w-5 text-rose-700" />
           <p className="mt-4 text-base font-bold text-rose-800">Needs attention</p>
           <p className="font-display text-4xl font-bold text-rose-950">
@@ -197,7 +197,7 @@ export default async function AdminDashboardPage({
           </p>
           <p className="mt-2 text-sm text-rose-900">Unpaid, overdue, or rejected houses to follow up.</p>
         </Card>
-        <Card className="border-rose-200 bg-rose-50">
+        <Card className="min-h-52 border-rose-200 bg-rose-50">
           <TriangleAlert className="h-5 w-5 text-rose-700" />
           <p className="mt-4 text-base font-bold text-rose-800">Overdue</p>
           <p className="font-display text-4xl font-bold text-rose-950">{overdueCount}</p>

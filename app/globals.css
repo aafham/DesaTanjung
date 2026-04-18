@@ -63,6 +63,11 @@ textarea {
   outline-offset: 3px;
 }
 
+:focus-visible {
+  outline: 3px solid rgba(5, 117, 111, 0.35);
+  box-shadow: 0 0 0 4px rgba(5, 117, 111, 0.12);
+}
+
 ::placeholder {
   color: #64748b;
   opacity: 1;

@@ -90,8 +90,8 @@ export default async function AdminReportsPage({
         }
       />
 
-      <section className="grid gap-4 print:grid-cols-5 md:grid-cols-3 xl:grid-cols-5">
-        <Card className="border-slate-200 bg-slate-50">
+      <section className="grid gap-4 print:grid-cols-5 md:grid-cols-2 xl:grid-cols-[1.15fr_repeat(4,minmax(0,1fr))]">
+        <Card className="border-slate-200 bg-slate-50 xl:min-h-64">
           <p className="text-base font-bold text-slate-700">Collection rate</p>
           <p className="mt-2 font-display text-5xl font-bold text-slate-950">{collectionRate}%</p>
           <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-200">
@@ -102,22 +102,22 @@ export default async function AdminReportsPage({
           </div>
           <p className="mt-3 text-base text-slate-600">Share of houses settled for the selected month.</p>
         </Card>
-        <Card className="border-emerald-200 bg-emerald-50">
+        <Card className="border-emerald-200 bg-emerald-50 xl:min-h-64">
           <p className="text-base font-bold text-emerald-800">Residents settled</p>
           <p className="mt-2 font-display text-4xl font-bold text-emerald-950">{totals.paidCount}</p>
           <p className="mt-2 text-base text-emerald-900">Out of {totals.totalResidents} total houses</p>
         </Card>
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="border-amber-200 bg-amber-50 xl:min-h-64">
           <p className="text-base font-bold text-amber-800">Awaiting review</p>
           <p className="mt-2 font-display text-4xl font-bold text-amber-950">{totals.pendingCount}</p>
           <p className="mt-2 text-base text-amber-900">Receipts uploaded but not reviewed yet</p>
         </Card>
-        <Card className="border-rose-200 bg-rose-50">
+        <Card className="border-rose-200 bg-rose-50 xl:min-h-64">
           <p className="text-base font-bold text-rose-800">Need follow-up</p>
           <p className="mt-2 font-display text-4xl font-bold text-rose-950">{totals.unsettledCount}</p>
           <p className="mt-2 text-base text-rose-900">Unpaid, overdue, or rejected houses</p>
         </Card>
-        <Card className="border-sky-200 bg-sky-50">
+        <Card className="border-sky-200 bg-sky-50 xl:min-h-64">
           <p className="text-base font-bold text-sky-800">Meeting summary</p>
           <p className="mt-2 text-2xl font-bold text-sky-950">
             {totals.paidCount} paid / {totals.unsettledCount} unsettled
@@ -155,7 +155,7 @@ export default async function AdminReportsPage({
       </Card>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="border-sky-200 bg-sky-50">
+        <Card className="min-h-52 border-sky-200 bg-sky-50">
           <p className="text-base font-bold text-sky-800">Expected collection</p>
           <p className="mt-2 font-display text-4xl font-bold text-sky-950">
             RM {totals.expectedCollection.toFixed(2)}
@@ -164,14 +164,14 @@ export default async function AdminReportsPage({
             RM {(settings.monthly_fee ?? 0).toFixed(2)} x {totals.totalResidents} residents
           </p>
         </Card>
-        <Card className="border-emerald-200 bg-emerald-50">
+        <Card className="min-h-52 border-emerald-200 bg-emerald-50">
           <p className="text-base font-bold text-emerald-800">Collected</p>
           <p className="mt-2 font-display text-4xl font-bold text-emerald-950">
             RM {totals.collectedAmount.toFixed(2)}
           </p>
           <p className="mt-2 text-base text-emerald-900">{totals.paidCount} houses paid</p>
         </Card>
-        <Card className="border-rose-200 bg-rose-50">
+        <Card className="min-h-52 border-rose-200 bg-rose-50">
           <p className="text-base font-bold text-rose-800">Outstanding</p>
           <p className="mt-2 font-display text-4xl font-bold text-rose-950">
             RM {totals.outstandingAmount.toFixed(2)}
@@ -180,7 +180,7 @@ export default async function AdminReportsPage({
             {totals.unsettledCount} houses to follow up
           </p>
         </Card>
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="min-h-52 border-amber-200 bg-amber-50">
           <p className="text-base font-bold text-amber-800">Due date</p>
           <p className="mt-2 font-display text-3xl font-bold text-amber-950">{dueDateLabel}</p>
           <p className="mt-2 text-base text-amber-900">{totals.pendingCount} receipts still pending</p>
@@ -188,28 +188,32 @@ export default async function AdminReportsPage({
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <Card className="border-emerald-200 bg-emerald-50">
+        <Card className="min-h-44 border-emerald-200 bg-emerald-50">
           <p className="text-base font-bold text-emerald-800">Paid</p>
           <p className="mt-2 font-display text-4xl font-bold text-slate-950">{totals.paidCount}</p>
+          <p className="mt-2 text-sm text-emerald-900">Fully settled for this month.</p>
         </Card>
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="min-h-44 border-amber-200 bg-amber-50">
           <p className="text-base font-bold text-amber-800">Pending</p>
           <p className="mt-2 font-display text-4xl font-bold text-slate-950">{totals.pendingCount}</p>
+          <p className="mt-2 text-sm text-amber-900">Receipt uploaded and waiting review.</p>
         </Card>
-        <Card className="border-slate-200 bg-slate-50">
+        <Card className="min-h-44 border-slate-200 bg-slate-50">
           <p className="text-base font-bold text-slate-700">Unpaid</p>
           <p className="mt-2 font-display text-4xl font-bold text-slate-950">{totals.unpaidCount}</p>
+          <p className="mt-2 text-sm text-slate-600">No payment record submitted yet.</p>
         </Card>
-        <Card className="border-rose-200 bg-rose-50">
+        <Card className="min-h-44 border-rose-200 bg-rose-50">
           <p className="text-base font-bold text-rose-800">Overdue</p>
           <p className="mt-2 font-display text-4xl font-bold text-rose-950">{totals.overdueCount}</p>
           <p className="mt-2 text-sm text-rose-900">Past due date and still unpaid</p>
         </Card>
-        <Card className="border-rose-200 bg-rose-50">
+        <Card className="min-h-44 border-rose-200 bg-rose-50">
           <p className="text-base font-bold text-rose-800">Rejected</p>
           <p className="mt-2 font-display text-4xl font-bold text-slate-950">
             {totals.rejectedCount}
           </p>
+          <p className="mt-2 text-sm text-rose-900">Need a clearer re-upload from the resident.</p>
         </Card>
       </section>
 

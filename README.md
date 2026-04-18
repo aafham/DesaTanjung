@@ -95,6 +95,10 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] alamat
   - [x] nombor telefon
 - [x] Dashboard admin
+- [x] UI admin dikemaskan dan diseragamkan:
+  - [x] dashboard
+  - [x] approvals
+  - [x] reports
 - [x] Approval queue admin
 - [x] Approve payment
 - [x] Reject payment dengan sebab reject
@@ -115,6 +119,11 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
 - [x] Admin reports page
 - [x] Admin notices / announcements
 - [x] Admin settings page
+- [x] Pagination untuk senarai panjang:
+  - [x] admin activity
+  - [x] admin users
+  - [x] admin residents
+  - [x] resident notifications
 - [x] Upload QR image dalam settings
 - [x] Dropdown bank Malaysia dalam settings
 - [x] Admin health page
@@ -163,7 +172,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] filter by type
   - [x] badge count lebih jelas
 - [ ] Accessibility pass akhir:
-  - [ ] focus state
+  - [x] focus state
   - [ ] contrast audit
   - [ ] keyboard flow
 
@@ -708,7 +717,27 @@ Di `Health`, admin boleh semak keadaan sistem:
 
 Ini page terbaik bila rasa sistem “tak sync” atau nampak warning.
 
-### O. Tutup kitaran bulanan
+### O. Guna pagination pada senarai panjang
+
+Untuk elak scroll terlalu panjang, sistem sekarang pecahkan senarai besar kepada beberapa page.
+
+Admin boleh guna pagination pada:
+
+1. `Activity`
+2. `Users`
+3. `Residents`
+
+Resident pula ada pagination pada:
+
+1. `Notifications`
+
+Setiap page guna format:
+
+- `<` untuk page sebelum
+- nombor page seperti `1 2 3 4`
+- `>` untuk page seterusnya
+
+### P. Tutup kitaran bulanan
 
 Pada hujung bulan atau selepas due date, admin biasanya akan buat:
 
@@ -777,6 +806,7 @@ Resident boleh buka page `Notifications` untuk lihat semua update penting sepert
 - bayaran diluluskan
 - bayaran ditolak
 - bayaran ditanda cash paid
+- buka notifikasi ikut page jika senarai sudah banyak
 
 ### 5. Profile
 
@@ -906,6 +936,7 @@ Admin boleh:
 - filter ikut action
 - filter ikut role
 - filter ikut tempoh masa
+- guna pagination 5 log satu page
 - export CSV
 
 Action yang direkod:
@@ -952,6 +983,18 @@ Admin boleh update:
 - monthly fee
 - due day
 - payment QR image
+
+### 12. Pagination untuk page panjang
+
+Admin kini boleh guna pagination di:
+
+- `Activity`
+- `Users`
+- `Residents`
+
+Resident pula boleh guna pagination di:
+
+- `Notifications`
 
 ## Log aktiviti yang direkod
 

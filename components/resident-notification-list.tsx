@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BellRing, CheckCircle2, Clock3, Megaphone, ShieldAlert, Wallet } from "lucide-react";
 import {
   markResidentNotificationsReadAction,
@@ -9,6 +9,7 @@ import {
 import type { NotificationRecord } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Card } from "@/components/ui/card";
 
 function getNotificationPresentation(message: string) {
@@ -77,9 +78,11 @@ export function ResidentNotificationList({
   compact?: boolean;
   redirectPath?: string;
 }) {
+  const PAGE_SIZE = 5;
   const [filter, setFilter] = useState<"all" | "approved" | "pending" | "action" | "cash" | "update">(
     "all",
   );
+  const [currentPage, setCurrentPage] = useState(1);
   const unreadCount = notifications.filter((notification) => !notification.is_read).length;
   const filteredNotifications = useMemo(
     () =>
@@ -92,6 +95,30 @@ export function ResidentNotificationList({
       }),
     [filter, notifications],
   );
+  const totalPages = compact ? 1 : Math.max(1, Math.ceil(filteredNotifications.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedNotifications = useMemo(() => {
+    if (compact) {
+      return filteredNotifications;
+    }
+
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredNotifications.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [compact, currentPage, filteredNotifications]);
+  const startItem = filteredNotifications.length === 0 ? 0 : compact ? 1 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endItem = compact
+    ? filteredNotifications.length
+    : Math.min(currentPage * PAGE_SIZE, filteredNotifications.length);
 
   return (
     <Card>
@@ -130,33 +157,39 @@ export function ResidentNotificationList({
       </div>
 
       {!compact ? (
-        <div className="mt-5 flex flex-wrap gap-2">
-          {[
-            { value: "all", label: "All" },
-            { value: "approved", label: "Approved" },
-            { value: "pending", label: "Pending review" },
-            { value: "action", label: "Needs action" },
-            { value: "cash", label: "Cash update" },
-            { value: "update", label: "Update" },
-          ].map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() =>
-                setFilter(
-                  option.value as "all" | "approved" | "pending" | "action" | "cash" | "update",
-                )
-              }
-              className={`rounded-full px-4 py-2 text-sm font-bold transition ${
-                filter === option.value
-                  ? "bg-slate-950 text-white"
-                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {[
+              { value: "all", label: "All" },
+              { value: "approved", label: "Approved" },
+              { value: "pending", label: "Pending review" },
+              { value: "action", label: "Needs action" },
+              { value: "cash", label: "Cash update" },
+              { value: "update", label: "Update" },
+            ].map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() =>
+                  setFilter(
+                    option.value as "all" | "approved" | "pending" | "action" | "cash" | "update",
+                  )
+                }
+                className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                  filter === option.value
+                    ? "bg-slate-950 text-white"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4 rounded-3xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+            Showing {startItem}-{endItem} of {filteredNotifications.length} notifications.
+          </div>
+        </>
       ) : null}
 
       <div className="mt-5 space-y-3">
@@ -167,7 +200,7 @@ export function ResidentNotificationList({
               : "No notifications matched the current filter."}
           </div>
         ) : (
-          filteredNotifications.map((notification) => {
+          paginatedNotifications.map((notification) => {
             const presentation = getNotificationPresentation(notification.message);
             const Icon = presentation.icon;
 
@@ -222,6 +255,16 @@ export function ResidentNotificationList({
           })
         )}
       </div>
+
+      {!compact ? (
+        <div className="mt-4">
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      ) : null}
     </Card>
   );
 }
