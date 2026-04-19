@@ -139,7 +139,7 @@ export default async function AdminReportsPage({
               style={{ width: `${collectionRate}%` }}
             />
           </div>
-          <p className="mt-3 text-base text-slate-600">Share of houses settled for the selected month.</p>
+          <p className="mt-3 text-base text-slate-700">Share of houses settled for the selected month.</p>
         </Card>
         <Card className="border-emerald-200 bg-emerald-50 xl:min-h-64">
           <p className="text-base font-bold text-emerald-800">Residents settled</p>
@@ -174,7 +174,7 @@ export default async function AdminReportsPage({
             <h3 className="mt-2 text-3xl font-bold text-slate-950">
               Collection progress for {currentMonthLabel}
             </h3>
-            <p className="mt-2 max-w-2xl text-base text-slate-600">
+            <p className="mt-2 max-w-2xl text-base text-slate-700">
               {totals.paidCount} houses have settled payment, while {totals.unsettledCount} still need follow-up before closing this month.
             </p>
           </div>
@@ -282,7 +282,7 @@ export default async function AdminReportsPage({
           <h3 className="mt-2 text-3xl font-bold text-slate-950">
             Houses still needing action
           </h3>
-          <p className="mt-2 text-base text-slate-600">
+          <p className="mt-2 text-base text-slate-700">
             Prioritise these houses after the meeting or export the full resident table below.
           </p>
           <div className="mt-5 space-y-3">
@@ -298,7 +298,7 @@ export default async function AdminReportsPage({
                       <p className="text-lg font-bold text-slate-950">
                         {resident.house_number} - {resident.name}
                       </p>
-                      <p className="mt-1 text-sm text-slate-600">{resident.address}</p>
+                      <p className="mt-1 text-sm text-slate-700">{resident.address}</p>
                     </div>
                     <StatusBadge status={resident.currentPayment?.display_status ?? "unpaid"} />
                   </div>

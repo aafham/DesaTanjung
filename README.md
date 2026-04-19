@@ -295,7 +295,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 
 - [ ] Jalankan suite penuh E2E pada disposable environment sebenar untuk mutation flow admin
 - [x] Tambah assertion visual / accessibility pada flow admin yang paling penting
-- [ ] Contrast audit kecil yang masih berbaki pada komponen admin tertentu
+- [x] Contrast audit kecil yang masih berbaki pada komponen admin tertentu
 - [x] Keyboard flow audit penuh untuk page admin utama
 - [ ] Performance / scalability bila data makin besar:
   - [x] server-side narrowing untuk global search
@@ -360,6 +360,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Activity page dipolish semula dengan audit summary dan clearer filtered export workflow
 - [x] Reports page dipolish semula dengan meeting highlights dan follow-up queue
 - [x] Keyboard-first admin filtering diperkemas pada users, residents, search, activity, dan month filter
+- [x] Contrast admin diperkemas lagi pada reminder panel gelap dan report copy yang masih borderline
 - [x] Search panel sidebar issue dibetulkan supaya tidak mengecil pada page tertentu
 - [x] Admin search result dipadatkan dengan pagination
 - [x] Expandable admin cards ada focus hint dan keyboard style yang lebih baik

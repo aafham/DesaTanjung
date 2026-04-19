@@ -236,21 +236,21 @@ export function AdminReminderTools({
     <Card className="bg-gradient-to-br from-slate-950 to-emerald-950 text-white">
       <div className="flex items-start gap-3">
         <div className="rounded-2xl bg-white/10 p-3">
-          <MessageSquareText className="h-5 w-5 text-teal-200" />
+          <MessageSquareText className="h-5 w-5 text-teal-100" />
         </div>
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-200">Reminder helper</p>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">Reminder helper</p>
           <h3 className="mt-2 font-display text-3xl font-bold leading-tight">
             Copy unpaid list for WhatsApp
           </h3>
-          <p className="mt-2 text-base text-slate-200">
+          <p className="mt-2 text-base text-slate-100">
             Use this when the committee wants to send a quick monthly reminder.
           </p>
         </div>
       </div>
 
       <div className="mt-5 rounded-3xl border border-white/15 bg-white/5 p-4">
-        <p className="text-sm font-bold uppercase tracking-[0.12em] text-teal-100">Reminder tone</p>
+        <p className="text-sm font-bold uppercase tracking-[0.12em] text-teal-50">Reminder tone</p>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           {TONE_OPTIONS.map((option) => {
             const active = tone === option.value;
@@ -268,7 +268,7 @@ export function AdminReminderTools({
                 }`}
               >
                 <p className="text-base font-bold">{option.label}</p>
-                <p className={`mt-2 text-sm leading-6 ${active ? "text-slate-800" : "text-slate-200"}`}>
+                <p className={`mt-2 text-sm leading-6 ${active ? "text-slate-800" : "text-slate-100"}`}>
                   {option.description}
                 </p>
               </button>
@@ -307,7 +307,7 @@ export function AdminReminderTools({
               Open WhatsApp draft
             </a>
           ) : (
-            <div className="flex min-h-12 w-full items-center justify-center rounded-3xl border border-dashed border-white/20 px-5 py-3 text-center text-sm font-semibold leading-relaxed text-slate-200">
+            <div className="flex min-h-12 w-full items-center justify-center rounded-3xl border border-dashed border-white/20 px-5 py-3 text-center text-sm font-semibold leading-relaxed text-slate-100">
               Add at least one resident phone number to open WhatsApp draft.
             </div>
           )}
@@ -315,11 +315,11 @@ export function AdminReminderTools({
 
         <div className="grid gap-3 md:grid-cols-2">
           <div className="rounded-3xl border border-rose-300/30 bg-rose-500/10 px-4 py-4 text-left">
-            <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-200">
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-100">
               Overdue list
             </p>
             <p className="mt-2 text-2xl font-bold text-white">{overdueResidents.length}</p>
-            <p className="mt-2 text-sm text-slate-200">
+            <p className="mt-2 text-sm text-slate-100">
               {copiedKind === "overdue" ? "Copied overdue reminder." : "Copy or open WhatsApp draft for overdue residents."}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -345,11 +345,11 @@ export function AdminReminderTools({
             </div>
           </div>
           <div className="rounded-3xl border border-amber-300/30 bg-amber-500/10 px-4 py-4 text-left">
-            <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-200">
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-100">
               Unpaid / rejected
             </p>
             <p className="mt-2 text-2xl font-bold text-white">{unpaidResidents.length}</p>
-            <p className="mt-2 text-sm text-slate-200">
+            <p className="mt-2 text-sm text-slate-100">
               {copiedKind === "unpaid" ? "Copied follow-up reminder." : "Copy or open a follow-up draft for residents who still need action."}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
