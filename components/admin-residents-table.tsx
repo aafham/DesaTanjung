@@ -199,8 +199,8 @@ export function AdminResidentsTable({
             <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
               Resident directory
             </p>
-            <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-              <div>
+            <div className="mt-3 grid gap-4">
+              <div className="max-w-xl">
                 <label htmlFor="resident-search" className="mb-2 block text-base font-bold text-slate-950">
                   Search resident
                 </label>
@@ -216,7 +216,11 @@ export function AdminResidentsTable({
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div>
+                <p className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
+                  Status filter
+                </p>
+                <div className="flex flex-wrap gap-2">
                 {filterOptions.map((option) => (
                   <button
                     key={option.value}
@@ -231,6 +235,7 @@ export function AdminResidentsTable({
                     {option.label}
                   </button>
                 ))}
+                </div>
               </div>
             </div>
           </div>
