@@ -185,9 +185,10 @@ export function AdminSettingsForm({
             accept="image/png,image/jpeg,image/jpg,image/webp"
             data-testid="payment-qr-input"
             onChange={(event) => handleQrPreview(event.target.files?.[0] ?? null)}
-            className="hidden"
+            className="sr-only"
+            aria-describedby="payment-qr-help"
           />
-          <p className="mt-2 text-sm text-muted">
+          <p id="payment-qr-help" className="mt-2 text-sm text-muted">
             Upload a new QR image if bank QR changes.
           </p>
           {settings.payment_qr_url ? (

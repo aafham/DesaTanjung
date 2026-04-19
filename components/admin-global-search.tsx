@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Activity, ArrowRight, Search, ShieldCheck, Users } from "lucide-react";
 import { ContactActions } from "@/components/contact-actions";
 import { Card } from "@/components/ui/card";
@@ -64,17 +65,50 @@ export function AdminGlobalSearch({
   residents,
   payments,
   activityLogs,
+  initialQuery,
 }: {
   currentMonthLabel: string;
   residents: ManagedUser[];
   payments: SearchPayment[];
   activityLogs: UserActivityWithUser[];
+  initialQuery?: string;
 }) {
   const PAGE_SIZE = 3;
-  const [query, setQuery] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [focus, setFocus] = useState<"all" | "residents" | "payments" | "activity">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const deferredQuery = useDeferredValue(query);
+
+  useEffect(() => {
+    setQuery(initialQuery ?? "");
+  }, [initialQuery]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      const normalized = deferredQuery.trim();
+
+      if (normalized) {
+        params.set("query", normalized);
+      } else {
+        params.delete("query");
+      }
+
+      const nextSearch = params.toString();
+      const nextHref = nextSearch ? `${pathname}?${nextSearch}` : pathname;
+      const currentSearch = searchParams.toString();
+      const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
+
+      if (nextHref !== currentHref) {
+        router.replace(nextHref, { scroll: false });
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [deferredQuery, pathname, router, searchParams]);
 
   const filtered = useMemo(() => {
     const normalized = deferredQuery.trim().toLowerCase();

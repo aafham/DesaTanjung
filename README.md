@@ -221,6 +221,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] focus mode `all / residents / payments / activity`
   - [x] shortcut action terus dari result
   - [x] pagination result
+  - [x] server-side narrowing bila query digunakan
 - [x] Admin reports page
 - [x] Print report
 - [x] Download report snapshot tanpa bergantung pada browser print
@@ -263,6 +264,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] mark cash paid
   - [x] settings update
   - [x] QR upload assertion
+  - [x] assertion visual / accessibility asas pada flow admin penting
 - [x] Error handling yang sudah dirapikan:
   - [x] mesej error yang lebih konsisten pada server action utama
   - [x] fail-safe yang lebih mesra pada flow kritikal admin
@@ -270,12 +272,12 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 #### Masih perlu dibuat / boleh dipertingkatkan
 
 - [ ] Jalankan suite penuh E2E pada disposable environment sebenar untuk mutation flow admin
-- [ ] Tambah assertion visual / accessibility pada flow admin yang paling penting
+- [x] Tambah assertion visual / accessibility pada flow admin yang paling penting
 - [ ] Contrast audit kecil yang masih berbaki pada komponen admin tertentu
 - [ ] Keyboard flow audit penuh untuk page admin utama
 - [ ] Performance / scalability bila data makin besar:
-  - [ ] server-side narrowing untuk global search
-  - [ ] semakan index database untuk query admin yang kerap
+  - [x] server-side narrowing untuk global search
+  - [x] semakan index database untuk query admin yang kerap
 - [ ] UI audit dan final polish untuk page admin yang belum disemak penuh:
   - [ ] activity
   - [ ] reports
@@ -283,8 +285,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [ ] settings
   - [ ] health
 - [ ] Polisi operasi live:
-  - [ ] elakkan kongsi satu akaun admin untuk ramai AJK
-  - [ ] sediakan akaun admin berasingan untuk audit yang lebih jelas
+  - [x] elakkan kongsi satu akaun admin untuk ramai AJK
+  - [x] sediakan akaun admin berasingan untuk audit yang lebih jelas
 
 ### Checklist UI interface
 
@@ -605,11 +607,17 @@ npm run build
 5. Buka `Approvals` untuk approve atau reject resit
 6. Buka `Residents` untuk follow-up, cash paid, reminder, CSV export, dan payment note
 7. Buka `Resident detail` untuk lihat history, timeline, dan bukti lama
-8. Buka `Users` untuk add, edit, reset password, atau delete user
+8. Buka `Users` untuk add, edit, reset password, delete user, atau cipta akaun admin berasingan
 9. Buka `Search` bila perlu cari cepat merentas resident, payment, dan activity
 10. Buka `Reports` untuk print report atau download snapshot bulanan
 11. Buka `Activity` untuk audit log terbaru 14 hari
 12. Buka `Announcements` untuk publish notice
+
+Nota operasi admin:
+
+- elakkan kongsi satu login admin untuk ramai AJK
+- cipta satu akaun admin berasingan bagi setiap jawatankuasa yang perlu akses
+- ini akan buat audit log lebih jelas bila ada approve, reject, settings update, atau user management
 
 ## Log aktiviti yang direkod
 

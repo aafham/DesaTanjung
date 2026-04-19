@@ -13,6 +13,10 @@ test.describe("admin settings", () => {
 
     await loginWithCredentials(page, env.adminIdentifier!, env.adminPassword!);
     await page.goto("/admin/settings");
+    await expect(
+      page.getByRole("heading", { name: "Payment and community settings" }),
+    ).toBeVisible();
+    await expect(page.getByTestId("payment-qr-upload-label")).toBeVisible();
 
     const uniqueSuffix = Date.now().toString().slice(-6);
     const communityName = `Desa Tanjung Test ${uniqueSuffix}`;
@@ -35,6 +39,7 @@ test.describe("admin settings", () => {
 
     await expect(page).toHaveURL(/message=Payment%20settings%20updated%20successfully/);
     await expect(page.getByText("Payment settings updated successfully.")).toBeVisible();
+    await expect(page.getByRole("status")).toContainText("Payment settings updated successfully.");
 
     await expect(page.getByLabel("Community name")).toHaveValue(communityName);
     await expect(page.getByLabel("Monthly fee amount")).toHaveValue(monthlyFee);

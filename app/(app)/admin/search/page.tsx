@@ -7,11 +7,17 @@ import { getAdminSearchData } from "@/lib/data";
 export default async function AdminSearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; error?: string; message?: string }>;
+  searchParams: Promise<{ month?: string; query?: string; error?: string; message?: string }>;
 }) {
   const params = await searchParams;
-  const { activityLogs, currentMonthLabel, payments, residents, warnings } =
-    await getAdminSearchData(params.month);
+  const {
+    activityLogs,
+    currentMonthLabel,
+    payments,
+    residents,
+    searchQuery,
+    warnings,
+  } = await getAdminSearchData(params.month, params.query);
 
   return (
     <div className="space-y-6">
@@ -47,6 +53,7 @@ export default async function AdminSearchPage({
         residents={residents}
         payments={payments}
         activityLogs={activityLogs}
+        initialQuery={searchQuery}
       />
     </div>
   );

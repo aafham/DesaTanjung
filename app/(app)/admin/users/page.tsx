@@ -134,11 +134,29 @@ export default async function AdminUsersPage({
                 />
                 <p className="mt-2 text-sm text-muted">Use Malaysian mobile format such as 012-345 6789.</p>
               </div>
+              <div>
+                <label htmlFor="new-role" className="mb-2 block text-base font-bold text-slate-950">
+                  Account role
+                </label>
+                <select
+                  id="new-role"
+                  name="role"
+                  defaultValue="user"
+                  className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
+                >
+                  <option value="user">Resident</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <p className="mt-2 text-sm text-muted">
+                  Create separate admin accounts for committee members instead of sharing one login.
+                </p>
+              </div>
               <div className="md:col-span-2 rounded-3xl bg-slate-50 px-4 py-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                   <p className="max-w-xl text-base text-muted">
-                    Every new resident is created with username based on house number and default
-                    password <span className="font-semibold text-slate-900">password</span>.
+                    Every new account is created with username based on house number. Resident
+                    accounts start with default password <span className="font-semibold text-slate-900">password</span>,
+                    while admin accounts start with <span className="font-semibold text-slate-900">passwordadmin</span>.
                   </p>
                   <FormSubmitButton className="min-h-14 shrink-0 px-6 py-3 sm:min-w-[10rem]" pendingLabel="Adding user...">
                     Add user
@@ -166,6 +184,12 @@ export default async function AdminUsersPage({
                 <p className="text-base font-bold text-slate-950">3. Ask resident to change password</p>
                 <p className="mt-2 text-sm leading-7 text-slate-600">
                   The portal will prompt a password change on first login to keep the account secure.
+                </p>
+              </div>
+              <div className="rounded-3xl bg-white px-4 py-4">
+                <p className="text-base font-bold text-slate-950">4. Use separate admin accounts</p>
+                <p className="mt-2 text-sm leading-7 text-slate-600">
+                  Create one admin login per committee member so audit history stays clear and you can avoid shared passwords.
                 </p>
               </div>
             </div>

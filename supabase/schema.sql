@@ -120,6 +120,39 @@ create table if not exists public.announcements (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create index if not exists users_role_house_number_idx
+on public.users (role, house_number);
+
+create index if not exists users_role_last_login_idx
+on public.users (role, last_login_at desc);
+
+create index if not exists payments_month_status_updated_idx
+on public.payments (month, status, updated_at desc);
+
+create index if not exists payments_user_month_updated_idx
+on public.payments (user_id, month, updated_at desc);
+
+create index if not exists notifications_user_scope_created_idx
+on public.notifications (user_id, scope, created_at desc);
+
+create index if not exists notifications_scope_read_created_idx
+on public.notifications (scope, is_read, created_at desc);
+
+create index if not exists payment_audit_logs_user_created_idx
+on public.payment_audit_logs (user_id, created_at desc);
+
+create index if not exists payment_audit_logs_payment_created_idx
+on public.payment_audit_logs (payment_id, created_at desc);
+
+create index if not exists user_activity_logs_user_created_idx
+on public.user_activity_logs (user_id, created_at desc);
+
+create index if not exists user_activity_logs_created_idx
+on public.user_activity_logs (created_at desc);
+
+create index if not exists announcements_audience_pinned_published_idx
+on public.announcements (audience, is_pinned desc, published_at desc);
+
 insert into public.app_settings (id)
 values (true)
 on conflict (id) do nothing;

@@ -54,6 +54,9 @@ test.describe.serial("resident payment and admin review flows", () => {
     await expect(adminPage).toHaveURL(/\/admin$/);
 
     await adminPage.goto("/admin/approvals");
+    await expect(
+      adminPage.getByRole("heading", { name: /review submissions for/i }),
+    ).toBeVisible();
     const approvalCard = adminPage.getByTestId(
       `approval-card-${env.paymentResidentIdentifier!}`,
     );
@@ -64,6 +67,7 @@ test.describe.serial("resident payment and admin review flows", () => {
 
     await expect(adminPage).toHaveURL(/message=Payment%20approved%20successfully/);
     await expect(adminPage.getByText("Payment approved successfully.")).toBeVisible();
+    await expect(adminPage.getByRole("status")).toContainText("Payment approved successfully.");
     await adminPage.close();
   });
 
@@ -87,6 +91,9 @@ test.describe.serial("resident payment and admin review flows", () => {
     const adminPage = await browser.newPage();
     await loginWithCredentials(adminPage, env.adminIdentifier!, env.adminPassword!);
     await adminPage.goto("/admin/approvals");
+    await expect(
+      adminPage.getByRole("heading", { name: /review submissions for/i }),
+    ).toBeVisible();
 
     const approvalCard = adminPage.getByTestId(
       `approval-card-${env.paymentResidentIdentifier!}`,
@@ -101,6 +108,9 @@ test.describe.serial("resident payment and admin review flows", () => {
 
     await expect(adminPage).toHaveURL(/message=Payment%20proof%20rejected%20with%20reason%20saved/);
     await expect(adminPage.getByText("Payment proof rejected with reason saved.")).toBeVisible();
+    await expect(adminPage.getByRole("status")).toContainText(
+      "Payment proof rejected with reason saved.",
+    );
     await adminPage.close();
   });
 
@@ -112,6 +122,9 @@ test.describe.serial("resident payment and admin review flows", () => {
 
     await loginWithCredentials(page, env.adminIdentifier!, env.adminPassword!);
     await page.goto("/admin/residents");
+    await expect(
+      page.getByRole("heading", { name: /payment status for/i }),
+    ).toBeVisible();
 
     await page.getByLabel("Search resident").fill(env.cashResidentHouseNumber!);
     const markCashButton = page.getByTestId(`mark-cash-${env.cashResidentHouseNumber!}`);
@@ -122,5 +135,6 @@ test.describe.serial("resident payment and admin review flows", () => {
 
     await expect(page).toHaveURL(/message=Cash%20payment%20marked%20successfully/);
     await expect(page.getByText("Cash payment marked successfully.")).toBeVisible();
+    await expect(page.getByRole("status")).toContainText("Cash payment marked successfully.");
   });
 });

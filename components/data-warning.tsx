@@ -6,7 +6,12 @@ export function DataWarning({ warnings }: { warnings: string[] }) {
   }
 
   return (
-    <div className="rounded-4xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-950 shadow-soft">
+    <div
+      className="rounded-4xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-950 shadow-soft"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <div className="flex items-start gap-3">
         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
         <div>

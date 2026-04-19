@@ -828,9 +828,9 @@ export async function createManagedUserAction(formData: FormData) {
   const address = String(formData.get("address") ?? "").trim();
   const phoneNumberInput = String(formData.get("phone_number") ?? "").trim();
   const phoneNumber = normalizeMalaysianPhoneNumber(phoneNumberInput);
-  const role = "user";
+  const role = String(formData.get("role") ?? "user").trim();
 
-  if (!houseNumber || !name || !address || !phoneNumberInput) {
+  if (!houseNumber || !name || !address || !phoneNumberInput || !["user", "admin"].includes(role)) {
     redirectWithError("/admin/users", "Please fill in all user fields correctly.");
   }
 
@@ -840,7 +840,7 @@ export async function createManagedUserAction(formData: FormData) {
 
   const adminClient = createAdminClient();
   const email = identifierToEmail(houseNumber);
-  const defaultPassword = DEFAULT_USER_PASSWORD;
+  const defaultPassword = role === "admin" ? DEFAULT_ADMIN_PASSWORD : DEFAULT_USER_PASSWORD;
 
   const { data, error } = await adminClient.auth.admin.createUser({
     email,
