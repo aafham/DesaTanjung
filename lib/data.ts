@@ -588,9 +588,12 @@ export async function getAdminActivityLogData() {
   }
 
   const supabase = await createClient();
+  const recentCutoff = new Date();
+  recentCutoff.setDate(recentCutoff.getDate() - 14);
   const { data, error } = await supabase
     .from("user_activity_logs")
     .select("id, user_id, action, message, created_at, users(house_number, name, role)")
+    .gte("created_at", recentCutoff.toISOString())
     .order("created_at", { ascending: false })
     .limit(100);
 
