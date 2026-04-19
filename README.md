@@ -350,7 +350,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [ ] semak empty state jika tiada history / tiada notification / tiada resit
   - [ ] semak mobile layout untuk payment upload, timeline, dan history table
 - [ ] Admin screens:
-  - [ ] admin dashboard
+  - [x] admin dashboard
   - [ ] approvals page
   - [ ] residents page
   - [ ] resident detail page
@@ -397,7 +397,7 @@ Untuk saya kemaskan semula UI dengan lebih tepat, saya perlukan screenshot berik
   - [ ] `/payments`
   - [ ] `/notifications`
   - [ ] `/profile`
-  - [ ] `/admin`
+  - [x] `/admin`
   - [ ] `/admin/approvals`
   - [ ] `/admin/residents`
   - [ ] `/admin/residents/[id]`
@@ -448,7 +448,7 @@ Nota untuk screenshot:
 - [ ] kalau tak sempat ambil semua, priority pertama ialah:
   - [ ] `/dashboard`
   - [ ] `/payments`
-  - [ ] `/admin`
+  - [x] `/admin`
   - [ ] `/admin/approvals`
   - [ ] `/admin/residents`
   - [ ] `/admin/users`
