@@ -68,7 +68,7 @@ export default async function AdminResidentDetailPage({
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr] xl:items-start">
         <Card
           className="border-slate-900 text-white"
           style={{
@@ -158,22 +158,38 @@ export default async function AdminResidentDetailPage({
                 </div>
               </div>
             </div>
+            <div className="rounded-3xl border border-slate-200 bg-white px-4 py-4">
+              <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">
+                Suggested admin next step
+              </p>
+              <p className="mt-2 text-base text-slate-800">
+                {currentPayment?.status === "pending"
+                  ? "Open Approvals to review the uploaded receipt and confirm the payment."
+                  : currentPayment?.status === "rejected"
+                    ? "Contact the resident and ask for a clearer or corrected re-upload."
+                    : currentPayment?.display_status === "overdue"
+                      ? "Follow up immediately because this resident is already past the due date."
+                      : currentPayment?.display_status === "paid"
+                        ? "No urgent action is needed. You can review history or committee notes if required."
+                        : "Remind the resident to make payment and upload the receipt for review."}
+              </p>
+            </div>
           </div>
         </Card>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Card className="min-h-48">
           <UserRound className="h-5 w-5 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">Owner</p>
           <p className="text-2xl font-bold text-slate-950">{resident.name}</p>
         </Card>
-        <Card>
+        <Card className="min-h-48">
           <Home className="h-5 w-5 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">Address</p>
           <p className="text-xl font-bold text-slate-950">{resident.address}</p>
         </Card>
-        <Card>
+        <Card className="min-h-48">
           <Phone className="h-5 w-5 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">Phone number</p>
           <p className="text-xl font-bold text-slate-950">
@@ -182,7 +198,7 @@ export default async function AdminResidentDetailPage({
               : "No phone number saved yet"}
           </p>
         </Card>
-        <Card>
+        <Card className="min-h-48">
           <Clock3 className="h-5 w-5 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">Due date</p>
           <p className="text-xl font-bold text-slate-950">{dueDateLabel}</p>
@@ -192,7 +208,7 @@ export default async function AdminResidentDetailPage({
         </Card>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+      <section className="grid gap-4 xl:grid-cols-[0.88fr_1.12fr] xl:items-start">
         <Card className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -206,24 +222,32 @@ export default async function AdminResidentDetailPage({
             <StatusBadge status={currentPayment?.display_status ?? "unpaid"} />
           </div>
 
-          <div className="rounded-3xl bg-slate-50 p-4">
-            <p className="text-base font-bold text-slate-950">
-              Payment method:{" "}
-              <span className="capitalize">{currentPayment?.payment_method ?? "online"}</span>
-            </p>
-            <p className="mt-2 text-base text-muted">
-              Updated:{" "}
-              {currentPayment?.updated_at
-                ? formatTimestamp(currentPayment.updated_at)
-                : "No record yet"}
-            </p>
+          <div className="grid gap-3 rounded-3xl bg-slate-50 p-4 md:grid-cols-2">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">
+                Payment method
+              </p>
+              <p className="mt-2 text-xl font-bold capitalize text-slate-950">
+                {currentPayment?.payment_method ?? "online"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">
+                Updated
+              </p>
+              <p className="mt-2 text-xl font-bold text-slate-950">
+                {currentPayment?.updated_at
+                  ? formatTimestamp(currentPayment.updated_at)
+                  : "No record yet"}
+              </p>
+            </div>
             {currentPayment?.reject_reason ? (
-              <p className="mt-3 rounded-2xl bg-rose-50 px-3 py-2 text-base font-bold text-rose-900">
+              <p className="rounded-2xl bg-rose-50 px-3 py-2 text-base font-bold text-rose-900 md:col-span-2">
                 Reject reason: {currentPayment.reject_reason}
               </p>
             ) : null}
             {currentPayment?.notes ? (
-              <p className="mt-3 rounded-2xl bg-white px-3 py-2 text-base text-slate-800">
+              <p className="rounded-2xl bg-white px-3 py-2 text-base text-slate-800 md:col-span-2">
                 Admin note: {currentPayment.notes}
               </p>
             ) : null}
@@ -246,7 +270,7 @@ export default async function AdminResidentDetailPage({
           )}
         </Card>
 
-        <Card>
+        <Card className="self-start">
           <div className="flex items-center gap-3">
             <div className="rounded-2xl bg-teal-50 p-3">
               <ReceiptText className="h-5 w-5 text-primary" />
@@ -272,7 +296,11 @@ export default async function AdminResidentDetailPage({
 
       <Card className="p-0 overflow-hidden">
         <div className="border-b border-line bg-slate-50 px-4 py-4">
-          <h3 className="text-2xl font-bold text-slate-950">History by month</h3>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">History by month</p>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">Payment history</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Review older payment decisions, timestamps, notes, and receipt previews in one place.
+          </p>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-line text-left">

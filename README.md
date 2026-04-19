@@ -353,7 +353,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] admin dashboard
   - [x] approvals page
   - [x] residents page
-  - [ ] resident detail page
+  - [x] resident detail page
   - [ ] users page
   - [ ] search page
   - [ ] activity page
@@ -400,7 +400,7 @@ Untuk saya kemaskan semula UI dengan lebih tepat, saya perlukan screenshot berik
   - [x] `/admin`
   - [x] `/admin/approvals`
   - [x] `/admin/residents`
-  - [ ] `/admin/residents/[id]`
+  - [x] `/admin/residents/[id]`
   - [ ] `/admin/users`
   - [ ] `/admin/search`
   - [ ] `/admin/activity`
