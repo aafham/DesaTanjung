@@ -27,7 +27,7 @@ export default async function LoginPage({
           <h1 className="mt-4 max-w-xl font-display text-4xl font-bold leading-tight text-slate-950 sm:text-[3.2rem]">
             Portal bayaran bulanan komuniti.
           </h1>
-          <p className="mt-4 max-w-lg text-lg text-muted">
+          <p className="mt-4 max-w-lg text-lg font-medium text-muted">
             Semak status bayaran, muat naik resit, dan rujuk maklumat bayaran bulanan dengan lebih teratur.
           </p>
 

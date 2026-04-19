@@ -4,7 +4,9 @@ import {
   BellRing,
   CircleCheckBig,
   Clock3,
+  PhoneOff,
   ShieldCheck,
+  UserPlus,
   TriangleAlert,
   Users,
 } from "lucide-react";
@@ -34,6 +36,7 @@ export default async function AdminDashboardPage({
     currentMonthLabel,
     dueDateLabel,
     notifications,
+    onboardingSummary,
     pendingPayments,
     recentActivity,
     residents,
@@ -63,6 +66,8 @@ export default async function AdminDashboardPage({
   const unreadNotificationCount = notifications.filter(
     (notification) => !notification.is_read,
   ).length;
+  const hasOnboardingFollowUp =
+    onboardingSummary.missingPhoneCount > 0 || onboardingSummary.neverLoggedInCount > 0;
 
   return (
     <div className="space-y-6">
@@ -79,6 +84,75 @@ export default async function AdminDashboardPage({
           </div>
         }
       />
+
+      {hasOnboardingFollowUp ? (
+        <Card className="border-amber-200 bg-amber-50">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-800">
+                Onboarding follow-up
+              </p>
+              <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-amber-950">
+                Some resident accounts still need setup before follow-up is smooth
+              </h3>
+              <p className="mt-2 max-w-3xl text-base text-amber-900">
+                Complete missing phone numbers and check residents who have never logged in yet so
+                reminder, call, and WhatsApp workflows work properly.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/admin/users"
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-bold text-white"
+              >
+                Open Users
+              </Link>
+              <Link
+                href="/admin/health"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-amber-300 bg-white px-5 py-3 text-sm font-bold text-amber-950"
+              >
+                Open Health
+              </Link>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-3xl border border-rose-200 bg-white px-4 py-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-rose-50 p-3">
+                  <PhoneOff className="h-5 w-5 text-rose-700" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-slate-950">Missing phone numbers</p>
+                  <p className="mt-1 text-3xl font-bold text-rose-950">
+                    {onboardingSummary.missingPhoneCount}
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">
+                    Residents without phone numbers cannot use quick Call or WhatsApp follow-up.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-amber-200 bg-white px-4 py-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-2xl bg-amber-50 p-3">
+                  <UserPlus className="h-5 w-5 text-amber-700" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-slate-950">Never logged in</p>
+                  <p className="mt-1 text-3xl font-bold text-amber-950">
+                    {onboardingSummary.neverLoggedInCount}
+                  </p>
+                  <p className="mt-2 text-sm leading-7 text-slate-700">
+                    Good target for onboarding follow-up after accounts are created.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      ) : null}
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <Link

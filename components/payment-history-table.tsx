@@ -51,6 +51,9 @@ export function PaymentHistoryTable({ history }: { history: ResidentPaymentRecor
       <div className="hidden overflow-hidden rounded-4xl border border-line bg-white md:block">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-line text-left">
+          <caption className="sr-only">
+            Resident payment history with month, status, payment method, receipt preview, and latest update time.
+          </caption>
           <thead className="bg-slate-50">
             <tr className="text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
               <th className="px-4 py-4">Month</th>

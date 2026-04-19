@@ -21,7 +21,7 @@ export default async function ChangePasswordPage({
         <h1 className="mt-4 font-display text-4xl font-bold leading-tight text-slate-950">
           Change your password
         </h1>
-        <p className="mt-3 text-base text-muted">
+        <p className="mt-3 text-base font-medium text-muted">
           Welcome, {profile.name}. For security, your default password must be updated
           before you can use the portal.
         </p>
@@ -42,7 +42,7 @@ export default async function ChangePasswordPage({
               inputClassName="min-h-14 w-full rounded-3xl border border-line bg-white px-4 py-3 text-lg font-semibold text-slate-950 outline-none focus:border-primary"
               buttonClassName="text-slate-500 hover:bg-slate-100 hover:text-slate-950"
             />
-            <p className="mt-2 text-sm text-muted">Use at least 8 characters.</p>
+            <p className="mt-2 text-sm font-medium text-muted">Use at least 8 characters.</p>
           </div>
           <div>
             <label htmlFor="confirm-password" className="mb-2 block text-base font-bold text-slate-950">
@@ -59,7 +59,7 @@ export default async function ChangePasswordPage({
               inputClassName="min-h-14 w-full rounded-3xl border border-line bg-white px-4 py-3 text-lg font-semibold text-slate-950 outline-none focus:border-primary"
               buttonClassName="text-slate-500 hover:bg-slate-100 hover:text-slate-950"
             />
-            <p className="mt-2 text-sm text-muted">Enter the same password again to confirm.</p>
+            <p className="mt-2 text-sm font-medium text-muted">Enter the same password again to confirm.</p>
           </div>
 
           {params.error ? (

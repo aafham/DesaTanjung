@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CircleAlert, CircleCheckBig, TriangleAlert } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { DataWarning } from "@/components/data-warning";
@@ -28,6 +29,52 @@ const statusPresentation = {
     labelClass: "bg-rose-100 text-rose-900",
   },
 } as const;
+
+function getSuggestedFixPath({
+  label,
+  detail,
+  action,
+}: {
+  label: string;
+  detail: string;
+  action?: string | null;
+}) {
+  const haystack = `${label} ${detail} ${action ?? ""}`.toLowerCase();
+
+  if (
+    haystack.includes("phone") ||
+    haystack.includes("user") ||
+    haystack.includes("login") ||
+    haystack.includes("password")
+  ) {
+    return { href: "/admin/users", label: "Open Users" };
+  }
+
+  if (
+    haystack.includes("qr") ||
+    haystack.includes("bank") ||
+    haystack.includes("due date") ||
+    haystack.includes("settings") ||
+    haystack.includes("community")
+  ) {
+    return { href: "/admin/settings", label: "Open Settings" };
+  }
+
+  if (
+    haystack.includes("payment") ||
+    haystack.includes("resident") ||
+    haystack.includes("duplicate") ||
+    haystack.includes("receipt")
+  ) {
+    return { href: "/admin/residents", label: "Open Residents" };
+  }
+
+  if (haystack.includes("activity") || haystack.includes("log")) {
+    return { href: "/admin/activity", label: "Open Activity" };
+  }
+
+  return { href: "/admin", label: "Open Dashboard" };
+}
 
 export default async function AdminHealthPage() {
   const { checks, duplicateGroups, missingPhoneResidents, warnings } = await getAdminHealthData();
@@ -145,6 +192,14 @@ where id in (
                   </p>
                   <p className="mt-1 text-base font-bold text-slate-950">{check.label}</p>
                   <p className="mt-2 text-sm leading-7 text-slate-600">{check.action ?? check.detail}</p>
+                  <div className="mt-4">
+                    <Link
+                      href={getSuggestedFixPath(check).href}
+                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+                    >
+                      {getSuggestedFixPath(check).label}
+                    </Link>
+                  </div>
                 </div>
               ))
             )}
@@ -165,6 +220,12 @@ where id in (
             <span className="rounded-full bg-rose-100 px-3 py-1 text-sm font-bold text-rose-900">
               {missingPhoneResidents.length} missing phone
             </span>
+            <Link
+              href="/admin/users"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-line bg-white px-4 py-2 text-sm font-bold text-slate-950"
+            >
+              Open Users
+            </Link>
             {missingPhoneResidents.length > 0 ? (
               <a
                 href={missingPhoneCsvHref}
@@ -205,6 +266,12 @@ where id in (
             <span className="rounded-full bg-rose-100 px-3 py-1 text-sm font-bold text-rose-900">
               {duplicateGroups.length} duplicate group{duplicateGroups.length === 1 ? "" : "s"}
             </span>
+            <Link
+              href="/admin/residents"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-line bg-white px-4 py-2 text-sm font-bold text-slate-950"
+            >
+              Open Residents
+            </Link>
             {duplicateGroups.length > 0 ? (
               <a
                 href={duplicateCsvHref}
@@ -285,24 +352,48 @@ where id in (
             <p className="mt-2 text-sm leading-7 text-slate-600">
               Confirm monthly fee, QR image, and due date are already set in Settings.
             </p>
+            <Link
+              href="/admin/settings"
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+            >
+              Open Settings
+            </Link>
           </div>
           <div className="rounded-3xl bg-slate-50 px-4 py-4">
             <p className="text-base font-bold text-slate-950">When data looks missing</p>
             <p className="mt-2 text-sm leading-7 text-slate-600">
               Recheck Supabase schema, storage buckets, and duplicate payment risks first.
             </p>
+            <Link
+              href="/admin/health"
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+            >
+              Stay on Health
+            </Link>
           </div>
           <div className="rounded-3xl bg-slate-50 px-4 py-4">
             <p className="text-base font-bold text-slate-950">For resident follow-up</p>
             <p className="mt-2 text-sm leading-7 text-slate-600">
               Complete phone numbers in Admin Users so Call and WhatsApp actions work properly.
             </p>
+            <Link
+              href="/admin/users"
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+            >
+              Open Users
+            </Link>
           </div>
           <div className="rounded-3xl bg-slate-50 px-4 py-4">
             <p className="text-base font-bold text-slate-950">After major updates</p>
             <p className="mt-2 text-sm leading-7 text-slate-600">
               Revisit this page once to confirm the portal is ready before residents log in.
             </p>
+            <Link
+              href="/admin"
+              className="mt-4 inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+            >
+              Open Dashboard
+            </Link>
           </div>
         </div>
       </Card>

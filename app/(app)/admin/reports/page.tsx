@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Download } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { MonthFilter } from "@/components/month-filter";
 import { DataWarning } from "@/components/data-warning";
@@ -83,8 +85,15 @@ export default async function AdminReportsPage({
         title={`Monthly report for ${currentMonthLabel}`}
         description="Review collection progress, overdue houses, and expected versus collected amount in one page."
         actions={
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end lg:ml-auto">
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end lg:ml-auto">
             <MonthFilter currentMonth={currentMonth} />
+            <Link
+              href={`/admin/reports/snapshot?month=${currentMonth}`}
+              className="inline-flex min-h-14 items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-bold text-slate-950 transition hover:bg-slate-50"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download snapshot
+            </Link>
             <PrintPageButton className="min-h-14" />
           </div>
         }
@@ -226,6 +235,9 @@ export default async function AdminReportsPage({
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-line text-left">
+            <caption className="sr-only">
+              Resident monthly payment breakdown for the selected report month.
+            </caption>
             <thead className="bg-white">
               <tr className="text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
                 <th className="px-4 py-4">House</th>

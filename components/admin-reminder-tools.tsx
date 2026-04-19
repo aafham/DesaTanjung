@@ -5,14 +5,133 @@ import { Copy, MessageSquareText } from "lucide-react";
 import type { ResidentPaymentRecord, UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getPhoneActionLinks } from "@/lib/utils";
 
 type ResidentWithPayment = UserProfile & {
   currentPayment: ResidentPaymentRecord | null;
 };
 
+type ReminderTone = "friendly" | "firm" | "formal";
+
+const TONE_OPTIONS: Array<{
+  value: ReminderTone;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "friendly",
+    label: "Friendly",
+    description: "Warm and suitable for routine monthly reminders.",
+  },
+  {
+    value: "firm",
+    label: "Firm",
+    description: "More direct for overdue or repeated follow-up.",
+  },
+  {
+    value: "formal",
+    label: "Formal",
+    description: "More official wording for committee use.",
+  },
+];
+
 function getReminderReadyResidents(residents: ResidentWithPayment[]) {
   return residents.filter((resident) => !!resident.phone_number);
+}
+
+function buildReminderMessage({
+  kind,
+  currentMonthLabel,
+  residents,
+  tone,
+}: {
+  kind: "all" | "overdue" | "unpaid";
+  currentMonthLabel: string;
+  residents: ResidentWithPayment[];
+  tone: ReminderTone;
+}) {
+  if (residents.length === 0) {
+    if (kind === "overdue") {
+      return `No overdue residents for ${currentMonthLabel}.`;
+    }
+
+    if (kind === "unpaid") {
+      return `No unpaid or rejected residents for ${currentMonthLabel}.`;
+    }
+
+    return `All residents are settled for ${currentMonthLabel}.`;
+  }
+
+  const list = residents
+    .map((resident, index) => `${index + 1}. ${resident.house_number} - ${resident.name}`)
+    .join("\n");
+
+  const copyByTone = {
+    friendly: {
+      all: {
+        heading: `Friendly payment reminder for ${currentMonthLabel}`,
+        intro: "The following houses are not settled yet:",
+        closing: "Please update payment or upload proof when you have a moment. Thank you.",
+      },
+      overdue: {
+        heading: `Friendly overdue reminder for ${currentMonthLabel}`,
+        intro: "The following houses are already past the due date:",
+        closing: "Please settle payment or upload proof as soon as possible. Thank you for your help.",
+      },
+      unpaid: {
+        heading: `Friendly follow-up reminder for ${currentMonthLabel}`,
+        intro: "The following houses still need action:",
+        closing:
+          "Please update payment and upload a valid receipt in the Desa Tanjung portal. Thank you.",
+      },
+    },
+    firm: {
+      all: {
+        heading: `Payment reminder for ${currentMonthLabel}`,
+        intro: "The following houses have not settled payment yet:",
+        closing: "Please complete payment or upload proof as soon as possible.",
+      },
+      overdue: {
+        heading: `Overdue payment notice for ${currentMonthLabel}`,
+        intro: "The following houses are already overdue:",
+        closing: "Please settle payment immediately or upload proof to avoid further follow-up.",
+      },
+      unpaid: {
+        heading: `Follow-up action required for ${currentMonthLabel}`,
+        intro: "The following houses still require payment action:",
+        closing: "Please update payment and upload a valid receipt in the portal without delay.",
+      },
+    },
+    formal: {
+      all: {
+        heading: `Monthly payment notice for ${currentMonthLabel}`,
+        intro: "Please note that the following houses are still pending payment:",
+        closing: "Kindly complete payment or submit proof via the Desa Tanjung portal. Thank you.",
+      },
+      overdue: {
+        heading: `Overdue payment notice for ${currentMonthLabel}`,
+        intro: "The following houses are recorded as overdue for the current cycle:",
+        closing:
+          "Kindly arrange payment or submit proof through the Desa Tanjung portal at your earliest convenience.",
+      },
+      unpaid: {
+        heading: `Payment follow-up notice for ${currentMonthLabel}`,
+        intro: "The following houses require further payment follow-up:",
+        closing:
+          "Please submit payment and upload a valid receipt in the Desa Tanjung portal for committee review.",
+      },
+    },
+  } as const;
+
+  const selectedCopy = copyByTone[tone][kind];
+
+  return [
+    selectedCopy.heading,
+    "",
+    selectedCopy.intro,
+    list,
+    "",
+    selectedCopy.closing,
+  ].join("\n");
 }
 
 export function AdminReminderTools({
@@ -24,6 +143,7 @@ export function AdminReminderTools({
 }) {
   const [copied, setCopied] = useState(false);
   const [copiedKind, setCopiedKind] = useState<"all" | "overdue" | "unpaid" | null>(null);
+  const [tone, setTone] = useState<ReminderTone>("friendly");
 
   const whatsappResidents = useMemo(() => getReminderReadyResidents(residents), [residents]);
   const overdueResidents = useMemo(
@@ -43,61 +163,31 @@ export function AdminReminderTools({
   );
 
   const reminderText = useMemo(() => {
-    if (residents.length === 0) {
-      return `All residents are settled for ${currentMonthLabel}.`;
-    }
-
-    const list = residents
-      .map((resident, index) => `${index + 1}. ${resident.house_number} - ${resident.name}`)
-      .join("\n");
-
-    return [
-      `Payment reminder for ${currentMonthLabel}`,
-      "",
-      "The following houses are not settled yet:",
-      list,
-      "",
-      "Please update payment or upload proof as soon as possible. Thank you.",
-    ].join("\n");
-  }, [currentMonthLabel, residents]);
+    return buildReminderMessage({
+      kind: "all",
+      currentMonthLabel,
+      residents,
+      tone,
+    });
+  }, [currentMonthLabel, residents, tone]);
 
   const overdueReminderText = useMemo(() => {
-    if (overdueResidents.length === 0) {
-      return `No overdue residents for ${currentMonthLabel}.`;
-    }
-
-    const list = overdueResidents
-      .map((resident, index) => `${index + 1}. ${resident.house_number} - ${resident.name}`)
-      .join("\n");
-
-    return [
-      `Overdue payment reminder for ${currentMonthLabel}`,
-      "",
-      "The following houses are already past due date:",
-      list,
-      "",
-      "Please settle payment or upload proof as soon as possible. Thank you.",
-    ].join("\n");
-  }, [currentMonthLabel, overdueResidents]);
+    return buildReminderMessage({
+      kind: "overdue",
+      currentMonthLabel,
+      residents: overdueResidents,
+      tone,
+    });
+  }, [currentMonthLabel, overdueResidents, tone]);
 
   const unpaidReminderText = useMemo(() => {
-    if (unpaidResidents.length === 0) {
-      return `No unpaid or rejected residents for ${currentMonthLabel}.`;
-    }
-
-    const list = unpaidResidents
-      .map((resident, index) => `${index + 1}. ${resident.house_number} - ${resident.name}`)
-      .join("\n");
-
-    return [
-      `Follow-up reminder for ${currentMonthLabel}`,
-      "",
-      "The following houses still need action:",
-      list,
-      "",
-      "Please update payment and upload a valid receipt in the Desa Tanjung portal. Thank you.",
-    ].join("\n");
-  }, [currentMonthLabel, unpaidResidents]);
+    return buildReminderMessage({
+      kind: "unpaid",
+      currentMonthLabel,
+      residents: unpaidResidents,
+      tone,
+    });
+  }, [currentMonthLabel, tone, unpaidResidents]);
 
   const whatsappComposeLink = useMemo(() => {
     if (whatsappResidents.length === 0) {
@@ -159,9 +249,38 @@ export function AdminReminderTools({
         </div>
       </div>
 
+      <div className="mt-5 rounded-3xl border border-white/15 bg-white/5 p-4">
+        <p className="text-sm font-bold uppercase tracking-[0.12em] text-teal-100">Reminder tone</p>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          {TONE_OPTIONS.map((option) => {
+            const active = tone === option.value;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setTone(option.value)}
+                aria-pressed={active}
+                className={`rounded-3xl border px-4 py-4 text-left transition ${
+                  active
+                    ? "border-teal-200 bg-teal-200 text-slate-950"
+                    : "border-white/15 bg-white/5 text-white hover:bg-white/10"
+                }`}
+              >
+                <p className="text-base font-bold">{option.label}</p>
+                <p className={`mt-2 text-sm leading-6 ${active ? "text-slate-800" : "text-slate-200"}`}>
+                  {option.description}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <textarea
         readOnly
         value={reminderText}
+        aria-label={`${tone} reminder draft for ${currentMonthLabel}`}
         className="mt-5 h-48 w-full resize-none rounded-3xl border border-white/20 bg-white/10 p-4 text-base leading-relaxed text-white outline-none"
       />
 
@@ -170,6 +289,7 @@ export function AdminReminderTools({
           <Button
             type="button"
             onClick={copyReminder}
+            aria-label={`Copy WhatsApp reminder text for ${currentMonthLabel}`}
             className="w-full gap-2 bg-teal-300 px-6 text-slate-950 hover:bg-teal-200"
           >
             <Copy className="h-4 w-4" />
@@ -180,6 +300,7 @@ export function AdminReminderTools({
               href={whatsappComposeLink}
               target="_blank"
               rel="noreferrer"
+              aria-label={`Open WhatsApp draft for ${currentMonthLabel}`}
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-white/10 px-6 py-3 text-center text-base font-bold leading-tight text-white transition hover:bg-white/20"
             >
               <MessageSquareText className="h-4 w-4" />
@@ -205,6 +326,7 @@ export function AdminReminderTools({
               <button
                 type="button"
                 onClick={() => copyPresetReminder("overdue")}
+                aria-label={`Copy overdue reminder for ${currentMonthLabel}`}
                 className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold whitespace-nowrap text-white transition hover:bg-white/20"
               >
                 Copy text
@@ -214,6 +336,7 @@ export function AdminReminderTools({
                   href={overdueWhatsAppLink}
                   target="_blank"
                   rel="noreferrer"
+                  aria-label={`Open overdue WhatsApp draft for ${currentMonthLabel}`}
                   className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold whitespace-nowrap text-white transition hover:bg-white/20"
                 >
                   Open draft
@@ -233,6 +356,7 @@ export function AdminReminderTools({
               <button
                 type="button"
                 onClick={() => copyPresetReminder("unpaid")}
+                aria-label={`Copy unpaid or rejected reminder for ${currentMonthLabel}`}
                 className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold whitespace-nowrap text-white transition hover:bg-white/20"
               >
                 Copy text
@@ -242,6 +366,7 @@ export function AdminReminderTools({
                   href={unpaidWhatsAppLink}
                   target="_blank"
                   rel="noreferrer"
+                  aria-label={`Open unpaid or rejected WhatsApp draft for ${currentMonthLabel}`}
                   className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold whitespace-nowrap text-white transition hover:bg-white/20"
                 >
                   Open draft

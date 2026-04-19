@@ -403,6 +403,10 @@ export async function getAdminDashboardData(filterMonth?: string) {
     })),
   );
 
+  const residentDirectory = (residents as ManagedUser[] | null) ?? [];
+  const missingPhoneCount = residentDirectory.filter((resident) => !resident.phone_number).length;
+  const neverLoggedInCount = residentDirectory.filter((resident) => !resident.last_login_at).length;
+
   return {
     currentMonth: month,
     currentMonthLabel: formatMonthLabel(month),
@@ -414,6 +418,10 @@ export async function getAdminDashboardData(filterMonth?: string) {
     residents: residentRows,
     recentActivity: (recentActivity as UserActivityWithUser[] | null) ?? [],
     announcements,
+    onboardingSummary: {
+      missingPhoneCount,
+      neverLoggedInCount,
+    },
     warnings,
   };
 }

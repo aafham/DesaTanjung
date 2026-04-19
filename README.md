@@ -165,6 +165,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
 - [x] Upload QR image dalam settings
 - [x] Dropdown bank Malaysia dalam settings
 - [x] Admin health page
+- [x] Admin health quick action links ke page berkaitan (`Users`, `Residents`, `Settings`)
 - [x] Activity log resident untuk:
   - [x] login
   - [x] logout
@@ -195,6 +196,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] unpaid
   - [x] overdue
   - [x] rejected
+- [x] Resident reminder copy yang boleh pilih tone mesej
 - [x] Data health helper yang lebih action-oriented:
   - [x] duplicate payment cleanup helper
   - [x] missing phone export
@@ -204,6 +206,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] ruang tandatangan AJK
   - [x] ruang catatan mesyuarat
   - [x] PDF-ready styling
+- [x] Export laporan bulanan sebagai fail snapshot tanpa bergantung pada browser print
 - [x] Final polish `Users` dan `Search` untuk filter lanjutan:
   - [x] statistik cepat untuk onboarding dan follow-up
   - [x] carian `Users` lebih luas:
@@ -216,6 +219,8 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
     - [x] residents
     - [x] payments
     - [x] activity
+  - [x] shortcut action pada search result untuk terus approve / follow-up
+- [x] Onboarding banner untuk admin bila ada `missing phone` atau `never logged in`
 - [x] Resident notification management:
   - [x] mark as read
   - [x] filter by type
@@ -256,6 +261,8 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] auth form error state lebih jelas untuk assistive tech
   - [x] filter/search card state lebih jelas untuk keyboard + screen reader
   - [x] report table / print metadata contrast diperkemas
+  - [x] auth helper text + report table caption diperkemas
+  - [x] reminder helper lebih jelas untuk keyboard / screen reader
   - [ ] contrast audit komponen spesifik seluruh app yang berbaki kecil
   - [ ] keyboard flow audit penuh seluruh app yang berbaki kecil
 - [ ] Test automation untuk flow kritikal:
@@ -268,9 +275,6 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [ ] pagination / server-side narrowing untuk global search bila data makin besar
   - [ ] semakan index database untuk query admin yang kerap
 - [ ] UX polish seterusnya:
-  - [ ] onboarding banner untuk admin bila ada `missing phone` atau `never logged in`
-  - [ ] shortcut action pada search result untuk terus approve / follow-up
-  - [ ] resident reminder copy yang boleh pilih tone mesej
 
 ### Checklist test flow utama
 

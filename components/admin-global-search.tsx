@@ -106,6 +106,22 @@ export function AdminGlobalSearch({
     },
   ];
 
+  function getPaymentActionLabel(payment: SearchPayment) {
+    if (payment.display_status === "pending") {
+      return "Review approval";
+    }
+
+    if (payment.display_status === "rejected") {
+      return "Follow up reject";
+    }
+
+    if (payment.display_status === "overdue" || payment.display_status === "unpaid") {
+      return "Follow up resident";
+    }
+
+    return "Open resident";
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -153,7 +169,7 @@ export function AdminGlobalSearch({
                   active
                     ? "border-slate-950 bg-slate-950 text-white"
                     : "border-line bg-slate-50 text-slate-900 hover:bg-white"
-                }`}
+                } focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className={`rounded-2xl p-2 ${active ? "bg-white/10" : "bg-white"}`}>
@@ -199,7 +215,7 @@ export function AdminGlobalSearch({
             Resident matches
           </p>
           <p className="mt-2 text-3xl font-bold text-slate-950">{filtered.residents.length}</p>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm font-medium text-slate-700">
             House number, owner name, address, phone, and email.
           </p>
         </Card>
@@ -208,7 +224,7 @@ export function AdminGlobalSearch({
             Payment matches
           </p>
           <p className="mt-2 text-3xl font-bold text-amber-950">{filtered.payments.length}</p>
-          <p className="mt-2 text-sm text-amber-900">
+          <p className="mt-2 text-sm font-medium text-amber-950">
             Notes, reject reasons, and status records for {currentMonthLabel}.
           </p>
         </Card>
@@ -217,7 +233,7 @@ export function AdminGlobalSearch({
             Activity matches
           </p>
           <p className="mt-2 text-3xl font-bold text-teal-950">{filtered.activityLogs.length}</p>
-          <p className="mt-2 text-sm text-teal-900">
+          <p className="mt-2 text-sm font-medium text-teal-950">
             Login, profile changes, uploads, and account activity.
           </p>
         </Card>
@@ -269,12 +285,20 @@ export function AdminGlobalSearch({
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
                           {resident.role}
                         </span>
-                        <Link
-                          href={`/admin/residents/${resident.id}`}
-                          className="rounded-full bg-slate-950 px-3 py-1 text-sm font-semibold text-white"
-                        >
-                          Open
-                        </Link>
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Link
+                            href={`/admin/residents/${resident.id}`}
+                            className="rounded-full bg-slate-950 px-3 py-1 text-sm font-semibold text-white"
+                          >
+                            Open resident
+                          </Link>
+                          <Link
+                            href={`/admin/users?query=${encodeURIComponent(resident.house_number)}`}
+                            className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700"
+                          >
+                            Open user
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -330,15 +354,31 @@ export function AdminGlobalSearch({
                         {payment.notes ? (
                           <p className="mt-2 text-sm text-slate-700">Note: {payment.notes}</p>
                         ) : null}
+                        <ContactActions
+                          phoneNumber={payment.users?.phone_number}
+                          compact
+                          className="mt-3"
+                        />
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <StatusBadge status={payment.display_status} />
-                        <Link
-                          href={`/admin/residents/${payment.user_id}?month=${payment.month}`}
-                          className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700"
-                        >
-                          View resident
-                        </Link>
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Link
+                            href={`/admin/residents/${payment.user_id}?month=${payment.month}`}
+                            className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700"
+                          >
+                            {getPaymentActionLabel(payment)}
+                          </Link>
+                          {(payment.display_status === "pending" ||
+                            payment.display_status === "rejected") && (
+                            <Link
+                              href={`/admin/approvals?month=${payment.month}`}
+                              className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white"
+                            >
+                              Open approvals
+                            </Link>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -389,14 +429,24 @@ export function AdminGlobalSearch({
                     <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
                       {formatTimestamp(activity.created_at)}
                     </p>
-                    {activity.user_id ? (
-                      <Link
-                        href={`/admin/residents/${activity.user_id}`}
-                        className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700"
-                      >
-                        Open resident
-                      </Link>
-                    ) : null}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {activity.user_id ? (
+                        <Link
+                          href={`/admin/residents/${activity.user_id}`}
+                          className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700"
+                        >
+                          Open resident
+                        </Link>
+                      ) : null}
+                      {activity.user_id ? (
+                        <Link
+                          href={`/admin/users?query=${encodeURIComponent(activity.users?.house_number ?? "")}`}
+                          className="inline-flex rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white"
+                        >
+                          Open user
+                        </Link>
+                      ) : null}
+                    </div>
                   </div>
                 ))
               )}
