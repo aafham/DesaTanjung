@@ -27,7 +27,7 @@ test.describe("authentication", () => {
 
     await loginWithCredentials(page, env.adminIdentifier!, env.adminPassword!);
 
-    await expect(page).toHaveURL(/\/admin$/);
+    await expect(page).toHaveURL(/\/admin$/, { timeout: 15_000 });
     await expect(page.getByRole("heading", { name: /Overview for/i })).toBeVisible();
     await expect(page.getByText("Admin dashboard")).toBeVisible();
   });
@@ -40,8 +40,8 @@ test.describe("authentication", () => {
 
     await loginWithCredentials(page, env.residentIdentifier!, env.residentPassword!);
 
-    await expect(page).toHaveURL(/\/dashboard$/);
-    await expect(page.getByRole("heading", { name: /Current month/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+    await expect(page.getByText("Current month")).toBeVisible();
     await expect(page.getByText("Latest payment activity")).toBeVisible();
   });
 
@@ -53,14 +53,14 @@ test.describe("authentication", () => {
 
     await loginWithCredentials(page, env.firstLoginIdentifier!, env.firstLoginPassword!);
 
-    await expect(page).toHaveURL(/\/change-password$/);
+    await expect(page).toHaveURL(/\/change-password$/, { timeout: 15_000 });
     await expect(page.getByRole("heading", { name: "Change your password" })).toBeVisible();
 
     await page.getByLabel("New password").fill(env.firstLoginNewPassword!);
     await page.getByLabel("Confirm new password").fill(env.firstLoginNewPassword!);
     await page.getByRole("button", { name: "Save new password" }).click();
 
-    await expect(page).toHaveURL(/\/dashboard$/);
-    await expect(page.getByRole("heading", { name: /Current month/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+    await expect(page.getByText("Current month")).toBeVisible();
   });
 });

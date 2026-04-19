@@ -1,0 +1,11 @@
+{
+  "id": true,
+  "community_name": "Desa Tanjung",
+  "bank_name": "Maybank",
+  "bank_account_name": "Persatuan Penduduk Desa Tanjung",
+  "bank_account_number": "1234567890",
+  "payment_qr_url": "https://fzgxeffuqrkqtyemvkdp.supabase.co/storage/v1/object/public/app-assets/qr/payment-qr-1776478612832.jpeg",
+  "monthly_fee": 500,
+  "due_day": 21,
+  "updated_at": "2026-04-18T15:55:18.30997+00:00"
+}

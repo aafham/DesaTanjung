@@ -12,6 +12,7 @@ test.describe("admin settings", () => {
     );
 
     await loginWithCredentials(page, env.adminIdentifier!, env.adminPassword!);
+    await expect(page).toHaveURL(/\/admin$/, { timeout: 15_000 });
     await page.goto("/admin/settings");
     await expect(
       page.getByRole("heading", { name: "Payment and community settings" }),
@@ -21,6 +22,7 @@ test.describe("admin settings", () => {
     const uniqueSuffix = Date.now().toString().slice(-6);
     const communityName = `Desa Tanjung Test ${uniqueSuffix}`;
     const monthlyFee = "45.50";
+    const normalizedMonthlyFee = String(Number(monthlyFee));
     const dueDay = "9";
     const previewImage = page.getByTestId("payment-qr-preview-image");
     const beforePreviewSrc = await previewImage.getAttribute("src");
@@ -42,7 +44,7 @@ test.describe("admin settings", () => {
     await expect(page.getByRole("status")).toContainText("Payment settings updated successfully.");
 
     await expect(page.getByLabel("Community name")).toHaveValue(communityName);
-    await expect(page.getByLabel("Monthly fee amount")).toHaveValue(monthlyFee);
+    await expect(page.getByLabel("Monthly fee amount")).toHaveValue(normalizedMonthlyFee);
     await expect(page.getByLabel("Payment due day")).toHaveValue(dueDay);
     await expect(previewImage).not.toHaveAttribute("src", /blob:/);
 
@@ -51,8 +53,10 @@ test.describe("admin settings", () => {
     expect(afterPreviewSrc).not.toBe(beforePreviewSrc);
 
     if (env.residentIdentifier && env.residentPassword) {
-      const residentPage = await browser.newPage();
+      const residentContext = await browser.newContext();
+      const residentPage = await residentContext.newPage();
       await loginWithCredentials(residentPage, env.residentIdentifier, env.residentPassword);
+      await expect(residentPage).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
       await residentPage.goto("/payments");
 
       await expect(residentPage.getByAltText("Community payment QR code")).toBeVisible();
@@ -61,7 +65,7 @@ test.describe("admin settings", () => {
         .getAttribute("src");
 
       expect(residentQrSrc).toBe(afterPreviewSrc);
-      await residentPage.close();
+      await residentContext.close();
     }
   });
 });

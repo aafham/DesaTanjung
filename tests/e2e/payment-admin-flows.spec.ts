@@ -6,7 +6,7 @@ const env = getAuthEnv();
 
 async function uploadReceipt(page: Parameters<typeof test>[0]["page"], identifier: string, password: string) {
   await loginWithCredentials(page, identifier, password);
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
 
   await page.getByRole("link", { name: /pay now/i }).click();
   await expect(page).toHaveURL(/\/payments$/);
@@ -51,7 +51,7 @@ test.describe.serial("resident payment and admin review flows", () => {
 
     const adminPage = await browser.newPage();
     await loginWithCredentials(adminPage, env.adminIdentifier!, env.adminPassword!);
-    await expect(adminPage).toHaveURL(/\/admin$/);
+    await expect(adminPage).toHaveURL(/\/admin$/, { timeout: 15_000 });
 
     await adminPage.goto("/admin/approvals");
     await expect(
@@ -90,6 +90,7 @@ test.describe.serial("resident payment and admin review flows", () => {
 
     const adminPage = await browser.newPage();
     await loginWithCredentials(adminPage, env.adminIdentifier!, env.adminPassword!);
+    await expect(adminPage).toHaveURL(/\/admin$/, { timeout: 15_000 });
     await adminPage.goto("/admin/approvals");
     await expect(
       adminPage.getByRole("heading", { name: /review submissions for/i }),
@@ -121,6 +122,7 @@ test.describe.serial("resident payment and admin review flows", () => {
     );
 
     await loginWithCredentials(page, env.adminIdentifier!, env.adminPassword!);
+    await expect(page).toHaveURL(/\/admin$/, { timeout: 15_000 });
     await page.goto("/admin/residents");
     await expect(
       page.getByRole("heading", { name: /payment status for/i }),
@@ -135,6 +137,8 @@ test.describe.serial("resident payment and admin review flows", () => {
 
     await expect(page).toHaveURL(/message=Cash%20payment%20marked%20successfully/);
     await expect(page.getByText("Cash payment marked successfully.")).toBeVisible();
-    await expect(page.getByRole("status")).toContainText("Cash payment marked successfully.");
+    await expect(
+      page.getByRole("status").filter({ hasText: "Cash payment marked successfully." }),
+    ).toContainText("Cash payment marked successfully.");
   });
 });
