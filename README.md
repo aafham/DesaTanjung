@@ -326,6 +326,136 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
 - [ ] upload resit berfungsi di live
 - [ ] admin approve / reject berfungsi di live
 
+### Checklist audit UI / interface
+
+- [ ] Global interface system:
+  - [ ] semak konsistensi spacing, radius, shadow, dan hierarchy antara semua page
+  - [ ] semak konsistensi typography untuk heading, subheading, helper text, dan metadata
+  - [ ] semak state `default / hover / focus / active / disabled` pada button, input, tab, filter chip, dan link
+  - [ ] semak alignment card, grid, table, dan section spacing pada desktop
+  - [ ] semak layout collapse pada tablet dan mobile
+  - [ ] semak toast, empty state, loading state, dan error state supaya visual language konsisten
+  - [ ] semak sidebar, header page, badge count, dan breadcrumb/jump action supaya tidak nampak crowded
+- [ ] Auth screens:
+  - [ ] login page
+  - [ ] change password page
+  - [ ] semak state untuk error login / invalid password / first-login flow
+- [ ] Resident screens:
+  - [ ] resident dashboard
+  - [ ] payments page
+  - [ ] notifications page
+  - [ ] profile page
+  - [ ] receipt preview modal
+  - [ ] confirm submit dialog
+  - [ ] semak empty state jika tiada history / tiada notification / tiada resit
+  - [ ] semak mobile layout untuk payment upload, timeline, dan history table
+- [ ] Admin screens:
+  - [ ] admin dashboard
+  - [ ] approvals page
+  - [ ] residents page
+  - [ ] resident detail page
+  - [ ] users page
+  - [ ] search page
+  - [ ] activity page
+  - [ ] reports page
+  - [ ] announcements page
+  - [ ] settings page
+  - [ ] health page
+  - [ ] semak pagination, filter bar, summary cards, dan action button alignment
+- [ ] Visual states yang perlu diaudit:
+  - [ ] page dengan data penuh
+  - [ ] page dengan data sedikit
+  - [ ] page kosong / no result
+  - [ ] form validation error
+  - [ ] success state selepas submit / save / approve / reject
+  - [ ] loading / skeleton / pending state
+  - [ ] modal / dialog terbuka
+  - [ ] long text / long name / long address overflow
+  - [ ] screenshot print / snapshot report view
+- [ ] Mobile-specific audit:
+  - [ ] login
+  - [ ] resident dashboard
+  - [ ] payments upload
+  - [ ] notifications
+  - [ ] profile
+  - [ ] admin dashboard
+  - [ ] approvals
+  - [ ] residents
+  - [ ] users
+  - [ ] search
+  - [ ] settings
+  - [ ] reports
+
+### Screenshot yang diperlukan untuk audit UI
+
+Untuk saya kemaskan semula UI dengan lebih tepat, saya perlukan screenshot berikut:
+
+- [ ] 1 screenshot desktop penuh untuk setiap page utama:
+  - [ ] `/login`
+  - [ ] `/change-password`
+  - [ ] `/dashboard`
+  - [ ] `/payments`
+  - [ ] `/notifications`
+  - [ ] `/profile`
+  - [ ] `/admin`
+  - [ ] `/admin/approvals`
+  - [ ] `/admin/residents`
+  - [ ] `/admin/residents/[id]`
+  - [ ] `/admin/users`
+  - [ ] `/admin/search`
+  - [ ] `/admin/activity`
+  - [ ] `/admin/reports`
+  - [ ] `/admin/announcements`
+  - [ ] `/admin/settings`
+  - [ ] `/admin/health`
+- [ ] 1 screenshot mobile untuk page yang paling kerap guna:
+  - [ ] `/login`
+  - [ ] `/dashboard`
+  - [ ] `/payments`
+  - [ ] `/notifications`
+  - [ ] `/profile`
+  - [ ] `/admin`
+  - [ ] `/admin/approvals`
+  - [ ] `/admin/residents`
+  - [ ] `/admin/users`
+  - [ ] `/admin/search`
+  - [ ] `/admin/settings`
+  - [ ] `/admin/reports`
+- [ ] screenshot state khas yang penting:
+  - [ ] login dengan error message
+  - [ ] payment upload dengan preview gambar
+  - [ ] payment upload semasa loading / uploading
+  - [ ] receipt preview modal terbuka
+  - [ ] confirm submit dialog terbuka
+  - [ ] approvals page dengan item `pending`
+  - [ ] approvals page selepas `approve`
+  - [ ] approvals page selepas `reject`
+  - [ ] users page dengan filter aktif
+  - [ ] search page dengan result untuk resident
+  - [ ] search page dengan result untuk payment
+  - [ ] search page dengan result untuk activity
+  - [ ] reports page dalam keadaan penuh data
+  - [ ] settings page dengan preview QR
+  - [ ] health page yang ada warning / error
+  - [ ] mana-mana page yang nampak serabut, sempit, atau alignment lari
+
+Nota untuk screenshot:
+
+- [ ] desktop: ambil pada saiz penuh browser biasa, lebih kurang `1440px` lebar
+- [ ] mobile: ambil pada lebar lebih kurang `390px - 430px`
+- [ ] kalau boleh, ambil sekali state `normal`, `empty`, dan `error` untuk page yang penting
+- [ ] kalau ada page yang rasa “tak sedap tengok”, bagi screenshot itu sekali walaupun tidak ada bug fungsi
+- [ ] kalau tak sempat ambil semua, priority pertama ialah:
+  - [ ] `/dashboard`
+  - [ ] `/payments`
+  - [ ] `/admin`
+  - [ ] `/admin/approvals`
+  - [ ] `/admin/residents`
+  - [ ] `/admin/users`
+  - [ ] `/admin/search`
+  - [ ] `/admin/settings`
+  - [ ] `/admin/reports`
+
 ## Cara login
 
 Walaupun pengguna nampak login dengan `username`, Supabase Auth sebenarnya menggunakan `email + password`.
