@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Activity, ArrowRight, Search, ShieldCheck, Users } from "lucide-react";
 import { ContactActions } from "@/components/contact-actions";
 import { Card } from "@/components/ui/card";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 import { StatusBadge } from "@/components/ui/status-badge";
 import type {
   ManagedUser,
@@ -69,8 +70,10 @@ export function AdminGlobalSearch({
   payments: SearchPayment[];
   activityLogs: UserActivityWithUser[];
 }) {
+  const PAGE_SIZE = 3;
   const [query, setQuery] = useState("");
   const [focus, setFocus] = useState<"all" | "residents" | "payments" | "activity">("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const deferredQuery = useDeferredValue(query);
 
   const filtered = useMemo(() => {
@@ -262,6 +265,23 @@ export function AdminGlobalSearch({
           ? `Payment records for ${currentMonthLabel}.`
           : "Recent activity items only.";
 
+  const totalPages = Math.max(1, Math.ceil(resultGroups.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, focus]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedResults = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return resultGroups.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [currentPage, resultGroups]);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -394,7 +414,7 @@ export function AdminGlobalSearch({
           </div>
           <div className="rounded-3xl bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700">
             {hasQuery
-              ? `${resultGroups.length} top match${resultGroups.length === 1 ? "" : "es"} shown`
+              ? `Showing ${Math.min(PAGE_SIZE, paginatedResults.length)} of ${resultGroups.length} top match${resultGroups.length === 1 ? "" : "es"}`
               : "Showing a compact shortlist"}
           </div>
         </div>
@@ -406,7 +426,7 @@ export function AdminGlobalSearch({
               or switch the focus cards above.
             </div>
           ) : (
-            resultGroups.map((result) => (
+            paginatedResults.map((result) => (
               <div
                 key={result.id}
                 className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
@@ -461,6 +481,16 @@ export function AdminGlobalSearch({
             ))
           )}
         </div>
+
+        {resultGroups.length > 0 ? (
+          <div className="mt-5">
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        ) : null}
 
         <div className="mt-5 grid gap-3 md:grid-cols-3">
           <Link
