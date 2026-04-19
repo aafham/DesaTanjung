@@ -47,6 +47,8 @@ export function LoginForm({
   action: (formData: FormData) => void | Promise<void>;
   error?: string;
 }) {
+  const errorId = error ? "login-form-error" : undefined;
+
   return (
     <form action={action} className="relative mt-8 space-y-5">
       <LoadingOverlay />
@@ -59,7 +61,11 @@ export function LoginForm({
           id="identifier"
           name="identifier"
           required
+          autoComplete="username"
+          autoFocus
           placeholder="Contoh: A-12 atau admin"
+          aria-invalid={Boolean(error)}
+          aria-describedby={errorId}
           className="min-h-14 w-full rounded-3xl border border-slate-600 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none ring-0 placeholder:text-slate-400 focus:border-teal-400"
         />
       </div>
@@ -74,13 +80,20 @@ export function LoginForm({
           required
           placeholder="Masukkan kata laluan"
           autoComplete="current-password"
+          aria-invalid={Boolean(error)}
+          aria-describedby={errorId}
           inputClassName="min-h-14 w-full rounded-3xl border border-slate-600 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none placeholder:text-slate-400 focus:border-teal-400"
           buttonClassName="text-slate-300 hover:bg-white/10 hover:text-white"
         />
       </div>
 
       {error ? (
-        <p className="rounded-2xl bg-rose-500/20 px-4 py-3 text-base font-bold text-rose-100">
+        <p
+          id={errorId}
+          className="rounded-2xl bg-rose-500/20 px-4 py-3 text-base font-bold text-rose-100"
+          role="alert"
+          aria-live="assertive"
+        >
           {decodeURIComponent(error)}
         </p>
       ) : null}

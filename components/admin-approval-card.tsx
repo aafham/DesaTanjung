@@ -34,7 +34,7 @@ type ApprovalCardProps = {
 
 export function AdminApprovalCard({ payment }: ApprovalCardProps) {
   return (
-    <Card className="space-y-5">
+    <Card className="space-y-5" data-testid={`approval-card-${payment.users.house_number}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
@@ -103,6 +103,7 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
             className="mb-3 h-24 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
           />
           <ConfirmSubmitButton
+            data-testid={`approve-payment-${payment.users.house_number}`}
             confirmMessage={`Approve payment for ${payment.users.house_number}?`}
             confirmTitle="Approve this payment proof?"
             className="w-full"
@@ -138,6 +139,7 @@ export function AdminApprovalCard({ payment }: ApprovalCardProps) {
             className="mb-3 h-24 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
           />
           <ConfirmSubmitButton
+            data-testid={`reject-payment-${payment.users.house_number}`}
             confirmMessage={`Reject payment proof from ${payment.users.house_number}?`}
             confirmTitle="Reject this payment proof?"
             variant="danger"

@@ -148,6 +148,7 @@ export function AdminGlobalSearch({
                 key={option.value}
                 type="button"
                 onClick={() => setFocus(option.value)}
+                aria-pressed={active}
                 className={`rounded-3xl border px-4 py-4 text-left transition ${
                   active
                     ? "border-slate-950 bg-slate-950 text-white"
@@ -167,7 +168,7 @@ export function AdminGlobalSearch({
                   </span>
                 </div>
                 <p className="mt-4 text-base font-bold">{option.label}</p>
-                <p className={`mt-2 text-sm leading-6 ${active ? "text-slate-200" : "text-slate-600"}`}>
+                <p className={`mt-2 text-sm leading-6 ${active ? "text-slate-100" : "text-slate-700"}`}>
                   {option.description}
                 </p>
               </button>

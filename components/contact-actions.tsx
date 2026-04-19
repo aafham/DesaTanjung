@@ -14,7 +14,7 @@ export function ContactActions({
 
   if (!links) {
     return (
-      <p className={cn("text-sm text-muted", className)}>
+      <p className={cn("text-sm font-medium text-muted", className)}>
         Add a valid Malaysian mobile number to enable Call and WhatsApp.
       </p>
     );
@@ -24,6 +24,7 @@ export function ContactActions({
     <div className={cn("flex flex-wrap gap-2", className)}>
       <a
         href={links.tel}
+        aria-label={`Call ${links.display}`}
         className={cn(
           "inline-flex items-center justify-center gap-2 rounded-full font-bold transition",
           compact
@@ -38,6 +39,7 @@ export function ContactActions({
         href={links.whatsapp}
         target="_blank"
         rel="noreferrer"
+        aria-label={`Open WhatsApp chat with ${links.display}`}
         className={cn(
           "inline-flex items-center justify-center gap-2 rounded-full font-bold transition",
           compact

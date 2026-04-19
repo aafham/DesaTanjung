@@ -331,7 +331,7 @@ export function AdminUsersManager({
           paginatedUsers.map((user) => (
             <Card key={user.id} className="p-0">
               <details className="group">
-                <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-4 px-6 py-5">
+                <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-4 rounded-3xl px-6 py-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
                   <div>
                     <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
                       {user.role === "admin" ? "Admin" : "Resident"}
@@ -340,14 +340,15 @@ export function AdminUsersManager({
                       {user.house_number}
                     </h4>
                     <p className="mt-1 text-base text-muted">{user.name}</p>
-                    <p className="mt-1 text-sm text-muted">
+                    <p className="mt-1 text-sm font-medium text-muted">
                       {user.phone_number
                         ? formatMalaysianPhoneNumber(user.phone_number)
                         : "No phone number saved yet"}
                     </p>
+                    <span className="sr-only">Press Enter or Space to expand user account details.</span>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <div className="rounded-2xl bg-slate-50 px-3 py-2">
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
                           Last login
                         </p>
                         <p className="mt-1 text-sm font-semibold text-slate-950">
@@ -355,7 +356,7 @@ export function AdminUsersManager({
                         </p>
                       </div>
                       <div className="rounded-2xl bg-slate-50 px-3 py-2">
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
                           Last logout
                         </p>
                         <p className="mt-1 text-sm font-semibold text-slate-950">

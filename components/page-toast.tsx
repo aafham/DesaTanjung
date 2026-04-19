@@ -31,7 +31,12 @@ export function PageToast({
   const isError = Boolean(error);
 
   return (
-    <div className="fixed right-4 top-4 z-50 w-full max-w-sm">
+    <div
+      className="fixed right-4 top-4 z-50 w-full max-w-sm"
+      role={isError ? "alert" : "status"}
+      aria-live={isError ? "assertive" : "polite"}
+      aria-atomic="true"
+    >
       <div
         className={`flex items-start gap-3 rounded-3xl border px-4 py-4 shadow-soft ${
           isError
@@ -52,7 +57,7 @@ export function PageToast({
           type="button"
           onClick={() => setVisible(false)}
           className="rounded-full p-1 text-current/70 transition hover:bg-black/5 hover:text-current"
-          aria-label="Dismiss notification"
+          aria-label={isError ? "Dismiss error notification" : "Dismiss success notification"}
         >
           <X className="h-4 w-4" />
         </button>

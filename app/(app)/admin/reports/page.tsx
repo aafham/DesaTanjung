@@ -220,14 +220,14 @@ export default async function AdminReportsPage({
       <Card className="p-0 overflow-hidden">
         <div className="border-b border-line bg-slate-50 px-4 py-4">
           <h3 className="text-2xl font-bold text-slate-950">Resident breakdown</h3>
-          <p className="mt-1 text-base text-muted">
+          <p className="mt-1 text-base font-medium text-muted">
             Use this summary during committee meetings or monthly review.
           </p>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-line text-left">
             <thead className="bg-white">
-              <tr className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
+              <tr className="text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
                 <th className="px-4 py-4">House</th>
                 <th className="px-4 py-4">Owner</th>
                 <th className="px-4 py-4">Status</th>
@@ -263,7 +263,7 @@ export default async function AdminReportsPage({
       <section className="hidden rounded-3xl border border-slate-300 bg-white p-6 print:block">
         <div className="grid gap-10 md:grid-cols-2">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-700">
               Prepared by
             </p>
             <div className="mt-10 border-t border-slate-300 pt-3 text-base text-slate-700">
@@ -271,7 +271,7 @@ export default async function AdminReportsPage({
             </div>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-700">
               Generated at
             </p>
             <div className="mt-4 text-base font-semibold text-slate-950">

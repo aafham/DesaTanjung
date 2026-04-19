@@ -163,6 +163,7 @@ export function AdminSettingsForm({
           <input type="hidden" name="existing_payment_qr_url" value={settings.payment_qr_url} />
           <label
             htmlFor="payment_qr_image"
+            data-testid="payment-qr-upload-label"
             className="flex min-h-32 cursor-pointer flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-line bg-slate-50 px-4 py-6 text-center transition hover:border-primary"
           >
             <span className="text-base font-bold text-slate-950">
@@ -182,6 +183,7 @@ export function AdminSettingsForm({
             name="payment_qr_image"
             type="file"
             accept="image/png,image/jpeg,image/jpg,image/webp"
+            data-testid="payment-qr-input"
             onChange={(event) => handleQrPreview(event.target.files?.[0] ?? null)}
             className="hidden"
           />
@@ -240,6 +242,7 @@ export function AdminSettingsForm({
           <div className="mt-4 overflow-hidden rounded-3xl border border-line bg-slate-50 p-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              data-testid="payment-qr-preview-image"
               src={preview.payment_qr_url || settings.payment_qr_url}
               alt="Payment QR preview"
               className="h-auto w-full rounded-2xl object-cover"

@@ -320,17 +320,18 @@ export function AdminResidentsTable({
       <div className="grid gap-4 p-4 md:hidden">
         {paginatedResidents.map((resident) => (
           <details key={resident.id} className="rounded-3xl border border-line bg-white p-4">
-            <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
               <div>
                 <p className="text-2xl font-bold text-slate-950">{resident.house_number}</p>
                 <p className="text-base text-muted">{resident.name}</p>
+                <span className="sr-only">Press Enter or Space to expand resident details.</span>
               </div>
               <StatusBadge status={getDisplayStatus(resident)} />
             </summary>
 
             <div className="mt-4 space-y-3 border-t border-line pt-4">
               <p className="text-base text-slate-800">{resident.address}</p>
-              <p className="text-sm text-muted">
+              <p className="text-sm font-medium text-muted">
                 {resident.phone_number
                   ? formatMalaysianPhoneNumber(resident.phone_number)
                   : "No phone number saved yet"}
@@ -342,7 +343,7 @@ export function AdminResidentsTable({
               >
                 Open resident detail
               </Link>
-              <p className="text-sm text-muted">
+              <p className="text-sm font-medium text-muted">
                 Updated:{" "}
                 {resident.currentPayment
                   ? formatTimestamp(resident.currentPayment.updated_at)
@@ -447,6 +448,7 @@ export function AdminResidentsTable({
                           <input type="hidden" name="resident_id" value={resident.id} />
                           <input type="hidden" name="month" value={currentMonth} />
                           <ConfirmSubmitButton
+                            data-testid={`mark-cash-${resident.house_number}`}
                             confirmMessage={`Mark ${resident.house_number} as paid by cash for ${currentMonthLabel}?`}
                             confirmTitle="Confirm cash payment"
                             className="w-full whitespace-nowrap rounded-full bg-slate-950 px-4 py-2 text-sm font-bold uppercase tracking-[0.08em] text-white"

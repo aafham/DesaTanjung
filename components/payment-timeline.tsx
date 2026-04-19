@@ -63,11 +63,11 @@ export function PaymentTimeline({
             >
               <Icon
                 className={`h-5 w-5 ${
-                  step.done ? "text-primary" : "text-slate-400"
+                  step.done ? "text-primary" : "text-slate-600"
                 }`}
               />
               <p className="mt-3 text-base font-bold text-slate-950">{step.label}</p>
-              <p className="mt-1 text-sm text-muted">{step.description}</p>
+              <p className="mt-1 text-sm font-medium text-muted">{step.description}</p>
             </div>
           );
         })}
@@ -79,12 +79,12 @@ export function PaymentTimeline({
         </p>
         <div className="mt-3 space-y-3">
           {auditLogs.length === 0 ? (
-            <p className="text-base text-muted">No activity yet.</p>
+            <p className="text-base font-medium text-muted">No activity yet.</p>
           ) : (
             auditLogs.map((log) => (
               <div key={log.id} className="rounded-2xl bg-white px-4 py-3">
                 <p className="text-base font-bold text-slate-950">{log.message}</p>
-                <p className="mt-1 text-sm text-muted">{formatTimestamp(log.created_at)}</p>
+                <p className="mt-1 text-sm font-medium text-muted">{formatTimestamp(log.created_at)}</p>
               </div>
             ))
           )}

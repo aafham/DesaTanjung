@@ -31,11 +31,18 @@ Tujuan utama portal ini:
 
 Playwright telah disediakan untuk regression test asas auth flow dan smoke test dashboard.
 
+Nota:
+- Flow `upload`, `approve/reject`, `cash paid`, dan `settings` akan mengubah data sebenar.
+- Gunakan account atau environment disposable untuk mutation tests.
+
 1. Salin `.env.e2e.example` ke `.env.e2e.local`
 2. Isi account yang sesuai untuk test:
    - `E2E_ADMIN_IDENTIFIER` + `E2E_ADMIN_PASSWORD`
-   - `E2E_RESIDENT_IDENTIFIER` + `E2E_RESIDENT_PASSWORD`
+   - `E2E_RESIDENT_IDENTIFIER` + `E2E_RESIDENT_PASSWORD` untuk resident dashboard / QR verification
+   - `E2E_PAYMENT_RESIDENT_IDENTIFIER` + `E2E_PAYMENT_RESIDENT_PASSWORD` untuk flow upload + approval/reject
+   - `E2E_CASH_RESIDENT_HOUSE_NUMBER` untuk flow admin mark cash paid
    - `E2E_FIRST_LOGIN_*` hanya untuk account disposable kerana test ini akan tukar password
+   - `E2E_ALLOW_SETTINGS_MUTATION=true` hanya pada environment disposable jika mahu test settings update
 3. Jalankan:
 
 ```bash
@@ -172,12 +179,6 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] elak fetch settings berganda pada resident payments page
   - [x] cache app settings per request
   - [x] loading state lebih jelas semasa navigation dalam portal
-- [x] Login page kemas
-- [x] Konsistensi font seluruh app
-- [x] README setup + walkthrough admin + resident
-
-### Masih perlu dibuat / boleh dipertingkatkan
-
 - [x] Filter admin yang lebih mendalam:
   - [x] `missing phone`
   - [x] `never logged in`
@@ -188,6 +189,8 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] preview gambar sebelum submit
   - [x] mesej saiz / jenis fail lebih jelas
   - [x] retry flow yang lebih mesra
+  - [x] progress state yang lebih jelas semasa upload
+  - [x] optimize / resize ringan sebelum upload
 - [x] Bulk WhatsApp ikut selection dengan pilihan template mesej:
   - [x] unpaid
   - [x] overdue
@@ -201,7 +204,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] ruang tandatangan AJK
   - [x] ruang catatan mesyuarat
   - [x] PDF-ready styling
-- [x] Final polish `Users` dan `Search` untuk filter lanjutan
+- [x] Final polish `Users` dan `Search` untuk filter lanjutan:
   - [x] statistik cepat untuk onboarding dan follow-up
   - [x] carian `Users` lebih luas:
     - [x] alamat
@@ -217,12 +220,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] mark as read
   - [x] filter by type
   - [x] badge count lebih jelas
-- [ ] Accessibility pass akhir:
-  - [x] focus state
-  - [x] skip to content link
-  - [ ] contrast audit
-  - [ ] keyboard flow
-- [ ] Test automation untuk flow kritikal:
+- [x] Test automation sudah tersedia untuk flow utama:
   - [x] Playwright config + env template
   - [x] login smoke tests:
     - [x] login page render
@@ -230,17 +228,44 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
     - [x] admin login
     - [x] resident login
     - [x] first-login password change flow
-  - [ ] resident upload resit
-  - [ ] admin approve / reject payment
-  - [ ] admin mark cash paid
-  - [ ] settings update + QR upload
+  - [x] resident upload resit
+  - [x] admin approve payment
+  - [x] admin reject payment
+  - [x] admin mark cash paid
+  - [x] settings update flow untuk disposable environment
+  - [x] QR upload assertion dalam settings test
+- [x] Error handling / performance improvement yang sudah siap:
+  - [x] retry / rollback plan untuk upload + submit flow
+  - [x] image compression / resize sebelum upload resit
+- [x] Login page kemas
+- [x] Konsistensi font seluruh app
+- [x] README setup + walkthrough admin + resident
+
+### Masih perlu dibuat / boleh dipertingkatkan
+
+- [ ] Accessibility pass akhir:
+  - [x] focus state
+  - [x] skip to content link
+  - [x] dialog focus restore + `Escape` support
+  - [x] dialog focus trap untuk keyboard navigation
+  - [x] live region untuk toast success / error
+  - [x] state button yang lebih jelas untuk screen reader
+  - [x] contrast token global diperkuatkan
+  - [x] keyboard hint + focus style untuk expandable admin cards
+  - [x] contrast diperkemas pada timeline, history, dan contact actions
+  - [x] auth form error state lebih jelas untuk assistive tech
+  - [x] filter/search card state lebih jelas untuk keyboard + screen reader
+  - [x] report table / print metadata contrast diperkemas
+  - [ ] contrast audit komponen spesifik seluruh app yang berbaki kecil
+  - [ ] keyboard flow audit penuh seluruh app yang berbaki kecil
+- [ ] Test automation untuk flow kritikal:
+  - [ ] jalankan suite penuh pada disposable environment sebenar
+  - [ ] tambah assertion visual / accessibility untuk flow penting
 - [ ] Error handling & operational hardening:
   - [ ] mesej error yang lebih konsisten pada server action utama
-  - [ ] retry / rollback plan untuk upload + submit flow
   - [ ] semakan audit log untuk action kritikal admin
 - [ ] Performance & scalability pass:
   - [ ] pagination / server-side narrowing untuk global search bila data makin besar
-  - [ ] image compression / resize sebelum upload resit
   - [ ] semakan index database untuk query admin yang kerap
 - [ ] UX polish seterusnya:
   - [ ] onboarding banner untuk admin bila ada `missing phone` atau `never logged in`

@@ -10,6 +10,7 @@ export default async function ChangePasswordPage({
 }) {
   const profile = await requireUserProfile();
   const params = await searchParams;
+  const errorId = params.error ? "change-password-error" : undefined;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-hero-glow px-4 py-10">
@@ -36,6 +37,8 @@ export default async function ChangePasswordPage({
               required
               minLength={8}
               autoComplete="new-password"
+              aria-invalid={Boolean(params.error)}
+              aria-describedby={errorId}
               inputClassName="min-h-14 w-full rounded-3xl border border-line bg-white px-4 py-3 text-lg font-semibold text-slate-950 outline-none focus:border-primary"
               buttonClassName="text-slate-500 hover:bg-slate-100 hover:text-slate-950"
             />
@@ -51,6 +54,8 @@ export default async function ChangePasswordPage({
               required
               minLength={8}
               autoComplete="new-password"
+              aria-invalid={Boolean(params.error)}
+              aria-describedby={errorId}
               inputClassName="min-h-14 w-full rounded-3xl border border-line bg-white px-4 py-3 text-lg font-semibold text-slate-950 outline-none focus:border-primary"
               buttonClassName="text-slate-500 hover:bg-slate-100 hover:text-slate-950"
             />
@@ -58,7 +63,12 @@ export default async function ChangePasswordPage({
           </div>
 
           {params.error ? (
-            <p className="rounded-2xl bg-rose-50 px-4 py-3 text-base font-bold text-rose-800">
+            <p
+              id={errorId}
+              className="rounded-2xl bg-rose-50 px-4 py-3 text-base font-bold text-rose-800"
+              role="alert"
+              aria-live="assertive"
+            >
               {decodeURIComponent(params.error)}
             </p>
           ) : null}

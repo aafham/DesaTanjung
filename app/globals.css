@@ -6,13 +6,13 @@
   --background: #f4faf7;
   --foreground: #07111f;
   --surface: #ffffff;
-  --line: #c8d8d2;
+  --line: #a9bbb4;
   --primary: #05756f;
   --primary-foreground: #ffffff;
   --success: #047857;
   --warning: #b45309;
   --danger: #be123c;
-  --muted: #475569;
+  --muted: #334155;
 }
 
 * {
@@ -86,11 +86,25 @@ textarea {
 }
 
 :focus-visible {
-  outline: 3px solid rgba(5, 117, 111, 0.35);
-  box-shadow: 0 0 0 4px rgba(5, 117, 111, 0.12);
+  outline: 3px solid rgba(5, 117, 111, 0.55);
+  box-shadow: 0 0 0 5px rgba(5, 117, 111, 0.18);
 }
 
 ::placeholder {
-  color: #64748b;
+  color: #475569;
   opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

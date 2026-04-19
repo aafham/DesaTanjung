@@ -175,6 +175,7 @@ export function ResidentNotificationList({
                     option.value as "all" | "approved" | "pending" | "action" | "cash" | "update",
                   )
                 }
+                aria-pressed={filter === option.value}
                 className={`rounded-full px-4 py-2 text-sm font-bold transition ${
                   filter === option.value
                     ? "bg-slate-950 text-white"
