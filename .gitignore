@@ -6,3 +6,7 @@ node_modules
 scripts/seed-users.json
 coverage
 dist
+playwright-report
+test-results
+.playwright
+.env.e2e.local

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { FilterX, Search } from "lucide-react";
 import {
   deleteManagedUserAction,
   resetManagedUserPasswordAction,
@@ -29,9 +29,10 @@ export function AdminUsersManager({
     "all" | "missing-phone" | "never-logged-in" | "inactive"
   >("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const deferredQuery = useDeferredValue(query);
 
   const filteredUsers = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
+    const normalized = deferredQuery.trim().toLowerCase();
 
     return users.filter((user) => {
       const matchesRole = roleFilter === "all" || user.role === roleFilter;
@@ -46,11 +47,13 @@ export function AdminUsersManager({
         !normalized ||
         user.house_number.toLowerCase().includes(normalized) ||
         user.name.toLowerCase().includes(normalized) ||
-        user.phone_number?.toLowerCase().includes(normalized);
+        user.phone_number?.toLowerCase().includes(normalized) ||
+        user.address.toLowerCase().includes(normalized) ||
+        user.email.toLowerCase().includes(normalized);
 
       return matchesRole && matchesFollowUp && matchesSearch;
     });
-  }, [followUpFilter, query, roleFilter, users]);
+  }, [deferredQuery, followUpFilter, roleFilter, users]);
 
   const adminCount = users.filter((user) => user.role === "admin").length;
   const residentCount = users.filter((user) => user.role === "user").length;
@@ -93,6 +96,8 @@ export function AdminUsersManager({
   }, [currentPage, filteredUsers]);
   const startItem = filteredUsers.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const endItem = Math.min(currentPage * PAGE_SIZE, filteredUsers.length);
+  const hasActiveFilters =
+    query.trim().length > 0 || roleFilter !== "all" || followUpFilter !== "all";
 
   return (
     <section className="space-y-4">
@@ -108,7 +113,7 @@ export function AdminUsersManager({
         </div>
         <div className="w-full max-w-md">
           <label htmlFor="user-search" className="mb-2 block text-base font-bold text-slate-950">
-            Search by house number, owner name, or phone number
+            Search by house number, owner, address, email, or phone number
           </label>
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -116,7 +121,7 @@ export function AdminUsersManager({
               id="user-search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search A-12, Nur Aisyah, or 0123456789"
+              placeholder="Search A-12, Nur Aisyah, Jalan Tanjung, or 0123456789"
               className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
             />
           </div>
@@ -258,6 +263,20 @@ export function AdminUsersManager({
               {neverLoggedInCount} users have never logged in yet. Use these filters to quickly
               spot accounts that still need setup or follow-up.
             </p>
+            {hasActiveFilters ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setRoleFilter("all");
+                  setFollowUpFilter("all");
+                }}
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+              >
+                <FilterX className="h-4 w-4" />
+                Clear all filters
+              </button>
+            ) : null}
           </div>
           <div className="rounded-3xl bg-slate-50 px-4 py-4">
             <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
@@ -269,14 +288,44 @@ export function AdminUsersManager({
             <p className="mt-2 text-sm text-slate-600">
               Showing {startItem}-{endItem} of {filteredUsers.length} matched users.
             </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
+                {passwordResetCount} need password change
+              </span>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
+                {missingPhoneCount} missing phone
+              </span>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
+                {inactiveCount} inactive 30+ days
+              </span>
+            </div>
           </div>
         </div>
       </Card>
 
       <div className="grid gap-4">
         {filteredUsers.length === 0 ? (
-          <Card className="text-center text-sm text-muted">
-            No users matched your search.
+          <Card className="rounded-4xl border-dashed text-center text-sm text-muted">
+            <p className="text-lg font-bold text-slate-950">No users matched this view.</p>
+            <p className="mt-2 text-sm text-muted">
+              Try clearing filters, searching with a shorter keyword, or switching back to all conditions.
+            </p>
+            {hasActiveFilters ? (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery("");
+                    setRoleFilter("all");
+                    setFollowUpFilter("all");
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+                >
+                  <FilterX className="h-4 w-4" />
+                  Reset view
+                </button>
+              </div>
+            ) : null}
           </Card>
         ) : (
           paginatedUsers.map((user) => (

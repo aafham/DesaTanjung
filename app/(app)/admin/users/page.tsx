@@ -17,6 +17,9 @@ export default async function AdminUsersPage({
     getAdminUserManagementData(),
     searchParams,
   ]);
+  const residentCount = users.filter((user) => user.role === "user").length;
+  const missingPhoneCount = users.filter((user) => !user.phone_number).length;
+  const neverLoggedInCount = users.filter((user) => !user.last_login_at).length;
 
   return (
     <div className="space-y-6">
@@ -26,6 +29,36 @@ export default async function AdminUsersPage({
         title="Add, edit, delete, and reset user accounts"
         description="Keep resident records tidy, update contact details, and manage who can access the portal."
       />
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <Card className="border-slate-200 bg-slate-50">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">
+            Resident accounts
+          </p>
+          <p className="mt-2 text-3xl font-bold text-slate-950">{residentCount}</p>
+          <p className="mt-2 text-sm text-slate-600">
+            Active resident profiles available for billing and follow-up.
+          </p>
+        </Card>
+        <Card className="border-rose-200 bg-rose-50">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-800">
+            Missing phone
+          </p>
+          <p className="mt-2 text-3xl font-bold text-rose-950">{missingPhoneCount}</p>
+          <p className="mt-2 text-sm text-rose-900">
+            These residents are not ready for WhatsApp and call shortcuts.
+          </p>
+        </Card>
+        <Card className="border-amber-200 bg-amber-50">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-800">
+            Never logged in
+          </p>
+          <p className="mt-2 text-3xl font-bold text-amber-950">{neverLoggedInCount}</p>
+          <p className="mt-2 text-sm text-amber-900">
+            Useful for onboarding follow-up after new accounts are created.
+          </p>
+        </Card>
+      </section>
 
       <Card>
         <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
@@ -39,6 +72,17 @@ export default async function AdminUsersPage({
                 Add one resident account with house number, owner details, address, and phone number.
                 The system will prepare the default login automatically.
               </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <a
+                  href="#user-directory"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+                >
+                  Jump to user directory
+                </a>
+                <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+                  Default first password: password
+                </span>
+              </div>
             </div>
             <form action={createManagedUserAction} className="grid gap-4 md:grid-cols-2">
               <div>
@@ -127,7 +171,9 @@ export default async function AdminUsersPage({
         </div>
       </Card>
 
-      <AdminUsersManager users={users} currentAdminId={profile.id} />
+      <div id="user-directory">
+        <AdminUsersManager users={users} currentAdminId={profile.id} />
+      </div>
     </div>
   );
 }

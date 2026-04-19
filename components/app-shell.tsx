@@ -72,6 +72,12 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-hero-glow">
+      <a
+        href="#main-content"
+        className="sr-only absolute left-4 top-4 z-50 rounded-full bg-slate-950 px-4 py-3 text-sm font-bold text-white focus:not-sr-only"
+      >
+        Skip to main content
+      </a>
       <div
         className={`mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-7 px-4 py-4 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-8 ${
           printOnlyReportRoute ? "print:max-w-none print:px-0 print:py-0" : ""
@@ -190,7 +196,9 @@ export function AppShell({
               </div>
             </div>
           ) : null}
-          <main aria-busy={loadingHref ? "true" : "false"}>{children}</main>
+          <main id="main-content" aria-busy={loadingHref ? "true" : "false"}>
+            {children}
+          </main>
         </div>
       </div>
     </div>

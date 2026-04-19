@@ -24,7 +24,30 @@ Tujuan utama portal ini:
 - `Supabase Auth`
 - `Supabase Postgres`
 - `Supabase Storage`
+- `Playwright`
 - `Vercel`
+
+## Test automation
+
+Playwright telah disediakan untuk regression test asas auth flow dan smoke test dashboard.
+
+1. Salin `.env.e2e.example` ke `.env.e2e.local`
+2. Isi account yang sesuai untuk test:
+   - `E2E_ADMIN_IDENTIFIER` + `E2E_ADMIN_PASSWORD`
+   - `E2E_RESIDENT_IDENTIFIER` + `E2E_RESIDENT_PASSWORD`
+   - `E2E_FIRST_LOGIN_*` hanya untuk account disposable kerana test ini akan tukar password
+3. Jalankan:
+
+```bash
+npm run test:e2e
+```
+
+Command tambahan:
+
+```bash
+npm run test:e2e:ui
+npm run test:e2e:headed
+```
 
 ## Ringkasan fungsi
 
@@ -155,38 +178,74 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
 
 ### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] Filter admin yang lebih mendalam:
+- [x] Filter admin yang lebih mendalam:
   - [x] `missing phone`
   - [x] `never logged in`
   - [x] `inactive users`
   - [x] `overdue only`
   - [x] `rejected only`
-- [ ] Resident upload UX lebih baik:
+- [x] Resident upload UX lebih baik:
   - [x] preview gambar sebelum submit
   - [x] mesej saiz / jenis fail lebih jelas
   - [x] retry flow yang lebih mesra
-- [ ] Bulk WhatsApp ikut selection dengan pilihan template mesej:
+- [x] Bulk WhatsApp ikut selection dengan pilihan template mesej:
   - [x] unpaid
   - [x] overdue
   - [x] rejected
-- [ ] Data health helper yang lebih action-oriented:
+- [x] Data health helper yang lebih action-oriented:
   - [x] duplicate payment cleanup helper
   - [x] missing phone export
   - [x] schema mismatch detector yang lebih spesifik
-- [ ] Report versi lebih formal untuk mesyuarat:
+- [x] Report versi lebih formal untuk mesyuarat:
   - [x] layout A4 penuh
   - [x] ruang tandatangan AJK
   - [x] ruang catatan mesyuarat
   - [x] PDF-ready styling
-  - [ ] Final polish `Users` dan `Search` untuk filter lanjutan
-- [ ] Resident notification management:
+- [x] Final polish `Users` dan `Search` untuk filter lanjutan
+  - [x] statistik cepat untuk onboarding dan follow-up
+  - [x] carian `Users` lebih luas:
+    - [x] alamat
+    - [x] email
+  - [x] `clear filters` / `reset view`
+  - [x] quick jump ke direktori user
+  - [x] `Search` focus mode:
+    - [x] all
+    - [x] residents
+    - [x] payments
+    - [x] activity
+- [x] Resident notification management:
   - [x] mark as read
   - [x] filter by type
   - [x] badge count lebih jelas
 - [ ] Accessibility pass akhir:
   - [x] focus state
+  - [x] skip to content link
   - [ ] contrast audit
   - [ ] keyboard flow
+- [ ] Test automation untuk flow kritikal:
+  - [x] Playwright config + env template
+  - [x] login smoke tests:
+    - [x] login page render
+    - [x] invalid login error
+    - [x] admin login
+    - [x] resident login
+    - [x] first-login password change flow
+  - [ ] resident upload resit
+  - [ ] admin approve / reject payment
+  - [ ] admin mark cash paid
+  - [ ] settings update + QR upload
+- [ ] Error handling & operational hardening:
+  - [ ] mesej error yang lebih konsisten pada server action utama
+  - [ ] retry / rollback plan untuk upload + submit flow
+  - [ ] semakan audit log untuk action kritikal admin
+- [ ] Performance & scalability pass:
+  - [ ] pagination / server-side narrowing untuk global search bila data makin besar
+  - [ ] image compression / resize sebelum upload resit
+  - [ ] semakan index database untuk query admin yang kerap
+- [ ] UX polish seterusnya:
+  - [ ] onboarding banner untuk admin bila ada `missing phone` atau `never logged in`
+  - [ ] shortcut action pada search result untuk terus approve / follow-up
+  - [ ] resident reminder copy yang boleh pilih tone mesej
 
 ### Checklist test flow utama
 
