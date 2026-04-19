@@ -14,6 +14,18 @@ const ACTION_OPTIONS = [
   { value: "profile_updated", label: "Profile updated" },
   { value: "password_changed", label: "Password changed" },
   { value: "payment_uploaded", label: "Payment uploaded" },
+  { value: "payment_approved", label: "Payment approved" },
+  { value: "payment_rejected", label: "Payment rejected" },
+  { value: "cash_paid", label: "Cash paid" },
+  { value: "bulk_cash_paid", label: "Bulk cash paid" },
+  { value: "payment_note_updated", label: "Payment note updated" },
+  { value: "settings_updated", label: "Settings updated" },
+  { value: "announcement_published", label: "Announcement published" },
+  { value: "announcement_deleted", label: "Announcement deleted" },
+  { value: "user_created", label: "User created" },
+  { value: "user_updated", label: "User updated" },
+  { value: "user_password_reset", label: "User password reset" },
+  { value: "user_deleted", label: "User deleted" },
 ] as const;
 
 const ROLE_OPTIONS = [
@@ -23,10 +35,9 @@ const ROLE_OPTIONS = [
 ] as const;
 
 const DATE_OPTIONS = [
-  { value: "all", label: "All time" },
   { value: "today", label: "Today" },
   { value: "7d", label: "Last 7 days" },
-  { value: "30d", label: "Last 30 days" },
+  { value: "14d", label: "Last 14 days" },
 ] as const;
 
 function escapeCsv(value: string) {
@@ -45,7 +56,7 @@ export function AdminActivityLog({
   const [roleFilter, setRoleFilter] =
     useState<(typeof ROLE_OPTIONS)[number]["value"]>("all");
   const [dateFilter, setDateFilter] =
-    useState<(typeof DATE_OPTIONS)[number]["value"]>("all");
+    useState<(typeof DATE_OPTIONS)[number]["value"]>("14d");
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredActivity = useMemo(() => {
@@ -68,10 +79,9 @@ export function AdminActivityLog({
 
       const age = now - new Date(activity.created_at).getTime();
       const matchesDate =
-        dateFilter === "all" ||
         (dateFilter === "today" && age < 1000 * 60 * 60 * 24) ||
         (dateFilter === "7d" && age < 1000 * 60 * 60 * 24 * 7) ||
-        (dateFilter === "30d" && age < 1000 * 60 * 60 * 24 * 30);
+        (dateFilter === "14d" && age < 1000 * 60 * 60 * 24 * 14);
 
       return (
         matchesAction &&
@@ -118,15 +128,34 @@ export function AdminActivityLog({
 
   const startItem = filteredActivity.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
   const endItem = Math.min(currentPage * PAGE_SIZE, filteredActivity.length);
+  const hasActiveFilters =
+    query.trim().length > 0 ||
+    actionFilter !== "all" ||
+    roleFilter !== "all" ||
+    dateFilter !== "14d";
+
+  function resetFilters() {
+    setQuery("");
+    setActionFilter("all");
+    setRoleFilter("all");
+    setDateFilter("14d");
+  }
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-4" aria-labelledby="activity-log-heading">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Audit log</p>
-          <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-            Resident activity timeline
+          <h3
+            id="activity-log-heading"
+            className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950"
+          >
+            Portal activity timeline
           </h3>
+          <p id="activity-log-help" className="mt-2 max-w-2xl text-base text-slate-600">
+            Search by house number, resident, or message, then narrow the latest 14 days of
+            resident and admin activity with action, role, and date filters.
+          </p>
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4 lg:w-full xl:max-w-5xl">
           <div>
@@ -138,6 +167,7 @@ export function AdminActivityLog({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search A-12, Noor Azizan, uploaded..."
+              aria-describedby="activity-log-help activity-results-summary"
               className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
             />
           </div>
@@ -189,6 +219,7 @@ export function AdminActivityLog({
               onChange={(event) =>
                 setDateFilter(event.target.value as (typeof DATE_OPTIONS)[number]["value"])
               }
+              aria-describedby="activity-results-summary"
               className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
             >
               {DATE_OPTIONS.map((option) => (
@@ -201,22 +232,39 @@ export function AdminActivityLog({
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted sm:flex-row sm:items-center sm:justify-between">
+      <div
+        id="activity-results-summary"
+        className="flex flex-col gap-3 rounded-3xl bg-slate-50 px-4 py-3 text-base text-muted sm:flex-row sm:items-center sm:justify-between"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <p>
           Showing {startItem}-{endItem} of {filteredActivity.length} filtered actions
-          {" "}from {activityLogs.length} recorded resident actions.
+          {" "}from {activityLogs.length} recorded portal actions in the latest 14 days.
         </p>
-        <a
-          href={csvHref}
-          download="resident-activity-log.csv"
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold whitespace-nowrap text-white"
-        >
-          <Download className="h-4 w-4" />
-          Export CSV
-        </a>
+        <div className="flex flex-wrap items-center gap-2">
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-line bg-white px-4 py-2 text-sm font-bold text-slate-950"
+            >
+              Clear filters
+            </button>
+          ) : null}
+          <a
+            href={csvHref}
+            download="resident-activity-log.csv"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold whitespace-nowrap text-white"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </a>
+        </div>
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid gap-3" aria-live="polite">
         {filteredActivity.length === 0 ? (
           <Card className="text-base text-muted">
             No resident activity matched the current search and filter.

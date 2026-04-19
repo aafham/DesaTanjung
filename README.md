@@ -1,20 +1,19 @@
 # Desa Tanjung Payment Portal
 
-Portal bayaran bulanan untuk penduduk taman yang dibina menggunakan `Next.js App Router`, `Tailwind CSS`, `Supabase`, dan sesuai untuk deployment di `Vercel`.
+Portal bayaran bulanan untuk komuniti taman yang dibina dengan `Next.js App Router`, `Tailwind CSS`, `Supabase`, dan sesuai untuk deployment di `Vercel`.
 
-Sistem ini direka untuk dua jenis pengguna:
+Sistem ini ada dua kumpulan pengguna:
 
-- `Resident / Penduduk`
+- `User / Penduduk`
 - `Admin / Jawatankuasa`
 
-Tujuan utama portal ini:
+Matlamat utama portal ini:
 
 - semak status bayaran bulanan
-- muat naik resit bayaran
+- muat naik bukti bayaran
 - semakan dan kelulusan oleh jawatankuasa
-- rekod aktiviti pengguna
-- notifikasi yang jelas untuk admin dan resident
 - pengurusan data penduduk yang lebih teratur
+- rekod aktiviti portal yang lebih jelas
 
 ## Tech stack
 
@@ -29,20 +28,21 @@ Tujuan utama portal ini:
 
 ## Test automation
 
-Playwright telah disediakan untuk regression test asas auth flow dan smoke test dashboard.
+Playwright telah disediakan untuk regression test asas auth flow dan flow mutasi utama.
 
-Nota:
+Nota penting:
+
 - Flow `upload`, `approve/reject`, `cash paid`, dan `settings` akan mengubah data sebenar.
 - Gunakan account atau environment disposable untuk mutation tests.
 
 1. Salin `.env.e2e.example` ke `.env.e2e.local`
 2. Isi account yang sesuai untuk test:
    - `E2E_ADMIN_IDENTIFIER` + `E2E_ADMIN_PASSWORD`
-   - `E2E_RESIDENT_IDENTIFIER` + `E2E_RESIDENT_PASSWORD` untuk resident dashboard / QR verification
-   - `E2E_PAYMENT_RESIDENT_IDENTIFIER` + `E2E_PAYMENT_RESIDENT_PASSWORD` untuk flow upload + approval/reject
-   - `E2E_CASH_RESIDENT_HOUSE_NUMBER` untuk flow admin mark cash paid
-   - `E2E_FIRST_LOGIN_*` hanya untuk account disposable kerana test ini akan tukar password
-   - `E2E_ALLOW_SETTINGS_MUTATION=true` hanya pada environment disposable jika mahu test settings update
+   - `E2E_RESIDENT_IDENTIFIER` + `E2E_RESIDENT_PASSWORD`
+   - `E2E_PAYMENT_RESIDENT_IDENTIFIER` + `E2E_PAYMENT_RESIDENT_PASSWORD`
+   - `E2E_CASH_RESIDENT_HOUSE_NUMBER`
+   - `E2E_FIRST_LOGIN_*` hanya untuk account disposable
+   - `E2E_ALLOW_SETTINGS_MUTATION=true` hanya pada environment disposable
 3. Jalankan:
 
 ```bash
@@ -58,9 +58,9 @@ npm run test:e2e:headed
 
 ## Ringkasan fungsi
 
-### Resident
+### User / Penduduk
 
-- log masuk guna nombor rumah
+- login guna nombor rumah
 - tukar kata laluan pada login pertama
 - lihat status bayaran bulan semasa
 - lihat due date dan jumlah yuran bulanan
@@ -75,9 +75,9 @@ npm run test:e2e:headed
   - alamat
   - nombor telefon
 
-### Admin
+### Admin / Jawatankuasa
 
-- log masuk guna username `admin`
+- login guna username `admin`
 - dashboard kutipan bulanan
 - approval queue untuk semak resit
 - approve / reject payment proof
@@ -91,8 +91,7 @@ npm run test:e2e:headed
   - reset password
   - delete user
   - lihat last login / last logout
-  - lihat log aktiviti resident
-- global search admin
+- search ringkas merentas resident, payment, dan activity
 - halaman reports
 - halaman activity log
 - halaman notices / announcements
@@ -104,216 +103,274 @@ npm run test:e2e:headed
   - jumlah yuran bulanan
   - hari due date
 - upload QR image
+- halaman health untuk semak readiness sistem
 
-## Status checklist projek
+## Checklist semakan kod
 
-Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project.
+Checklist ini disusun semula berdasarkan route, komponen, action, data layer, dan test yang memang wujud dalam codebase semasa.
 
-### Sudah siap
+### Checklist user
+
+#### Sudah siap
 
 - [x] Login menggunakan `nombor rumah / username`
-- [x] Login admin menggunakan `admin`
 - [x] Paksa tukar kata laluan pada login pertama
-- [x] Dashboard resident
-- [x] Page pembayaran resident
-- [x] Muat naik resit ke Supabase Storage
-- [x] Sejarah bayaran resident
-- [x] Timeline aktiviti bayaran
-- [x] Resident notification inbox
-- [x] Resident UI final polish:
-  - [x] dashboard action flow
-  - [x] payments page summary + next-step guidance
-  - [x] profile layout refinement
-  - [x] mobile-friendly payment history
-- [x] Resident profile update:
-  - [x] nama
-  - [x] alamat
-  - [x] nombor telefon
-- [x] Dashboard admin
-- [x] UI admin dikemaskan dan diseragamkan:
-  - [x] dashboard
-  - [x] approvals
-  - [x] reports
-- [x] Approval queue admin
-- [x] Approve payment
-- [x] Reject payment dengan sebab reject
-- [x] Nota admin pada payment
-- [x] Mark cash paid
-- [x] Bulk mark cash paid
-- [x] Residents page dengan search, filter, CSV export
-- [x] Resident detail page
-- [x] Users page:
-  - [x] add user
-  - [x] edit user
-  - [x] reset password
-  - [x] delete user
-  - [x] last login
-  - [x] last logout
-- [x] Admin global search
-- [x] Users page polish
-- [x] Search page polish
-- [x] Admin activity page
-- [x] Admin reports page
-- [x] Admin notices / announcements
-- [x] Admin settings page
-- [x] Pagination untuk senarai panjang:
-  - [x] admin activity
-  - [x] admin users
-  - [x] admin residents
-  - [x] resident notifications
-- [x] Loading screen for sidebar navigation inside the portal
-- [x] Upload QR image dalam settings
-- [x] Dropdown bank Malaysia dalam settings
-- [x] Admin health page
-- [x] Admin health quick action links ke page berkaitan (`Users`, `Residents`, `Settings`)
-- [x] Activity log resident untuk:
+- [x] Redirect automatik ke `dashboard` atau `change-password` ikut status akaun
+- [x] Dashboard user untuk bulan semasa
+- [x] Paparan status bayaran semasa:
+  - [x] `paid`
+  - [x] `pending`
+  - [x] `unpaid`
+  - [x] `rejected`
+  - [x] `overdue`
+- [x] Payments page:
+  - [x] paparan bank info
+  - [x] paparan QR pembayaran
+  - [x] preview QR lebih besar
+  - [x] monthly fee dan due date
+- [x] Upload resit ke Supabase Storage
+- [x] Upload UX yang lebih baik:
+  - [x] preview gambar
+  - [x] semakan saiz / jenis fail
+  - [x] optimize / resize ringan sebelum upload
+  - [x] progress state semasa preparing / uploading / saving / refreshing
+  - [x] retry / rollback flow jika submit gagal
+- [x] Timeline aktiviti bayaran user
+- [x] Sejarah bayaran user
+- [x] Preview resit lama
+- [x] Resident inbox / notification list
+- [x] Notification management:
+  - [x] mark single as read
+  - [x] mark all as read
+  - [x] filter by type
+  - [x] badge count pada sidebar
+  - [x] pagination untuk senarai panjang
+- [x] Announcement / notice feed untuk user
+- [x] Profile page:
+  - [x] update nama
+  - [x] update alamat
+  - [x] update nombor telefon
+  - [x] shortcut tukar password
+- [x] Activity log user direkod untuk:
   - [x] login
   - [x] logout
   - [x] update profile
   - [x] tukar password
   - [x] upload payment proof
-- [x] Call / WhatsApp action
-- [x] Bulk WhatsApp reminder draft
-- [x] Preview resit lama
-- [x] Loading state untuk action penting
-- [x] Performance polish ringan:
-  - [x] elak fetch settings berganda pada resident payments page
-  - [x] cache app settings per request
-  - [x] loading state lebih jelas semasa navigation dalam portal
-- [x] Filter admin yang lebih mendalam:
-  - [x] `missing phone`
-  - [x] `never logged in`
-  - [x] `inactive users`
-  - [x] `overdue only`
-  - [x] `rejected only`
-- [x] Resident upload UX lebih baik:
-  - [x] preview gambar sebelum submit
-  - [x] mesej saiz / jenis fail lebih jelas
-  - [x] retry flow yang lebih mesra
-  - [x] progress state yang lebih jelas semasa upload
-  - [x] optimize / resize ringan sebelum upload
-- [x] Bulk WhatsApp ikut selection dengan pilihan template mesej:
-  - [x] unpaid
-  - [x] overdue
-  - [x] rejected
-- [x] Resident reminder copy yang boleh pilih tone mesej
-- [x] Data health helper yang lebih action-oriented:
+- [x] UI/UX user yang sudah dipolish:
+  - [x] dashboard hierarchy lebih jelas
+  - [x] payments page summary + next-step guidance
+  - [x] profile layout refinement
+  - [x] mobile-friendly payment history
+- [x] Accessibility yang sudah siap pada flow user:
+  - [x] skip to content
+  - [x] focus state
+  - [x] dialog focus restore + `Escape`
+  - [x] dialog focus trap
+  - [x] live region untuk toast
+  - [x] auth form error state lebih jelas
+
+#### Masih perlu dibuat / boleh dipertingkatkan
+
+- [ ] Contrast audit kecil yang masih berbaki pada page user tertentu
+- [ ] Keyboard flow audit penuh untuk login, payments upload, notifications, dan profile
+- [ ] Jalankan suite penuh E2E pada disposable environment sebenar untuk flow user
+- [ ] Tambah assertion visual / accessibility pada test flow user yang penting
+- [ ] Mobile UI audit penuh untuk:
+  - [ ] `/login`
+  - [ ] `/dashboard`
+  - [ ] `/payments`
+  - [ ] `/notifications`
+  - [ ] `/profile`
+
+### Checklist admin
+
+#### Sudah siap
+
+- [x] Login admin menggunakan `admin`
+- [x] Dashboard admin
+- [x] Dashboard admin dipolish semula untuk action harian dan onboarding follow-up
+- [x] Approval queue admin
+- [x] Approve payment
+- [x] Reject payment dengan sebab reject
+- [x] Payment note / committee note
+- [x] Mark cash paid
+- [x] Bulk mark cash paid
+- [x] Residents page:
+  - [x] search
+  - [x] status filter
+  - [x] payment method filter
+  - [x] export CSV
+  - [x] bulk action
+  - [x] follow-up tools
+- [x] Resident detail page:
+  - [x] current month summary
+  - [x] contact panel
+  - [x] timeline payment
+  - [x] history by month
+  - [x] bukti pembayaran lama
+- [x] Users page:
+  - [x] add user
+  - [x] edit user
+  - [x] reset password
+  - [x] delete user
+  - [x] last login / last logout
+  - [x] onboarding filters
+- [x] Search page dikemas semula sebagai `compact global finder`
+- [x] Search features:
+  - [x] focus mode `all / residents / payments / activity`
+  - [x] shortcut action terus dari result
+  - [x] pagination result
+- [x] Admin reports page
+- [x] Print report
+- [x] Download report snapshot tanpa bergantung pada browser print
+- [x] Admin announcements / notices
+- [x] Admin settings:
+  - [x] nama komuniti
+  - [x] bank
+  - [x] nama pemegang akaun
+  - [x] nombor akaun
+  - [x] monthly fee
+  - [x] due day
+  - [x] upload QR image
+  - [x] dropdown bank Malaysia
+- [x] Admin health page
+- [x] Health helpers:
   - [x] duplicate payment cleanup helper
   - [x] missing phone export
-  - [x] schema mismatch detector yang lebih spesifik
-- [x] Report versi lebih formal untuk mesyuarat:
-  - [x] layout A4 penuh
-  - [x] ruang tandatangan AJK
-  - [x] ruang catatan mesyuarat
-  - [x] PDF-ready styling
-- [x] Export laporan bulanan sebagai fail snapshot tanpa bergantung pada browser print
-- [x] Final polish `Users` dan `Search` untuk filter lanjutan:
-  - [x] statistik cepat untuk onboarding dan follow-up
-  - [x] carian `Users` lebih luas:
-    - [x] alamat
-    - [x] email
-  - [x] `clear filters` / `reset view`
-  - [x] quick jump ke direktori user
-  - [x] `Search` focus mode:
-    - [x] all
-    - [x] residents
-    - [x] payments
-    - [x] activity
-  - [x] shortcut action pada search result untuk terus approve / follow-up
-  - [x] `Search` dikemas semula sebagai compact global finder
-  - [x] `Search` result dipagination supaya tidak terlalu panjang untuk discroll
-- [x] Onboarding banner untuk admin bila ada `missing phone` atau `never logged in`
-- [x] Resident notification management:
-  - [x] mark as read
-  - [x] filter by type
-  - [x] badge count lebih jelas
-- [x] Test automation sudah tersedia untuk flow utama:
-  - [x] Playwright config + env template
-  - [x] login smoke tests:
-    - [x] login page render
-    - [x] invalid login error
-    - [x] admin login
-    - [x] resident login
-    - [x] first-login password change flow
-  - [x] resident upload resit
-  - [x] admin approve payment
-  - [x] admin reject payment
-  - [x] admin mark cash paid
-  - [x] settings update flow untuk disposable environment
-  - [x] QR upload assertion dalam settings test
-- [x] Error handling / performance improvement yang sudah siap:
-  - [x] retry / rollback plan untuk upload + submit flow
-  - [x] image compression / resize sebelum upload resit
-- [x] Login page kemas
-- [x] Konsistensi font seluruh app
-- [x] README setup + walkthrough admin + resident
+  - [x] quick action links ke page berkaitan
+- [x] Admin activity page
+- [x] Admin activity dihadkan kepada log terbaru 14 hari untuk view global yang lebih ringan
+- [x] Audit log untuk action kritikal admin:
+  - [x] approve / reject payment
+  - [x] cash paid / bulk cash paid
+  - [x] update payment note
+  - [x] update settings / QR
+  - [x] publish / delete announcement
+  - [x] create / update / reset password / delete user
+- [x] Reminder helper:
+  - [x] unpaid / overdue / rejected templates
+  - [x] tone `friendly / firm / formal`
+  - [x] WhatsApp draft helpers
+- [x] Call / WhatsApp shortcut
+- [x] Pagination pada senarai panjang:
+  - [x] activity
+  - [x] users
+  - [x] residents
+- [x] Test automation tersedia untuk flow admin utama:
+  - [x] admin login
+  - [x] resident upload -> admin approve / reject
+  - [x] mark cash paid
+  - [x] settings update
+  - [x] QR upload assertion
+- [x] Error handling yang sudah dirapikan:
+  - [x] mesej error yang lebih konsisten pada server action utama
+  - [x] fail-safe yang lebih mesra pada flow kritikal admin
 
-### Masih perlu dibuat / boleh dipertingkatkan
+#### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] Accessibility pass akhir:
-  - [x] focus state
-  - [x] skip to content link
-  - [x] dialog focus restore + `Escape` support
-  - [x] dialog focus trap untuk keyboard navigation
-  - [x] live region untuk toast success / error
-  - [x] state button yang lebih jelas untuk screen reader
-  - [x] contrast token global diperkuatkan
-  - [x] keyboard hint + focus style untuk expandable admin cards
-  - [x] contrast diperkemas pada timeline, history, dan contact actions
-  - [x] auth form error state lebih jelas untuk assistive tech
-  - [x] filter/search card state lebih jelas untuk keyboard + screen reader
-  - [x] report table / print metadata contrast diperkemas
-  - [x] auth helper text + report table caption diperkemas
-  - [x] reminder helper lebih jelas untuk keyboard / screen reader
-  - [ ] contrast audit komponen spesifik seluruh app yang berbaki kecil
-  - [ ] keyboard flow audit penuh seluruh app yang berbaki kecil
-- [ ] Test automation untuk flow kritikal:
-  - [ ] jalankan suite penuh pada disposable environment sebenar
-  - [ ] tambah assertion visual / accessibility untuk flow penting
-- [ ] Error handling & operational hardening:
-  - [ ] mesej error yang lebih konsisten pada server action utama
-  - [ ] semakan audit log untuk action kritikal admin
-- [ ] Performance & scalability pass:
-  - [ ] pagination / server-side narrowing untuk global search bila data makin besar
+- [ ] Jalankan suite penuh E2E pada disposable environment sebenar untuk mutation flow admin
+- [ ] Tambah assertion visual / accessibility pada flow admin yang paling penting
+- [ ] Contrast audit kecil yang masih berbaki pada komponen admin tertentu
+- [ ] Keyboard flow audit penuh untuk page admin utama
+- [ ] Performance / scalability bila data makin besar:
+  - [ ] server-side narrowing untuk global search
   - [ ] semakan index database untuk query admin yang kerap
-- [ ] UX polish seterusnya:
+- [ ] UI audit dan final polish untuk page admin yang belum disemak penuh:
+  - [ ] activity
+  - [ ] reports
+  - [ ] announcements
+  - [ ] settings
+  - [ ] health
+- [ ] Polisi operasi live:
+  - [ ] elakkan kongsi satu akaun admin untuk ramai AJK
+  - [ ] sediakan akaun admin berasingan untuk audit yang lebih jelas
 
-### Checklist test flow utama
+### Checklist UI interface
 
-#### Resident
+#### UI interface user
 
-- [ ] Login guna nombor rumah
-- [ ] Tukar password kali pertama
-- [ ] Lihat dashboard bulan semasa
-- [ ] Semak due date dan monthly fee
-- [ ] Buka page payments
-- [ ] Nampak bank info dan QR
-- [ ] Upload resit
-- [ ] Status jadi `pending`
-- [ ] Notification resident masuk
-- [ ] Profile update berjaya
-- [ ] History payment dipaparkan
-- [ ] Sign out direkod
+##### Sudah siap
 
-#### Admin
+- [x] Login page dikemas semula
+- [x] Change password page lebih jelas dan konsisten
+- [x] Dashboard user dipolish semula untuk hierarchy dan action flow
+- [x] Payments page dipolish semula untuk summary, next-step guidance, dan upload flow
+- [x] Profile page dipolish semula untuk susun atur maklumat dan form
+- [x] Payment history table lebih kemas dan lebih mudah dibaca
+- [x] Payment timeline lebih jelas dari segi contrast dan hierarchy
+- [x] Receipt preview modal lebih kemas dan accessible
+- [x] Confirm submit dialog lebih kemas dan accessible
+- [x] Konsistensi font seluruh app
+- [x] Focus state global diperkemas
+- [x] Skip to content link disediakan
+- [x] Live region untuk toast success / error
+- [x] Contrast token global diperkuatkan
 
-- [ ] Login sebagai admin
-- [ ] Nampak resident upload di approvals
-- [ ] Approve payment
-- [ ] Reject payment
-- [ ] Mark cash paid
-- [ ] Lihat update status di residents
-- [ ] Lihat activity log resident
-- [ ] Search resident / payment / activity
-- [ ] Update settings
-- [ ] Upload QR baru
-- [ ] Tambah user baru
-- [ ] Reset password user
-- [ ] Delete user ujian
-- [ ] Buka health page dan semak semua check penting
-- [ ] Print report
+##### Masih perlu dibuat / boleh dipertingkatkan
 
-### Checklist deployment / live environment
+- [ ] Audit UI mobile penuh untuk:
+  - [ ] `/login`
+  - [ ] `/dashboard`
+  - [ ] `/payments`
+  - [ ] `/notifications`
+  - [ ] `/profile`
+- [ ] Contrast audit kecil pada komponen user yang masih berbaki
+- [ ] Semakan visual untuk empty state, error state, dan loading state pada page user
+- [ ] Screenshot audit UI untuk page user utama
+
+#### UI interface admin
+
+##### Sudah siap
+
+- [x] Sidebar admin diseragamkan supaya konsisten antara page
+- [x] Admin dashboard dipolish semula
+- [x] Approvals page dipolish semula
+- [x] Residents page dipolish semula
+- [x] Resident detail page dipolish semula
+- [x] Users page dipolish semula
+- [x] Search page dipolish semula sebagai compact global finder
+- [x] Reports page dipolish semula
+- [x] Search panel sidebar issue dibetulkan supaya tidak mengecil pada page tertentu
+- [x] Admin search result dipadatkan dengan pagination
+- [x] Expandable admin cards ada focus hint dan keyboard style yang lebih baik
+- [x] Contact actions, timeline, history, dan metadata admin diperkemas dari segi contrast
+- [x] Activity page diperkemas dari segi summary filter, clear filters, dan hierarchy
+
+##### Masih perlu dibuat / boleh dipertingkatkan
+
+- [ ] Audit UI penuh untuk page admin yang belum disemak habis:
+  - [ ] `/admin/activity`
+  - [ ] `/admin/reports`
+  - [ ] `/admin/announcements`
+  - [ ] `/admin/settings`
+  - [ ] `/admin/health`
+- [ ] Audit mobile UI untuk:
+  - [ ] `/admin`
+  - [ ] `/admin/approvals`
+  - [ ] `/admin/residents`
+  - [ ] `/admin/users`
+  - [ ] `/admin/search`
+  - [ ] `/admin/settings`
+  - [ ] `/admin/reports`
+- [ ] Contrast audit kecil pada komponen admin yang masih berbaki
+- [ ] Semakan visual untuk empty state, success state, error state, dan loading state pada page admin
+- [ ] Screenshot audit UI untuk page admin utama yang belum cukup
+
+### Housekeeping kod
+
+#### Sudah dibuat
+
+- [x] `components/auth-panel.tsx` dibuang kerana tidak lagi digunakan
+- [x] README disusun semula ikut fungsi sebenar `User` dan `Admin`
+- [x] Checklist lama yang bercampur-campur diringkaskan supaya senang audit progress
+
+#### Masih boleh dibuat
+
+- [ ] Semakan berkala untuk dead code bila feature lama diubah atau dibuang
+- [ ] Semakan semula struktur test/helper jika suite E2E terus bertambah
+
+### Checklist go-live / live environment
 
 - [ ] `NEXT_PUBLIC_SUPABASE_URL` betul
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` betul
@@ -327,136 +384,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
 - [ ] resident user boleh login
 - [ ] upload resit berfungsi di live
 - [ ] admin approve / reject berfungsi di live
-
-### Checklist audit UI / interface
-
-- [ ] Global interface system:
-  - [ ] semak konsistensi spacing, radius, shadow, dan hierarchy antara semua page
-  - [ ] semak konsistensi typography untuk heading, subheading, helper text, dan metadata
-  - [ ] semak state `default / hover / focus / active / disabled` pada button, input, tab, filter chip, dan link
-  - [ ] semak alignment card, grid, table, dan section spacing pada desktop
-  - [ ] semak layout collapse pada tablet dan mobile
-  - [ ] semak toast, empty state, loading state, dan error state supaya visual language konsisten
-  - [ ] semak sidebar, header page, badge count, dan breadcrumb/jump action supaya tidak nampak crowded
-- [ ] Auth screens:
-  - [ ] login page
-  - [ ] change password page
-  - [ ] semak state untuk error login / invalid password / first-login flow
-- [ ] Resident screens:
-  - [ ] resident dashboard
-  - [ ] payments page
-  - [ ] notifications page
-  - [ ] profile page
-  - [ ] receipt preview modal
-  - [ ] confirm submit dialog
-  - [ ] semak empty state jika tiada history / tiada notification / tiada resit
-  - [ ] semak mobile layout untuk payment upload, timeline, dan history table
-- [ ] Admin screens:
-  - [x] admin dashboard
-  - [x] approvals page
-  - [x] residents page
-  - [x] resident detail page
-  - [x] users page
-  - [x] search page
-  - [ ] activity page
-  - [ ] reports page
-  - [ ] announcements page
-  - [ ] settings page
-  - [ ] health page
-  - [ ] semak pagination, filter bar, summary cards, dan action button alignment
-- [ ] Visual states yang perlu diaudit:
-  - [ ] page dengan data penuh
-  - [ ] page dengan data sedikit
-  - [ ] page kosong / no result
-  - [ ] form validation error
-  - [ ] success state selepas submit / save / approve / reject
-  - [ ] loading / skeleton / pending state
-  - [ ] modal / dialog terbuka
-  - [ ] long text / long name / long address overflow
-  - [ ] screenshot print / snapshot report view
-- [ ] Mobile-specific audit:
-  - [ ] login
-  - [ ] resident dashboard
-  - [ ] payments upload
-  - [ ] notifications
-  - [ ] profile
-  - [ ] admin dashboard
-  - [ ] approvals
-  - [ ] residents
-  - [ ] users
-  - [ ] search
-  - [ ] settings
-  - [ ] reports
-
-### Screenshot yang diperlukan untuk audit UI
-
-Untuk saya kemaskan semula UI dengan lebih tepat, saya perlukan screenshot berikut:
-
-- [ ] 1 screenshot desktop penuh untuk setiap page utama:
-  - [ ] `/login`
-  - [ ] `/change-password`
-  - [ ] `/dashboard`
-  - [ ] `/payments`
-  - [ ] `/notifications`
-  - [ ] `/profile`
-  - [x] `/admin`
-  - [x] `/admin/approvals`
-  - [x] `/admin/residents`
-  - [x] `/admin/residents/[id]`
-  - [x] `/admin/users`
-  - [x] `/admin/search`
-  - [ ] `/admin/activity`
-  - [ ] `/admin/reports`
-  - [ ] `/admin/announcements`
-  - [ ] `/admin/settings`
-  - [ ] `/admin/health`
-- [ ] 1 screenshot mobile untuk page yang paling kerap guna:
-  - [ ] `/login`
-  - [ ] `/dashboard`
-  - [ ] `/payments`
-  - [ ] `/notifications`
-  - [ ] `/profile`
-  - [ ] `/admin`
-  - [ ] `/admin/approvals`
-  - [ ] `/admin/residents`
-  - [ ] `/admin/users`
-  - [ ] `/admin/search`
-  - [ ] `/admin/settings`
-  - [ ] `/admin/reports`
-- [ ] screenshot state khas yang penting:
-  - [ ] login dengan error message
-  - [ ] payment upload dengan preview gambar
-  - [ ] payment upload semasa loading / uploading
-  - [ ] receipt preview modal terbuka
-  - [ ] confirm submit dialog terbuka
-  - [ ] approvals page dengan item `pending`
-  - [ ] approvals page selepas `approve`
-  - [ ] approvals page selepas `reject`
-  - [ ] users page dengan filter aktif
-  - [ ] search page dengan result untuk resident
-  - [ ] search page dengan result untuk payment
-  - [ ] search page dengan result untuk activity
-  - [ ] reports page dalam keadaan penuh data
-  - [ ] settings page dengan preview QR
-  - [ ] health page yang ada warning / error
-  - [ ] mana-mana page yang nampak serabut, sempit, atau alignment lari
-
-Nota untuk screenshot:
-
-- [ ] desktop: ambil pada saiz penuh browser biasa, lebih kurang `1440px` lebar
-- [ ] mobile: ambil pada lebar lebih kurang `390px - 430px`
-- [ ] kalau boleh, ambil sekali state `normal`, `empty`, dan `error` untuk page yang penting
-- [ ] kalau ada page yang rasa “tak sedap tengok”, bagi screenshot itu sekali walaupun tidak ada bug fungsi
-- [ ] kalau tak sempat ambil semua, priority pertama ialah:
-  - [ ] `/dashboard`
-  - [ ] `/payments`
-  - [x] `/admin`
-  - [x] `/admin/approvals`
-  - [x] `/admin/residents`
-  - [x] `/admin/users`
-  - [x] `/admin/search`
-  - [ ] `/admin/settings`
-  - [ ] `/admin/reports`
+- [ ] admin mark cash paid berfungsi di live
 
 ## Cara login
 
@@ -502,7 +430,9 @@ Nota:
 |   |   |   |-- activity/page.tsx
 |   |   |   |-- announcements/page.tsx
 |   |   |   |-- approvals/page.tsx
+|   |   |   |-- health/page.tsx
 |   |   |   |-- reports/page.tsx
+|   |   |   |-- reports/snapshot/route.ts
 |   |   |   |-- residents/page.tsx
 |   |   |   |-- residents/[id]/page.tsx
 |   |   |   |-- search/page.tsx
@@ -528,7 +458,6 @@ Nota:
 |   |-- admin-users-manager.tsx
 |   |-- announcement-feed.tsx
 |   |-- app-shell.tsx
-|   |-- auth-panel.tsx
 |   |-- confirm-submit-button.tsx
 |   |-- contact-actions.tsx
 |   |-- data-warning.tsx
@@ -556,11 +485,13 @@ Nota:
 |   `-- utils.ts
 |-- scripts
 |   |-- reset-password.mjs
+|   |-- seed-users.json
 |   |-- seed-users.json.example
 |   `-- seed-users.mjs
 |-- supabase
 |   `-- schema.sql
-`-- middleware.ts
+`-- tests
+    `-- e2e
 ```
 
 ## Setup local
@@ -642,595 +573,47 @@ npm run lint
 npm run build
 ```
 
-## Flow penggunaan sistem
+## Cara guna website
 
-## Walkthrough penuh dari awal sampai habis
+### Untuk user / penduduk
 
-Bahagian ini sesuai untuk orang yang baru pertama kali guna sistem dan mahu ikut langkah satu per satu.
-
-## Walkthrough resident
-
-### A. Kali pertama log masuk
-
-1. Buka page `Login`
-2. Masukkan `nombor rumah` sebagai username
-   - contoh: `A-12`
+1. Buka `Login`
+2. Masukkan nombor rumah sebagai username
 3. Masukkan password semasa
-   - default awal: `password`
-4. Tekan `Masuk portal`
-5. Sistem akan bawa ke page `Change password`
-6. Masukkan password baru dan sahkan password baru
-7. Selepas berjaya, sistem akan bawa resident ke `Dashboard`
+4. Jika ini login pertama, tukar kata laluan di page `Change password`
+5. Semak `Dashboard` untuk status bulan semasa, due date, dan notifikasi terkini
+6. Buka `Payments` untuk lihat bank info, QR, dan muat naik resit
+7. Selepas upload, status akan jadi `pending` sehingga admin semak
+8. Buka `Notifications` untuk lihat update seperti approve, reject, atau cash paid
+9. Buka `Profile` untuk kemas kini nama, alamat, nombor telefon, atau tukar kata laluan
 
-### B. Semak status bulan semasa
+### Untuk admin / jawatankuasa
 
-Di `Dashboard`, resident patut semak:
-
-1. status bulan semasa
-   - `Paid`
-   - `Pending review`
-   - `Awaiting payment`
-   - `Rejected`
-   - `Overdue`
-2. due date bulan semasa
-3. monthly fee
-4. mesej tindakan seterusnya
-5. notifikasi terbaru
-
-Kalau status `Awaiting payment`, resident perlu pergi ke `Payments`.
-
-### C. Buat bayaran dan upload resit
-
-Di page `Payments`:
-
-1. semak nama bank
-2. semak nama pemegang akaun
-3. semak nombor akaun
-4. scan QR jika disediakan
-5. buat bayaran melalui bank transfer / QR
-6. pilih fail gambar resit
-7. tekan submit upload resit
-
-Selepas itu:
-
-1. resit akan disimpan dalam Supabase Storage
-2. rekod bayaran bulan semasa akan jadi `pending`
-3. admin akan nampak resit itu dalam `Approvals`
-4. resident akan dapat notifikasi bahawa resit telah dihantar
-
-### D. Tunggu semakan admin
-
-Selepas upload:
-
-1. resident boleh buka `Dashboard`
-2. atau buka `Notifications`
-3. tunggu status berubah
-
-Kemungkinan hasil:
-
-- `Approved` -> bayaran diterima
-- `Rejected` -> perlu upload semula resit yang betul atau lebih jelas
-
-### E. Kalau resit ditolak
-
-Jika admin reject:
-
-1. resident akan nampak status `Rejected`
-2. resident akan nampak sebab reject
-3. resident pergi semula ke `Payments`
-4. upload resit baru
-5. status akan kembali `Pending review`
-
-### F. Kemas kini profil
-
-Resident boleh buka `Profile` untuk:
-
-1. semak nombor rumah
-2. semak nama pemilik
-3. semak alamat rumah
-4. semak nombor telefon
-5. update nama, alamat, dan nombor telefon jika perlu
-
-Setiap update ini akan masuk ke activity log admin.
-
-### G. Semak rekod lama
-
-Resident boleh:
-
-1. buka `Dashboard`
-2. lihat `Payment history`
-3. lihat status bagi bulan-bulan lepas
-4. buka semula resit lama jika ada
-
-### H. Akhir sekali
-
-Bila selesai:
-
-1. semak notifikasi terakhir
-2. pastikan status bulan semasa betul
-3. tekan `Sign out`
-
-## Walkthrough admin
-
-### A. Setup awal sebelum resident guna
-
-Sebelum mula guna sistem secara sebenar, admin patut buat ini dahulu:
-
-1. login sebagai `admin`
-2. buka `Settings`
-3. isi / semak:
+1. Login sebagai `admin`
+2. Buka `Settings` dahulu untuk semak:
    - community name
-   - bank name
-   - account holder name
-   - account number
+   - bank info
    - monthly fee
    - due day
-   - payment QR image
-4. save settings
-5. buka page `Health`
-6. semak semua check penting
-   - QR bukan placeholder
-   - monthly fee sudah diisi
-   - bucket storage wujud
-   - tiada duplicate payment
-   - env penting wujud
-
-### B. Tambah resident baru
-
-Di page `Users`:
-
-1. isi nombor rumah
-2. isi nama pemilik
-3. isi alamat
-4. isi nombor telefon
-5. tekan `Add user`
-
-Selepas itu:
-
-- resident boleh login guna nombor rumah
-- password awal resident ialah `password`
-
-### C. Pantau dashboard admin
-
-Di `Admin Dashboard`, admin boleh semak:
-
-1. collection rate
-2. jumlah paid / pending / needs attention / overdue
-3. latest submissions
-4. resident activity
-5. uploaded proofs
-6. notice board
-7. reminder helper
-
-Ini biasanya page utama untuk semakan harian.
-
-### D. Semak resit yang baru dihantar
-
-Bila resident upload resit:
-
-1. admin buka `Approvals`
-2. cari payment untuk bulan semasa
-3. buka gambar resit
-4. semak maklumat rumah, nama, phone number
-5. semak timeline / nota jika perlu
-
-Kemudian pilih salah satu:
-
-- `Approve`
-- `Reject`
-
-### E. Approve payment
-
-Jika resit betul:
-
-1. admin tekan `Approve`
-2. status payment akan jadi `paid`
-3. resident akan dapat notification `approved`
-4. page `Residents`, `Reports`, dan `Dashboard` akan update
-
-### F. Reject payment
-
-Jika resit tak jelas atau salah:
-
-1. admin pilih sebab reject
-2. admin boleh tambah nota jika perlu
-3. admin tekan `Reject`
-4. status payment akan jadi `rejected`
-5. resident akan dapat notification dengan sebab reject
-
-### G. Mark cash paid
-
-Jika bayaran dibuat secara tunai:
-
-1. admin buka `Residents`
-2. cari resident
-3. tekan `Mark paid cash`
-4. jika ramai resident sekali, pilih beberapa resident
-5. guna `Bulk action`
-
-Selepas itu:
-
-- rekod payment akan jadi `paid`
-- payment method akan jadi `cash`
-- resident akan dapat notification `cash paid`
-
-### H. Guna Residents page untuk follow-up
-
-Di `Residents`, admin boleh:
-
-1. search nama / nombor rumah / alamat / phone
-2. filter status
-3. filter payment method
-4. export CSV
-5. buka resident detail
-6. copy reminder text
-7. call resident
-8. WhatsApp resident
-9. simpan payment note
-
-### I. Guna Users page untuk urus akaun
-
-Di `Users`, admin boleh:
-
-1. tambah resident baru
-2. edit data resident
-3. reset password resident
-4. delete user
-5. semak:
-   - last login
-   - last logout
-   - missing phone
-   - never logged in
-   - inactive 30+ days
-   - resident activity log
-
-### J. Guna Search page
-
-Di `Search`, admin boleh cari maklumat dengan cepat:
-
-1. nama resident
-2. nombor rumah
-3. nombor telefon
-4. payment bulan semasa
-5. activity log
-
-Sesuai untuk semakan cepat tanpa lompat banyak page.
-
-### K. Guna Activity page
-
-Di `Activity`, admin boleh audit apa yang resident telah buat:
-
-1. login
-2. logout
-3. update profile
-4. change password
-5. upload payment proof
-
-Sesuai untuk semakan dalaman dan troubleshooting.
-
-### L. Guna Reports page
-
-Di `Reports`, admin boleh:
-
-1. semak expected collection
-2. semak collected amount
-3. semak outstanding amount
-4. semak collection rate
-5. semak breakdown setiap rumah
-6. tekan `Print report`
-
-Sesuai untuk mesyuarat AJK atau semakan bulanan.
-
-### M. Guna Notices page
-
-Di `Notices`, admin boleh:
-
-1. create announcement
-2. pilih audience
-3. pin notice jika penting
-4. publish
-
-Resident akan nampak notice itu di dashboard / notifications flow yang berkaitan.
-
-### N. Guna Health page
-
-Di `Health`, admin boleh semak keadaan sistem:
-
-1. env penting cukup atau tidak
-2. QR placeholder masih ada atau tidak
-3. monthly fee sudah lengkap atau tidak
-4. bucket storage wujud atau tidak
-5. duplicate payment wujud atau tidak
-6. resident yang tiada phone number
-7. pending proof yang belum direview
-8. export senarai resident yang belum ada phone number
-9. export duplicate payment report
-10. salin SQL cleanup helper jika perlu bersihkan duplicate payment
-
-Ini page terbaik bila rasa sistem “tak sync” atau nampak warning.
-
-### O. Guna pagination pada senarai panjang
-
-Untuk elak scroll terlalu panjang, sistem sekarang pecahkan senarai besar kepada beberapa page.
-
-Admin boleh guna pagination pada:
-
-1. `Activity`
-2. `Users`
-3. `Residents`
-
-Resident pula ada pagination pada:
-
-1. `Notifications`
-
-Setiap page guna format:
-
-- `<` untuk page sebelum
-- nombor page seperti `1 2 3 4`
-- `>` untuk page seterusnya
-
-### P. Tutup kitaran bulanan
-
-Pada hujung bulan atau selepas due date, admin biasanya akan buat:
-
-1. buka `Dashboard`
-2. semak siapa yang belum settle
-3. guna reminder helper / WhatsApp
-4. review semua pending proof
-5. mark cash paid jika ada bayaran tunai
-6. buka `Reports`
-7. print report
-8. simpan rekod untuk mesyuarat
-
-## Flow resident
-
-### 1. Login
-
-Resident login guna:
-
-- nombor rumah sebagai username
-- kata laluan semasa
-
-Jika login pertama:
-
-- resident akan dibawa ke page `Change password`
-
-### 2. Dashboard
-
-Resident boleh lihat:
-
-- status bulan semasa
-- due date
-- monthly fee
-- nombor rumah
-- nama pemilik
-- alamat
-- nombor telefon
-- notice board
-- resident inbox
-- payment timeline
-- payment history
-
-### 3. Payments
-
-Resident boleh:
-
-- lihat nama bank
-- lihat nombor akaun
-- lihat nama pemegang akaun
-- lihat QR pembayaran
-- buka QR dalam saiz lebih besar
-- lihat panduan pembayaran
-- muat naik resit bayaran
-
-Bila resit diupload:
-
-- imej akan disimpan dalam Supabase Storage
-- rekod payment akan diupdate kepada `pending`
-- admin akan nampak di approval queue
-- resident akan dapat notifikasi bahawa resit sedang menunggu semakan
-
-### 4. Notifications
-
-Resident boleh buka page `Notifications` untuk lihat semua update penting seperti:
-
-- resit berjaya dihantar
-- bayaran diluluskan
-- bayaran ditolak
-- bayaran ditanda cash paid
-- buka notifikasi ikut page jika senarai sudah banyak
-
-### 5. Profile
-
-Resident boleh update:
-
-- nama pemilik
-- alamat
-- nombor telefon
-
-Semua perubahan ini direkod dalam activity log admin.
-
-### 6. Password
-
-Resident boleh tukar password:
-
-- pada login pertama
-- bila klik `Update password` di profile
-
-## Flow admin
-
-### 1. Login
-
-Admin login guna:
-
-- username: `admin`
-- password semasa
-
-### 2. Dashboard admin
-
-Admin boleh lihat:
-
-- collection rate
-- total paid / pending / needs attention / overdue
-- latest notifications
-- latest resident activity
-- pending uploaded proofs
-- resident belum settle
-- notice board
-- reminder helper
-- health warnings jika setting penting belum lengkap
-
-### 3. Approvals
-
-Admin boleh:
-
-- lihat resit yang resident upload
-- lihat nombor rumah, nama, alamat, phone number
-- preview resit
-- approve payment
-- reject payment
-- pilih sebab reject
-- simpan nota admin
-- lihat timeline payment
-
-Bila admin approve:
-
-- status resident jadi `paid`
-- resident dapat notification `approved`
-
-Bila admin reject:
-
-- status resident jadi `rejected`
-- reject reason disimpan
-- resident dapat notification `rejected`
-
-### 4. Residents
-
-Admin boleh:
-
-- search resident
-- filter by status
-- filter by payment method
-- export CSV
-- bulk mark cash paid
-- mark cash paid satu per satu
-- lihat notes payment
-- pergi ke resident detail
-- call / WhatsApp resident
-
-### 5. Resident detail
-
-Admin boleh lihat:
-
-- profile resident
-- phone number
-- contact actions
-- payment history
-- payment timeline
-- current month status
-
-### 6. Users
-
-Admin boleh:
-
-- tambah user baru
-- edit user
-- reset default password
-- delete user
-- semak:
-  - last login
-  - last logout
-  - activity log
-  - missing phone
-  - never logged in
-  - inactive 30+ days
-
-### 7. Search
-
-Halaman `Admin Search` digunakan untuk cari maklumat dengan cepat tanpa lompat banyak page.
-
-Admin boleh search:
-
-- nombor rumah
-- nama pemilik
-- alamat
-- nombor telefon
-- payment bulan semasa
-- activity log
-
-### 8. Activity
-
-Halaman `Admin Activity` digunakan untuk audit aktiviti portal.
-
-Admin boleh:
-
-- search ikut nama / nombor rumah
-- filter ikut action
-- filter ikut role
-- filter ikut tempoh masa
-- guna pagination 5 log satu page
-- export CSV
-
-Action yang direkod:
-
-- login
-- logout
-- profile update
-- password changed
-- payment uploaded
-
-### 9. Reports
-
-Admin boleh lihat:
-
-- expected collection
-- collected amount
-- outstanding amount
-- due date
-- collection rate
-- meeting summary
-- resident breakdown
-- print report
-
-### 10. Notices
-
-Admin boleh:
-
-- create announcement
-- set audience:
-  - all
-  - residents
-  - admins
-- pin notice
-- delete notice
-
-### 11. Settings
-
-Admin boleh update:
-
-- community name
-- bank name
-- account holder name
-- account number
-- monthly fee
-- due day
-- payment QR image
-
-### 12. Pagination untuk page panjang
-
-Admin kini boleh guna pagination di:
-
-- `Activity`
-- `Users`
-- `Residents`
-
-Resident pula boleh guna pagination di:
-
-- `Notifications`
+   - QR image
+3. Buka `Health` untuk semak readiness sistem
+4. Buka `Dashboard` untuk lihat:
+   - collection rate
+   - latest submissions
+   - resident belum settle
+   - onboarding follow-up
+5. Buka `Approvals` untuk approve atau reject resit
+6. Buka `Residents` untuk follow-up, cash paid, reminder, CSV export, dan payment note
+7. Buka `Resident detail` untuk lihat history, timeline, dan bukti lama
+8. Buka `Users` untuk add, edit, reset password, atau delete user
+9. Buka `Search` bila perlu cari cepat merentas resident, payment, dan activity
+10. Buka `Reports` untuk print report atau download snapshot bulanan
+11. Buka `Activity` untuk audit log terbaru 14 hari
+12. Buka `Announcements` untuk publish notice
 
 ## Log aktiviti yang direkod
 
-Sistem sekarang merekod aktiviti resident seperti:
+### Aktiviti user
 
 - resident login
 - resident logout
@@ -1238,11 +621,19 @@ Sistem sekarang merekod aktiviti resident seperti:
 - resident tukar password
 - resident upload payment proof
 
-Admin boleh nampak aktiviti ini pada:
+### Aktiviti admin
 
-- dashboard admin
-- page `Users`
-- page `Activity`
+- approve / reject payment
+- mark cash paid / bulk cash paid
+- update payment note
+- update settings / QR
+- publish / delete announcement
+- create / update / reset password / delete user
+
+Nota:
+
+- page `Admin Activity` memaparkan log terbaru 14 hari sahaja supaya view global kekal ringan
+- history penting payment masih kekal pada `Resident detail`
 
 ## Notification flow
 
@@ -1283,6 +674,9 @@ npm run dev
 npm run build
 npm run start
 npm run lint
+npm run test:e2e
+npm run test:e2e:ui
+npm run test:e2e:headed
 npm run seed:users
 npm run reset:password
 ```
@@ -1340,34 +734,6 @@ Selepas deploy:
 
 - run semula `supabase/schema.sql` jika ada perubahan schema
 - redeploy jika perlu
-
-## Checklist selepas deploy
-
-### Resident
-
-1. login
-2. tukar password
-3. update profile
-4. lihat QR dan bank info
-5. upload resit
-6. lihat status jadi `pending`
-7. lihat notifikasi masuk
-8. semak page notifications
-
-### Admin
-
-1. login
-2. tengok resident upload masuk ke `Approvals`
-3. approve payment
-4. reject payment
-5. mark cash paid
-6. lihat resident activity log
-7. guna global search
-8. lihat reports
-9. tambah user baru
-10. reset password user
-11. update settings
-12. semak notices
 
 ## Common masalah dan cara semak
 

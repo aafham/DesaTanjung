@@ -14,6 +14,10 @@ import {
 } from "@/lib/utils";
 import { DEFAULT_ADMIN_PASSWORD, DEFAULT_USER_PASSWORD } from "@/lib/constants";
 
+type ActionErrorLike = {
+  message?: string | null;
+};
+
 function redirectWithError(path: string, message: string) {
   const separator = path.includes("?") ? "&" : "?";
   redirect(`${path}${separator}error=${encodeURIComponent(message)}`);
@@ -22,6 +26,50 @@ function redirectWithError(path: string, message: string) {
 function redirectWithMessage(path: string, message: string) {
   const separator = path.includes("?") ? "&" : "?";
   redirect(`${path}${separator}message=${encodeURIComponent(message)}`);
+}
+
+function getActionErrorMessage(
+  fallback: string,
+  error?: ActionErrorLike | null,
+) {
+  const message = error?.message?.trim();
+
+  if (!message) {
+    return fallback;
+  }
+
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes("duplicate key") ||
+    lower.includes("already exists") ||
+    lower.includes("unique constraint")
+  ) {
+    return "This record already exists. Please check the current data and try again.";
+  }
+
+  if (
+    lower.includes("permission denied") ||
+    lower.includes("not authorized") ||
+    lower.includes("forbidden") ||
+    lower.includes("row-level security")
+  ) {
+    return "You do not have permission to complete this action.";
+  }
+
+  if (lower.includes("network") || lower.includes("fetch")) {
+    return "The request could not reach the server. Please try again.";
+  }
+
+  return fallback;
+}
+
+function redirectWithActionError(
+  path: string,
+  fallback: string,
+  error?: ActionErrorLike | null,
+) {
+  redirectWithError(path, getActionErrorMessage(fallback, error));
 }
 
 async function logUserActivity(
@@ -35,6 +83,14 @@ async function logUserActivity(
     action,
     message,
   });
+}
+
+async function logAdminAudit(
+  adminId: string,
+  action: string,
+  message: string,
+) {
+  await logUserActivity(adminId, action, message);
 }
 
 async function createNotification({
@@ -108,7 +164,11 @@ export async function changePasswordAction(formData: FormData) {
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
-    redirectWithError("/change-password", error.message);
+    redirectWithActionError(
+      "/change-password",
+      "Unable to update the password right now. Please try again.",
+      error,
+    );
   }
 
   await supabase.from("users").update({ must_change_password: false }).eq("id", profile.id);
@@ -147,7 +207,11 @@ export async function updateProfileAction(formData: FormData) {
     .eq("id", profile.id);
 
   if (error) {
-    redirectWithError("/profile", error.message);
+    redirectWithActionError(
+      "/profile",
+      "Unable to save the profile right now. Please try again.",
+      error,
+    );
   }
 
   const changedFields = [
@@ -200,17 +264,33 @@ export async function approvePaymentAction(formData: FormData) {
   const notes = String(formData.get("notes") ?? "").trim();
   const month = String(formData.get("month") ?? getMonthKey());
   const supabase = await createClient();
-  const { data: payment } = await supabase
+  const { data: payment, error: paymentError } = await supabase
     .from("payments")
-    .select("id, user_id, month")
+    .select("id, user_id, month, users!payments_user_id_fkey(house_number)")
     .eq("id", paymentId)
     .maybeSingle();
 
-  await supabase.rpc("admin_review_payment", {
+  if (paymentError || !payment) {
+    redirectWithActionError(
+      `/admin/approvals?month=${month}`,
+      "Unable to find the selected payment proof.",
+      paymentError,
+    );
+  }
+
+  const { error: reviewError } = await supabase.rpc("admin_review_payment", {
     p_payment_id: paymentId,
     p_status: "paid",
     p_notes: notes || null,
   });
+
+  if (reviewError) {
+    redirectWithActionError(
+      `/admin/approvals?month=${month}`,
+      "Unable to approve the payment right now. Please try again.",
+      reviewError,
+    );
+  }
 
   await supabase.from("notifications").update({ is_read: true }).eq("payment_id", paymentId).eq("scope", "admin");
   if (payment?.user_id) {
@@ -221,6 +301,11 @@ export async function approvePaymentAction(formData: FormData) {
       message: `Payment for ${formatMonthLabel(payment.month)} has been approved by the committee.`,
     });
   }
+  await logAdminAudit(
+    profile.id,
+    "payment_approved",
+    `Admin approved payment for ${payment?.users?.house_number ?? "the selected resident"} for ${formatMonthLabel(payment?.month ?? month)}.`,
+  );
 
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
@@ -246,18 +331,34 @@ export async function rejectPaymentAction(formData: FormData) {
   const notes = String(formData.get("notes") ?? "").trim();
   const month = String(formData.get("month") ?? getMonthKey());
   const supabase = await createClient();
-  const { data: payment } = await supabase
+  const { data: payment, error: paymentError } = await supabase
     .from("payments")
-    .select("id, user_id, month")
+    .select("id, user_id, month, users!payments_user_id_fkey(house_number)")
     .eq("id", paymentId)
     .maybeSingle();
 
-  await supabase.rpc("admin_review_payment", {
+  if (paymentError || !payment) {
+    redirectWithActionError(
+      `/admin/approvals?month=${month}`,
+      "Unable to find the selected payment proof.",
+      paymentError,
+    );
+  }
+
+  const { error: reviewError } = await supabase.rpc("admin_review_payment", {
     p_payment_id: paymentId,
     p_status: "rejected",
     p_reject_reason: rejectReason || "Payment proof needs correction.",
     p_notes: notes || null,
   });
+
+  if (reviewError) {
+    redirectWithActionError(
+      `/admin/approvals?month=${month}`,
+      "Unable to reject the payment proof right now. Please try again.",
+      reviewError,
+    );
+  }
 
   if (payment?.user_id) {
     await createNotification({
@@ -269,6 +370,11 @@ export async function rejectPaymentAction(formData: FormData) {
       }`,
     });
   }
+  await logAdminAudit(
+    profile.id,
+    "payment_rejected",
+    `Admin rejected payment proof for ${payment?.users?.house_number ?? "the selected resident"} for ${formatMonthLabel(payment?.month ?? month)}.`,
+  );
 
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
@@ -349,16 +455,34 @@ export async function markCashPaymentAction(formData: FormData) {
   const residentId = String(formData.get("resident_id") ?? "");
   const month = String(formData.get("month") ?? getMonthKey());
   const supabase = await createClient();
+  const { data: resident } = await supabase
+    .from("users")
+    .select("house_number")
+    .eq("id", residentId)
+    .maybeSingle();
 
-  await supabase.rpc("admin_mark_cash_payment", {
+  const { error } = await supabase.rpc("admin_mark_cash_payment", {
     p_user_id: residentId,
     p_month: month,
   });
+
+  if (error) {
+    redirectWithActionError(
+      `/admin/residents?month=${month}`,
+      "Unable to mark the cash payment right now. Please try again.",
+      error,
+    );
+  }
   await createNotification({
     userId: residentId,
     scope: "resident",
     message: `Payment for ${formatMonthLabel(month)} was marked as paid by cash.`,
   });
+  await logAdminAudit(
+    profile.id,
+    "cash_paid",
+    `Admin marked ${resident?.house_number ?? "the selected resident"} as cash paid for ${formatMonthLabel(month)}.`,
+  );
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
@@ -381,7 +505,7 @@ export async function bulkMarkCashPaymentAction(formData: FormData) {
 
   const supabase = await createClient();
 
-  await Promise.all(
+  const results = await Promise.all(
     residentIds.map((residentId) =>
       Promise.all([
         supabase.rpc("admin_mark_cash_payment", {
@@ -395,6 +519,23 @@ export async function bulkMarkCashPaymentAction(formData: FormData) {
         }),
       ]),
     ),
+  );
+
+  const firstRpcError = results
+    .flat()
+    .find((result) => "error" in result && result.error)?.error;
+
+  if (firstRpcError) {
+    redirectWithActionError(
+      `/admin/residents?month=${month}`,
+      "Unable to mark one or more cash payments right now. Please try again.",
+      firstRpcError,
+    );
+  }
+  await logAdminAudit(
+    profile.id,
+    "bulk_cash_paid",
+    `Admin marked ${residentIds.length} resident payment(s) as cash paid for ${formatMonthLabel(month)}.`,
   );
 
   revalidatePath("/admin");
@@ -423,7 +564,11 @@ export async function updatePaymentNotesAction(formData: FormData) {
   const { error } = await supabase.from("payments").update({ notes }).eq("id", paymentId);
 
   if (error) {
-    redirectWithError("/admin/residents", error.message);
+    redirectWithActionError(
+      "/admin/residents",
+      "Unable to update the payment note right now. Please try again.",
+      error,
+    );
   }
 
   await supabase.from("payment_audit_logs").insert({
@@ -432,6 +577,13 @@ export async function updatePaymentNotesAction(formData: FormData) {
     action: "note_updated",
     message: notes ? `Admin note updated: ${notes}` : "Admin note cleared.",
   });
+  await logAdminAudit(
+    profile.id,
+    "payment_note_updated",
+    notes
+      ? "Admin updated a payment note from the residents page."
+      : "Admin cleared a payment note from the residents page.",
+  );
 
   revalidatePath("/admin");
   revalidatePath("/admin/residents");
@@ -453,6 +605,7 @@ export async function updateAppSettingsAction(formData: FormData) {
   const dueDayValue = String(formData.get("due_day") ?? "").trim();
   const dueDay = Number(dueDayValue || "7");
   const qrImage = formData.get("payment_qr_image");
+  const qrUploaded = qrImage instanceof File && qrImage.size > 0;
 
   if (!communityName || !bankName || !bankAccountName || !bankAccountNumber) {
     redirectWithError("/admin/settings", "Please fill in all required settings.");
@@ -486,7 +639,11 @@ export async function updateAppSettingsAction(formData: FormData) {
       });
 
     if (uploadError) {
-      redirectWithError("/admin/settings", uploadError.message);
+      redirectWithActionError(
+        "/admin/settings",
+        "Unable to upload the QR image right now. Please try again.",
+        uploadError,
+      );
     }
 
     const { data: publicUrlData } = adminClient.storage.from("app-assets").getPublicUrl(path);
@@ -510,8 +667,17 @@ export async function updateAppSettingsAction(formData: FormData) {
   });
 
   if (error) {
-    redirectWithError("/admin/settings", error.message);
+    redirectWithActionError(
+      "/admin/settings",
+      "Unable to save the payment settings right now. Please try again.",
+      error,
+    );
   }
+  await logAdminAudit(
+    profile.id,
+    "settings_updated",
+    `Admin updated payment settings${qrUploaded ? " and uploaded a new QR image" : ""}.`,
+  );
 
   revalidatePath("/admin/settings");
   revalidatePath("/payments");
@@ -545,8 +711,17 @@ export async function createAnnouncementAction(formData: FormData) {
   });
 
   if (error) {
-    redirectWithError("/admin/announcements", error.message);
+    redirectWithActionError(
+      "/admin/announcements",
+      "Unable to publish the announcement right now. Please try again.",
+      error,
+    );
   }
+  await logAdminAudit(
+    profile.id,
+    "announcement_published",
+    `Admin published an announcement for ${audience}.`,
+  );
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
@@ -568,8 +743,17 @@ export async function deleteAnnouncementAction(formData: FormData) {
   const { error } = await supabase.from("announcements").delete().eq("id", announcementId);
 
   if (error) {
-    redirectWithError("/admin/announcements", error.message);
+    redirectWithActionError(
+      "/admin/announcements",
+      "Unable to remove the announcement right now. Please try again.",
+      error,
+    );
   }
+  await logAdminAudit(
+    profile.id,
+    "announcement_deleted",
+    "Admin removed an announcement.",
+  );
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
@@ -598,7 +782,12 @@ export async function submitPaymentProofAction(
   });
 
   if (error || !paymentId) {
-    throw new Error(error?.message ?? "Unable to save payment proof.");
+    throw new Error(
+      getActionErrorMessage(
+        "Unable to save the payment proof right now. Please try again.",
+        error,
+      ),
+    );
   }
 
   await createNotification({
@@ -665,7 +854,11 @@ export async function createManagedUserAction(formData: FormData) {
   });
 
   if (error || !data.user) {
-    redirectWithError("/admin/users", error?.message ?? "Unable to create user.");
+    redirectWithActionError(
+      "/admin/users",
+      "Unable to create the user right now. Please check the details and try again.",
+      error,
+    );
   }
 
   const createdUser = data.user!;
@@ -683,8 +876,17 @@ export async function createManagedUserAction(formData: FormData) {
 
   if (upsertError) {
     await adminClient.auth.admin.deleteUser(createdUser.id);
-    redirectWithError("/admin/users", upsertError.message);
+    redirectWithActionError(
+      "/admin/users",
+      "User login was created, but the resident record could not be saved. Please try again.",
+      upsertError,
+    );
   }
+  await logAdminAudit(
+    profile.id,
+    "user_created",
+    `Admin created resident account ${houseNumber}.`,
+  );
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/residents");
@@ -731,7 +933,11 @@ export async function updateManagedUserAction(formData: FormData) {
   });
 
   if (authError) {
-    redirectWithError("/admin/users", authError.message);
+    redirectWithActionError(
+      "/admin/users",
+      "Unable to update the user login details right now. Please try again.",
+      authError,
+    );
   }
 
   const { error: profileError } = await adminClient
@@ -747,8 +953,17 @@ export async function updateManagedUserAction(formData: FormData) {
     .eq("id", userId);
 
   if (profileError) {
-    redirectWithError("/admin/users", profileError.message);
+    redirectWithActionError(
+      "/admin/users",
+      "Unable to update the resident profile right now. Please try again.",
+      profileError,
+    );
   }
+  await logAdminAudit(
+    profile.id,
+    "user_updated",
+    `Admin updated account details for ${houseNumber}.`,
+  );
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/residents");
@@ -775,7 +990,11 @@ export async function resetManagedUserPasswordAction(formData: FormData) {
   });
 
   if (resetError) {
-    redirectWithError("/admin/users", resetError.message);
+    redirectWithActionError(
+      "/admin/users",
+      "Unable to reset the password right now. Please try again.",
+      resetError,
+    );
   }
 
   const { error: profileError } = await adminClient
@@ -784,8 +1003,17 @@ export async function resetManagedUserPasswordAction(formData: FormData) {
     .eq("id", userId);
 
   if (profileError) {
-    redirectWithError("/admin/users", profileError.message);
+    redirectWithActionError(
+      "/admin/users",
+      "Password was reset, but the reset flag could not be updated. Please try again.",
+      profileError,
+    );
   }
+  await logAdminAudit(
+    profile.id,
+    "user_password_reset",
+    `Admin reset the password for ${houseNumber}.`,
+  );
 
   revalidatePath("/admin/users");
   redirectWithMessage(
@@ -813,8 +1041,17 @@ export async function deleteManagedUserAction(formData: FormData) {
   const { error } = await adminClient.auth.admin.deleteUser(userId);
 
   if (error) {
-    redirectWithError("/admin/users", error.message);
+    redirectWithActionError(
+      "/admin/users",
+      "Unable to delete the user right now. Please try again.",
+      error,
+    );
   }
+  await logAdminAudit(
+    profile.id,
+    "user_deleted",
+    `Admin deleted account ${houseNumber}.`,
+  );
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/residents");

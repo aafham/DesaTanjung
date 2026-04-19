@@ -21,8 +21,8 @@ export default async function AdminActivityPage({
 
       <AdminPageHeader
         eyebrow="Admin activity"
-        title="Track resident actions across the portal"
-        description="Review logins, logouts, profile changes, password updates, and receipt uploads from one organised activity log."
+        title="Track the latest portal actions across admin and resident flows"
+        description="Review the latest 14 days of logins, profile updates, payment handling, settings updates, and user management actions from one organised activity log."
       />
 
       <AdminActivityLog activityLogs={activityLogs} />
