@@ -84,7 +84,7 @@ export function AppShell({
         }`}
       >
         <aside
-          className={`rounded-4xl border border-line bg-surface/95 p-5 shadow-soft backdrop-blur lg:sticky lg:top-8 lg:w-80 ${
+          className={`shrink-0 rounded-4xl border border-line bg-surface/95 p-5 shadow-soft backdrop-blur lg:sticky lg:top-8 lg:w-80 ${
             printOnlyReportRoute ? "print:hidden" : ""
           }`}
         >
