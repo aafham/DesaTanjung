@@ -72,6 +72,20 @@ function redirectWithActionError(
   redirectWithError(path, getActionErrorMessage(fallback, error));
 }
 
+function getRelatedHouseNumber(
+  relation:
+    | { house_number?: string | null }
+    | Array<{ house_number?: string | null }>
+    | null
+    | undefined,
+) {
+  if (Array.isArray(relation)) {
+    return relation[0]?.house_number ?? null;
+  }
+
+  return relation?.house_number ?? null;
+}
+
 async function logUserActivity(
   userId: string,
   action: string,
@@ -304,7 +318,7 @@ export async function approvePaymentAction(formData: FormData) {
   await logAdminAudit(
     profile.id,
     "payment_approved",
-    `Admin approved payment for ${payment?.users?.house_number ?? "the selected resident"} for ${formatMonthLabel(payment?.month ?? month)}.`,
+    `Admin approved payment for ${getRelatedHouseNumber(payment?.users) ?? "the selected resident"} for ${formatMonthLabel(payment?.month ?? month)}.`,
   );
 
   revalidatePath("/admin");
@@ -373,7 +387,7 @@ export async function rejectPaymentAction(formData: FormData) {
   await logAdminAudit(
     profile.id,
     "payment_rejected",
-    `Admin rejected payment proof for ${payment?.users?.house_number ?? "the selected resident"} for ${formatMonthLabel(payment?.month ?? month)}.`,
+    `Admin rejected payment proof for ${getRelatedHouseNumber(payment?.users) ?? "the selected resident"} for ${formatMonthLabel(payment?.month ?? month)}.`,
   );
 
   revalidatePath("/admin");
@@ -504,33 +518,25 @@ export async function bulkMarkCashPaymentAction(formData: FormData) {
   }
 
   const supabase = await createClient();
+  for (const residentId of residentIds) {
+    const { error } = await supabase.rpc("admin_mark_cash_payment", {
+      p_user_id: residentId,
+      p_month: month,
+    });
 
-  const results = await Promise.all(
-    residentIds.map((residentId) =>
-      Promise.all([
-        supabase.rpc("admin_mark_cash_payment", {
-          p_user_id: residentId,
-          p_month: month,
-        }),
-        createNotification({
-          userId: residentId,
-          scope: "resident",
-          message: `Payment for ${formatMonthLabel(month)} was marked as paid by cash.`,
-        }),
-      ]),
-    ),
-  );
+    if (error) {
+      redirectWithActionError(
+        `/admin/residents?month=${month}`,
+        "Unable to mark one or more cash payments right now. Please try again.",
+        error,
+      );
+    }
 
-  const firstRpcError = results
-    .flat()
-    .find((result) => "error" in result && result.error)?.error;
-
-  if (firstRpcError) {
-    redirectWithActionError(
-      `/admin/residents?month=${month}`,
-      "Unable to mark one or more cash payments right now. Please try again.",
-      firstRpcError,
-    );
+    await createNotification({
+      userId: residentId,
+      scope: "resident",
+      message: `Payment for ${formatMonthLabel(month)} was marked as paid by cash.`,
+    });
   }
   await logAdminAudit(
     profile.id,
