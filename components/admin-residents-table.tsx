@@ -193,61 +193,73 @@ export function AdminResidentsTable({
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="grid gap-4 border-b border-line p-4 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div>
-          <label htmlFor="resident-search" className="mb-2 block text-base font-bold text-slate-950">
-            Search resident
-          </label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <input
-              id="resident-search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by house, owner, address, or phone number"
-              className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
-            />
-          </div>
-        </div>
+      <div className="border-b border-line p-4">
+        <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+              Resident directory
+            </p>
+            <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+              <div>
+                <label htmlFor="resident-search" className="mb-2 block text-base font-bold text-slate-950">
+                  Search resident
+                </label>
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <input
+                    id="resident-search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search by house, owner, address, or phone number"
+                    className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex flex-wrap gap-2">
-            {filterOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => setStatusFilter(option.value)}
-                className={`min-h-11 rounded-full px-4 py-2 text-base font-bold transition ${
-                  statusFilter === option.value
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
+              <div className="flex flex-wrap gap-2">
+                {filterOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setStatusFilter(option.value)}
+                    className={`min-h-11 rounded-full px-4 py-2 text-base font-bold transition ${
+                      statusFilter === option.value
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+            <div>
+              <label className="mb-2 block text-base font-bold text-slate-950">Payment method</label>
+              <select
+                value={methodFilter}
+                onChange={(event) => setMethodFilter(event.target.value as "all" | "online" | "cash")}
+                className="min-h-12 w-full rounded-full border border-line bg-white px-4 py-2 text-base font-bold text-slate-950 outline-none focus:border-primary"
               >
-                {option.label}
-              </button>
-            ))}
+                {methodOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <a
+              href={csvHref}
+              download={`desa-tanjung-${currentMonth}-payments.csv`}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </a>
           </div>
-
-          <select
-            value={methodFilter}
-            onChange={(event) => setMethodFilter(event.target.value as "all" | "online" | "cash")}
-            className="min-h-12 rounded-full border border-line bg-white px-4 py-2 text-base font-bold text-slate-950 outline-none focus:border-primary"
-          >
-            {methodOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <a
-            href={csvHref}
-            download={`desa-tanjung-${currentMonth}-payments.csv`}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </a>
         </div>
       </div>
 
@@ -278,11 +290,12 @@ export function AdminResidentsTable({
 
       <form
         action={bulkMarkCashPaymentAction}
-        className="flex flex-col gap-3 border-b border-line bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+        className="grid gap-4 border-b border-line bg-white px-4 py-4 xl:grid-cols-[1fr_auto] xl:items-center"
       >
         <div>
-          <p className="font-bold text-slate-950">Bulk action</p>
-          <p className="text-sm text-muted">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Bulk action</p>
+          <p className="mt-2 text-lg font-bold text-slate-950">Work on multiple residents at once</p>
+          <p className="mt-1 text-sm text-muted">
             Select residents to mark cash paid or prepare one reminder draft for follow-up.
           </p>
         </div>
@@ -290,7 +303,7 @@ export function AdminResidentsTable({
         {selectedResidentIds.map((residentId) => (
           <input key={residentId} type="hidden" name="resident_ids" value={residentId} />
         ))}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
           {bulkWhatsappHref ? (
             <a
               href={bulkWhatsappHref}
@@ -426,50 +439,65 @@ export function AdminResidentsTable({
                       : "No record yet"}
                   </td>
                   <td className="px-4 py-5">
-                    <div className="flex flex-col gap-2">
-                      {getStatus(resident) === "pending" ? (
-                        <Link
-                          href={`/admin/approvals?month=${currentMonth}`}
-                          className="inline-flex min-h-11 items-center justify-center rounded-full bg-amber-500 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
-                        >
-                          Review proof
-                        </Link>
-                      ) : null}
-
-                      <Link
-                        href={`/admin/residents/${resident.id}?month=${currentMonth}`}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
-                      >
-                        View detail
-                      </Link>
-
-                      {getStatus(resident) !== "paid" ? (
-                        <form action={markCashPaymentAction}>
-                          <input type="hidden" name="resident_id" value={resident.id} />
-                          <input type="hidden" name="month" value={currentMonth} />
-                          <ConfirmSubmitButton
-                            data-testid={`mark-cash-${resident.house_number}`}
-                            confirmMessage={`Mark ${resident.house_number} as paid by cash for ${currentMonthLabel}?`}
-                            confirmTitle="Confirm cash payment"
-                            className="w-full whitespace-nowrap rounded-full bg-slate-950 px-4 py-2 text-sm font-bold uppercase tracking-[0.08em] text-white"
+                    <div className="max-w-[14rem] space-y-3">
+                      <div className="grid gap-2">
+                        {getStatus(resident) === "pending" ? (
+                          <Link
+                            href={`/admin/approvals?month=${currentMonth}`}
+                            className="inline-flex min-h-11 items-center justify-center rounded-full bg-amber-500 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
                           >
-                            Mark paid cash
-                          </ConfirmSubmitButton>
-                        </form>
-                      ) : (
-                        <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-emerald-900">
-                          Settled
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => copyReminder(resident)}
-                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-teal-950"
-                      >
-                        <Copy className="h-4 w-4" />
-                        {copiedResidentId === resident.id ? "Copied" : "Reminder"}
-                      </button>
-                      <ContactActions phoneNumber={resident.phone_number} compact />
+                            Review proof
+                          </Link>
+                        ) : null}
+
+                        <Link
+                          href={`/admin/residents/${resident.id}?month=${currentMonth}`}
+                          className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
+                        >
+                          View detail
+                        </Link>
+
+                        {getStatus(resident) !== "paid" ? (
+                          <form action={markCashPaymentAction}>
+                            <input type="hidden" name="resident_id" value={resident.id} />
+                            <input type="hidden" name="month" value={currentMonth} />
+                            <ConfirmSubmitButton
+                              data-testid={`mark-cash-${resident.house_number}`}
+                              confirmMessage={`Mark ${resident.house_number} as paid by cash for ${currentMonthLabel}?`}
+                              confirmTitle="Confirm cash payment"
+                              className="w-full whitespace-nowrap rounded-full bg-slate-950 px-4 py-2 text-sm font-bold uppercase tracking-[0.08em] text-white"
+                            >
+                              Mark paid cash
+                            </ConfirmSubmitButton>
+                          </form>
+                        ) : (
+                          <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-emerald-900">
+                            Settled
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="rounded-3xl bg-slate-50 px-3 py-3">
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                          Follow-up tools
+                        </p>
+                        <div className="mt-2 grid gap-2">
+                          <button
+                            type="button"
+                            onClick={() => copyReminder(resident)}
+                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-teal-950"
+                          >
+                            <Copy className="h-4 w-4" />
+                            {copiedResidentId === resident.id ? "Copied" : "Reminder"}
+                          </button>
+                          <ContactActions phoneNumber={resident.phone_number} compact />
+                        </div>
+                        {!resident.phone_number ? (
+                          <p className="mt-2 text-xs leading-6 text-slate-600">
+                            Add a valid Malaysian mobile number to enable Call and WhatsApp.
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -488,7 +516,13 @@ export function AdminResidentsTable({
       </div>
 
       <div className="border-t border-line bg-slate-50 p-4">
-        <p className="mb-3 text-base font-bold text-slate-950">Payment notes</p>
+        <div className="mb-4">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Payment notes</p>
+          <p className="mt-2 text-lg font-bold text-slate-950">Save short admin notes for the current page</p>
+          <p className="mt-1 text-sm text-muted">
+            Use these notes for handover, cash tracking, or quick context before opening resident detail.
+          </p>
+        </div>
         {paginatedResidents.filter((resident) => resident.currentPayment).length === 0 ? (
           <div className="rounded-3xl border border-dashed border-line bg-white px-4 py-6 text-base text-slate-600">
             No payment records are available on this page yet, so there are no notes to update.

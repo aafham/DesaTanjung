@@ -352,7 +352,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
 - [ ] Admin screens:
   - [x] admin dashboard
   - [x] approvals page
-  - [ ] residents page
+  - [x] residents page
   - [ ] resident detail page
   - [ ] users page
   - [ ] search page
@@ -399,7 +399,7 @@ Untuk saya kemaskan semula UI dengan lebih tepat, saya perlukan screenshot berik
   - [ ] `/profile`
   - [x] `/admin`
   - [x] `/admin/approvals`
-  - [ ] `/admin/residents`
+  - [x] `/admin/residents`
   - [ ] `/admin/residents/[id]`
   - [ ] `/admin/users`
   - [ ] `/admin/search`
@@ -450,7 +450,7 @@ Nota untuk screenshot:
   - [ ] `/payments`
   - [x] `/admin`
   - [x] `/admin/approvals`
-  - [ ] `/admin/residents`
+  - [x] `/admin/residents`
   - [ ] `/admin/users`
   - [ ] `/admin/search`
   - [ ] `/admin/settings`
