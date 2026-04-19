@@ -351,7 +351,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [ ] semak mobile layout untuk payment upload, timeline, dan history table
 - [ ] Admin screens:
   - [x] admin dashboard
-  - [ ] approvals page
+  - [x] approvals page
   - [ ] residents page
   - [ ] resident detail page
   - [ ] users page
@@ -398,7 +398,7 @@ Untuk saya kemaskan semula UI dengan lebih tepat, saya perlukan screenshot berik
   - [ ] `/notifications`
   - [ ] `/profile`
   - [x] `/admin`
-  - [ ] `/admin/approvals`
+  - [x] `/admin/approvals`
   - [ ] `/admin/residents`
   - [ ] `/admin/residents/[id]`
   - [ ] `/admin/users`
@@ -449,7 +449,7 @@ Nota untuk screenshot:
   - [ ] `/dashboard`
   - [ ] `/payments`
   - [x] `/admin`
-  - [ ] `/admin/approvals`
+  - [x] `/admin/approvals`
   - [ ] `/admin/residents`
   - [ ] `/admin/users`
   - [ ] `/admin/search`
