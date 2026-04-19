@@ -211,9 +211,13 @@ export function AdminResidentsTable({
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search by house, owner, address, or phone number"
+                    aria-describedby="resident-search-help resident-results-summary"
                     className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
                   />
                 </div>
+                <p id="resident-search-help" className="mt-2 text-sm text-muted">
+                  Search by house number, owner, address, or phone number to narrow the monthly list.
+                </p>
               </div>
 
               <div>
@@ -226,6 +230,8 @@ export function AdminResidentsTable({
                     key={option.value}
                     type="button"
                     onClick={() => setStatusFilter(option.value)}
+                    aria-pressed={statusFilter === option.value}
+                    aria-controls="resident-results-list"
                     className={`min-h-11 rounded-full px-4 py-2 text-base font-bold transition ${
                       statusFilter === option.value
                         ? "bg-primary text-primary-foreground"
@@ -246,6 +252,7 @@ export function AdminResidentsTable({
               <select
                 value={methodFilter}
                 onChange={(event) => setMethodFilter(event.target.value as "all" | "online" | "cash")}
+                aria-describedby="resident-results-summary"
                 className="min-h-12 w-full rounded-full border border-line bg-white px-4 py-2 text-base font-bold text-slate-950 outline-none focus:border-primary"
               >
                 {methodOptions.map((option) => (
@@ -268,7 +275,13 @@ export function AdminResidentsTable({
         </div>
       </div>
 
-      <div className="border-b border-line bg-slate-50 px-4 py-3 text-base text-muted">
+      <div
+        id="resident-results-summary"
+        className="border-b border-line bg-slate-50 px-4 py-3 text-base text-muted"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         Showing {startItem}-{endItem} of {filteredResidents.length} filtered residents for {currentMonthLabel}.
       </div>
 
@@ -335,7 +348,7 @@ export function AdminResidentsTable({
         </div>
       </form>
 
-      <div className="grid gap-4 p-4 md:hidden">
+      <div id="resident-results-list" className="grid gap-4 p-4 md:hidden">
         {paginatedResidents.map((resident) => (
           <details key={resident.id} className="rounded-3xl border border-line bg-white p-4">
             <summary className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">

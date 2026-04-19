@@ -22,6 +22,36 @@ export default async function AdminReportsPage({
     totals.totalResidents > 0
       ? Math.round((totals.paidCount / totals.totalResidents) * 100)
       : 0;
+  const residentsNeedingFollowUp = residents.filter((resident) => {
+    const displayStatus = resident.currentPayment?.display_status ?? "unpaid";
+    return ["unpaid", "overdue", "rejected"].includes(displayStatus);
+  });
+  const pendingReviewResidents = residents.filter(
+    (resident) => resident.currentPayment?.display_status === "pending",
+  );
+  const topFollowUpResidents = residentsNeedingFollowUp.slice(0, 5);
+  const meetingHighlights = [
+    {
+      label: "Collected",
+      value: `RM ${totals.collectedAmount.toFixed(2)}`,
+      help: `${totals.paidCount} houses already settled this month.`,
+      tone: "border-emerald-200 bg-emerald-50",
+    },
+    {
+      label: "Outstanding",
+      value: `RM ${totals.outstandingAmount.toFixed(2)}`,
+      help: `${totals.unsettledCount} houses still need follow-up.`,
+      tone: "border-rose-200 bg-rose-50",
+    },
+    {
+      label: "Pending review",
+      value: String(totals.pendingCount),
+      help: pendingReviewResidents.length > 0
+        ? "Receipts are uploaded and waiting for committee review."
+        : "No proof is waiting for review right now.",
+      tone: "border-amber-200 bg-amber-50",
+    },
+  ] as const;
 
   return (
     <div className="space-y-6 print:space-y-4">
@@ -223,6 +253,67 @@ export default async function AdminReportsPage({
             {totals.rejectedCount}
           </p>
           <p className="mt-2 text-sm text-rose-900">Need a clearer re-upload from the resident.</p>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card className="bg-slate-50/80">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+            Meeting highlights
+          </p>
+          <h3 className="mt-2 text-3xl font-bold text-slate-950">
+            What the committee should discuss first
+          </h3>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {meetingHighlights.map((item) => (
+              <div key={item.label} className={`rounded-3xl border px-4 py-4 ${item.tone}`}>
+                <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">{item.label}</p>
+                <p className="mt-3 text-3xl font-bold text-slate-950">{item.value}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{item.help}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="bg-slate-50/80">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+            Follow-up queue
+          </p>
+          <h3 className="mt-2 text-3xl font-bold text-slate-950">
+            Houses still needing action
+          </h3>
+          <p className="mt-2 text-base text-slate-600">
+            Prioritise these houses after the meeting or export the full resident table below.
+          </p>
+          <div className="mt-5 space-y-3">
+            {topFollowUpResidents.length === 0 ? (
+              <div className="rounded-3xl bg-emerald-50 px-4 py-4 text-base font-semibold text-emerald-900">
+                No house currently needs extra follow-up beyond the pending review queue.
+              </div>
+            ) : (
+              topFollowUpResidents.map((resident) => (
+                <div key={resident.id} className="rounded-3xl border border-line bg-white px-4 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-bold text-slate-950">
+                        {resident.house_number} - {resident.name}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-600">{resident.address}</p>
+                    </div>
+                    <StatusBadge status={resident.currentPayment?.display_status ?? "unpaid"} />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="mt-5">
+            <Link
+              href={`/admin/residents?month=${currentMonth}`}
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white transition hover:bg-slate-800"
+            >
+              Open residents follow-up
+            </Link>
+          </div>
         </Card>
       </section>
 

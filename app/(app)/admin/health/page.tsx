@@ -82,6 +82,52 @@ export default async function AdminHealthPage() {
   const warningCount = checks.filter((check) => check.status === "warning").length;
   const errorCount = checks.filter((check) => check.status === "error").length;
   const actionItems = checks.filter((check) => check.status !== "healthy");
+  const launchBlockers = checks.filter((check) =>
+    ["core-data-readiness", "env-public-url", "env-service-role", "payment-qr"].includes(check.id),
+  );
+  const launchBlockerCount = launchBlockers.filter((check) => check.status !== "healthy").length;
+  const readinessScore = Math.max(
+    0,
+    Math.round((healthyCount / Math.max(1, checks.length)) * 100),
+  );
+  const followUpBuckets = [
+    {
+      label: "Launch blockers",
+      count: launchBlockerCount,
+      tone:
+        launchBlockerCount > 0
+          ? "border-rose-200 bg-rose-50 text-rose-950"
+          : "border-emerald-200 bg-emerald-50 text-emerald-950",
+      help:
+        launchBlockerCount > 0
+          ? "Fix these before residents rely on the live portal."
+          : "Nothing critical is blocking live use right now.",
+    },
+    {
+      label: "Resident follow-up",
+      count: missingPhoneResidents.length,
+      tone:
+        missingPhoneResidents.length > 0
+          ? "border-amber-200 bg-amber-50 text-amber-950"
+          : "border-emerald-200 bg-emerald-50 text-emerald-950",
+      help:
+        missingPhoneResidents.length > 0
+          ? "Phone numbers are still missing for some residents."
+          : "Resident phone coverage is complete.",
+    },
+    {
+      label: "Data cleanup",
+      count: duplicateGroups.length,
+      tone:
+        duplicateGroups.length > 0
+          ? "border-amber-200 bg-amber-50 text-amber-950"
+          : "border-emerald-200 bg-emerald-50 text-emerald-950",
+      help:
+        duplicateGroups.length > 0
+          ? "Duplicate resident-month payment rows need a cleanup pass."
+          : "No duplicate payment groups were found.",
+    },
+  ] as const;
   const missingPhoneCsvHref = `data:text/csv;charset=utf-8,${encodeURIComponent(
     [
       ["House", "Owner", "Address"],
@@ -175,6 +221,9 @@ where id in (
           <p className="mt-3 max-w-2xl text-base leading-7 text-slate-100">
             Use this page before monthly collection opens, after Supabase changes, and whenever admin or resident data does not appear as expected.
           </p>
+          <div className="mt-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950">
+            Launch readiness score: {readinessScore}%
+          </div>
         </Card>
 
         <Card className="bg-slate-50">
@@ -205,6 +254,16 @@ where id in (
             )}
           </div>
         </Card>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        {followUpBuckets.map((bucket) => (
+          <Card key={bucket.label} className={bucket.tone}>
+            <p className="text-sm font-bold uppercase tracking-[0.14em]">{bucket.label}</p>
+            <p className="mt-3 text-4xl font-bold">{bucket.count}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">{bucket.help}</p>
+          </Card>
+        ))}
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
@@ -394,6 +453,36 @@ where id in (
             >
               Open Dashboard
             </Link>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="bg-slate-50/70">
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">What this page should answer</p>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-3xl bg-white px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Can residents pay today?</p>
+            <p className="mt-2 text-sm leading-7 text-slate-600">
+              Check QR, monthly fee, due day, and environment items first.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Can admins follow up quickly?</p>
+            <p className="mt-2 text-sm leading-7 text-slate-600">
+              Missing phone numbers should be kept close to zero.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Is payment data trustworthy?</p>
+            <p className="mt-2 text-sm leading-7 text-slate-600">
+              Duplicate payment groups should be reviewed before reporting.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Is the live environment aligned?</p>
+            <p className="mt-2 text-sm leading-7 text-slate-600">
+              Schema, buckets, and server secrets must match the current code.
+            </p>
           </div>
         </div>
       </Card>

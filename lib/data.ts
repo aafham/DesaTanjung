@@ -604,7 +604,7 @@ export async function getAdminActivityLogData() {
   };
 }
 
-export async function getAdminAnnouncementsData() {
+export async function getAdminAnnouncementsData(page = 1, pageSize = 6) {
   const profile = await requireUserProfile();
 
   if (profile.role !== "admin") {
@@ -615,10 +615,58 @@ export async function getAdminAnnouncementsData() {
     redirect("/change-password");
   }
 
+  const supabase = await createClient();
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
+
+  const [
+    announcementsResponse,
+    totalResponse,
+    pinnedResponse,
+    residentAudienceResponse,
+    adminAudienceResponse,
+  ] = await Promise.all([
+    supabase
+      .from("announcements")
+      .select(
+        "id, title, body, audience, is_pinned, created_by, published_at, created_at, updated_at",
+      )
+      .order("is_pinned", { ascending: false })
+      .order("published_at", { ascending: false })
+      .range(from, to),
+    supabase.from("announcements").select("id", { count: "exact", head: true }),
+    supabase
+      .from("announcements")
+      .select("id", { count: "exact", head: true })
+      .eq("is_pinned", true),
+    supabase
+      .from("announcements")
+      .select("id", { count: "exact", head: true })
+      .eq("audience", "residents"),
+    supabase
+      .from("announcements")
+      .select("id", { count: "exact", head: true })
+      .eq("audience", "admins"),
+  ]);
+
   return {
     profile,
-    announcements: await getAnnouncements({ audience: "all", limit: 20 }),
+    announcements: (announcementsResponse.data as ManagedAnnouncement[] | null) ?? [],
     warnings: [] as string[],
+    summary: {
+      total: totalResponse.count ?? 0,
+      pinned: pinnedResponse.count ?? 0,
+      residentsOnly: residentAudienceResponse.count ?? 0,
+      adminsOnly: adminAudienceResponse.count ?? 0,
+    },
+    pagination: {
+      currentPage: safePage,
+      pageSize: safePageSize,
+      totalItems: totalResponse.count ?? 0,
+      totalPages: Math.max(1, Math.ceil((totalResponse.count ?? 0) / safePageSize)),
+    },
   };
 }
 

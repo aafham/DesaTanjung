@@ -344,9 +344,13 @@ export function AdminGlobalSearch({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search A-12, Noor Azizan, 0123456789, uploaded..."
+            aria-describedby="admin-search-help admin-search-result-summary"
             className="min-h-14 w-full rounded-2xl border border-line py-3 pl-12 pr-4 text-base text-slate-950 outline-none focus:border-primary"
           />
         </div>
+        <p id="admin-search-help" className="mt-2 text-sm text-muted">
+          Search once, then use the focus cards to narrow to residents, payments, or activity.
+        </p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {focusCards.map((option) => {
@@ -446,7 +450,13 @@ export function AdminGlobalSearch({
               {focusSummaryLabel}
             </p>
           </div>
-          <div className="rounded-3xl bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700">
+          <div
+            id="admin-search-result-summary"
+            className="rounded-3xl bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             {hasQuery
               ? `Showing ${Math.min(PAGE_SIZE, paginatedResults.length)} of ${resultGroups.length} top match${resultGroups.length === 1 ? "" : "es"}`
               : "Showing a compact shortlist"}

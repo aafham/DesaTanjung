@@ -122,9 +122,13 @@ export function AdminUsersManager({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search A-12, Nur Aisyah, Jalan Tanjung, or 0123456789"
+              aria-describedby="user-search-help user-results-summary"
               className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
             />
           </div>
+          <p id="user-search-help" className="mt-2 text-sm text-muted">
+            Search by house number, owner, address, email, or phone to narrow the directory quickly.
+          </p>
         </div>
       </div>
 
@@ -173,6 +177,8 @@ export function AdminUsersManager({
         <button
           type="button"
           onClick={() => setRoleFilter("all")}
+          aria-pressed={roleFilter === "all"}
+          aria-controls="user-results-list"
           className={`rounded-3xl px-4 py-3 text-left text-base font-bold transition ${
             roleFilter === "all"
               ? "border border-slate-900 text-white"
@@ -193,6 +199,8 @@ export function AdminUsersManager({
         <button
           type="button"
           onClick={() => setRoleFilter("user")}
+          aria-pressed={roleFilter === "user"}
+          aria-controls="user-results-list"
           className={`rounded-3xl px-4 py-3 text-left text-base font-bold transition ${
             roleFilter === "user"
               ? "border border-teal-700 bg-primary text-primary-foreground"
@@ -205,6 +213,8 @@ export function AdminUsersManager({
         <button
           type="button"
           onClick={() => setRoleFilter("admin")}
+          aria-pressed={roleFilter === "admin"}
+          aria-controls="user-results-list"
           className={`rounded-3xl px-4 py-3 text-left text-base font-bold transition ${
             roleFilter === "admin"
               ? "border border-teal-700 bg-primary text-primary-foreground"
@@ -249,6 +259,8 @@ export function AdminUsersManager({
                       option.value as "all" | "missing-phone" | "never-logged-in" | "inactive",
                     )
                   }
+                  aria-pressed={followUpFilter === option.value}
+                  aria-controls="user-results-list"
                   className={`rounded-full px-4 py-2 text-sm font-bold transition ${
                     followUpFilter === option.value
                       ? "bg-slate-950 text-white"
@@ -285,7 +297,7 @@ export function AdminUsersManager({
             <p className="mt-2 text-lg font-bold text-slate-950">
               {activeRoleFilterLabel} - {activeFollowUpLabel}
             </p>
-            <p className="mt-2 text-sm text-slate-600">
+            <p id="user-results-summary" className="mt-2 text-sm text-slate-600">
               Showing {startItem}-{endItem} of {filteredUsers.length} matched users.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -303,7 +315,7 @@ export function AdminUsersManager({
         </div>
       </Card>
 
-      <div className="grid gap-4">
+      <div id="user-results-list" className="grid gap-4">
         {filteredUsers.length === 0 ? (
           <Card className="rounded-4xl border-dashed text-center text-sm text-muted">
             <p className="text-lg font-bold text-slate-950">No users matched this view.</p>

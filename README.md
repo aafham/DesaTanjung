@@ -34,6 +34,8 @@ Nota penting:
 
 - Flow `upload`, `approve/reject`, `cash paid`, dan `settings` akan mengubah data sebenar.
 - Gunakan account atau environment disposable untuk mutation tests.
+- Wiring suite telah disemak semula dan `npx playwright test --list` mengesan semua `10` test dengan betul.
+- Item checklist `full E2E mutation flow admin` masih belum boleh ditanda siap sehingga credential disposable sebenar diisi dan suite dijalankan penuh.
 
 1. Salin `.env.e2e.example` ke `.env.e2e.local`
 2. Isi account yang sesuai untuk test:
@@ -55,6 +57,26 @@ Command tambahan:
 npm run test:e2e:ui
 npm run test:e2e:headed
 ```
+
+### Cadangan setup disposable untuk flow admin
+
+Kalau nak habiskan checklist `mutation flow admin`, sediakan set minimum ini dalam `.env.e2e.local`:
+
+- `E2E_ADMIN_IDENTIFIER` + `E2E_ADMIN_PASSWORD`
+  - akaun admin sebenar untuk buka page admin dan sahkan action
+- `E2E_PAYMENT_RESIDENT_IDENTIFIER` + `E2E_PAYMENT_RESIDENT_PASSWORD`
+  - resident disposable untuk flow `upload -> approve / reject`
+- `E2E_CASH_RESIDENT_HOUSE_NUMBER`
+  - nombor rumah resident disposable untuk flow `mark cash paid`
+- `E2E_ALLOW_SETTINGS_MUTATION=true`
+  - hidupkan hanya pada environment disposable untuk test `settings + QR upload`
+
+Cadangan amalan selamat:
+
+- guna resident khas yang tidak dipakai untuk data sebenar komuniti
+- guna month semasa sahaja untuk mutation test
+- reset semula status account disposable selepas test jika perlu
+- jangan hidupkan `E2E_ALLOW_SETTINGS_MUTATION=true` pada environment live sebenar
 
 ## Ringkasan fungsi
 
@@ -274,16 +296,16 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Jalankan suite penuh E2E pada disposable environment sebenar untuk mutation flow admin
 - [x] Tambah assertion visual / accessibility pada flow admin yang paling penting
 - [ ] Contrast audit kecil yang masih berbaki pada komponen admin tertentu
-- [ ] Keyboard flow audit penuh untuk page admin utama
+- [x] Keyboard flow audit penuh untuk page admin utama
 - [ ] Performance / scalability bila data makin besar:
   - [x] server-side narrowing untuk global search
   - [x] semakan index database untuk query admin yang kerap
 - [ ] UI audit dan final polish untuk page admin yang belum disemak penuh:
-  - [ ] activity
-  - [ ] reports
-  - [ ] announcements
-  - [ ] settings
-  - [ ] health
+  - [x] activity
+  - [x] reports
+  - [x] announcements
+  - [x] settings
+  - [x] health
 - [ ] Polisi operasi live:
   - [x] elakkan kongsi satu akaun admin untuk ramai AJK
   - [x] sediakan akaun admin berasingan untuk audit yang lebih jelas
@@ -332,7 +354,12 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Resident detail page dipolish semula
 - [x] Users page dipolish semula
 - [x] Search page dipolish semula sebagai compact global finder
-- [x] Reports page dipolish semula
+- [x] Announcements page dipolish semula dengan board summary, audience guide, dan pagination
+- [x] Settings page dipolish semula dengan readiness summary, resident-facing preview, dan admin checklist
+- [x] Health page dipolish semula dengan launch readiness summary dan follow-up buckets
+- [x] Activity page dipolish semula dengan audit summary dan clearer filtered export workflow
+- [x] Reports page dipolish semula dengan meeting highlights dan follow-up queue
+- [x] Keyboard-first admin filtering diperkemas pada users, residents, search, activity, dan month filter
 - [x] Search panel sidebar issue dibetulkan supaya tidak mengecil pada page tertentu
 - [x] Admin search result dipadatkan dengan pagination
 - [x] Expandable admin cards ada focus hint dan keyboard style yang lebih baik

@@ -27,6 +27,37 @@ export function AdminSettingsForm({
   settings: AppSettings;
   action: (formData: FormData) => void | Promise<void>;
 }) {
+  const hasQrImage = Boolean(settings.payment_qr_url && !settings.payment_qr_url.includes("placehold.co"));
+  const hasFee = Boolean(settings.monthly_fee && settings.monthly_fee > 0);
+  const hasBankDetails = Boolean(
+    settings.bank_name && settings.bank_account_name && settings.bank_account_number,
+  );
+  const readinessItems = [
+    {
+      label: "Monthly fee",
+      value: hasFee ? `RM ${Number(settings.monthly_fee).toFixed(2)}` : "Not set",
+      tone: hasFee ? "ok" : "warn",
+      help: hasFee ? "Resident billing can use the current monthly amount." : "Set this before residents start paying.",
+    },
+    {
+      label: "Due day",
+      value: `Day ${settings.due_day}`,
+      tone: "ok",
+      help: "Late and overdue status use this date every month.",
+    },
+    {
+      label: "Bank details",
+      value: hasBankDetails ? settings.bank_name : "Incomplete",
+      tone: hasBankDetails ? "ok" : "warn",
+      help: hasBankDetails ? "Residents can follow the bank transfer details shown in Payments." : "Complete the bank fields before launch.",
+    },
+    {
+      label: "Payment QR",
+      value: hasQrImage ? "Ready" : "Placeholder",
+      tone: hasQrImage ? "ok" : "warn",
+      help: hasQrImage ? "Resident page will show the saved QR code." : "Upload the real bank QR before going live.",
+    },
+  ] as const;
   const [preview, setPreview] = useState({
     community_name: settings.community_name,
     bank_name: settings.bank_name,
@@ -54,12 +85,30 @@ export function AdminSettingsForm({
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <form
-        action={action}
-        encType="multipart/form-data"
-        className="grid gap-5 rounded-4xl border border-line bg-white p-6 shadow-soft md:grid-cols-2"
-      >
+    <div className="space-y-6">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {readinessItems.map((item) => (
+          <div
+            key={item.label}
+            className={
+              item.tone === "ok"
+                ? "rounded-4xl border border-teal-200 bg-teal-50/80 p-5 shadow-soft"
+                : "rounded-4xl border border-amber-200 bg-amber-50/80 p-5 shadow-soft"
+            }
+          >
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{item.label}</p>
+            <p className="mt-3 text-3xl font-bold text-slate-950">{item.value}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{item.help}</p>
+          </div>
+        ))}
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <form
+          action={action}
+          encType="multipart/form-data"
+          className="grid gap-5 rounded-4xl border border-line bg-white p-6 shadow-soft md:grid-cols-2"
+        >
         <div>
           <label htmlFor="community_name" className="mb-2 block text-base font-bold text-slate-950">
             Community name
@@ -89,6 +138,9 @@ export function AdminSettingsForm({
             placeholder="Example: 30"
             className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
           />
+          <p className="mt-2 text-sm text-muted">
+            This amount appears on resident payments page and monthly report calculations.
+          </p>
         </div>
 
         <div>
@@ -106,6 +158,9 @@ export function AdminSettingsForm({
             placeholder="7"
             className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
           />
+          <p className="mt-2 text-sm text-muted">
+            Keep this between day 1 and 28 so overdue logic stays predictable every month.
+          </p>
         </div>
 
         <div>
@@ -126,6 +181,9 @@ export function AdminSettingsForm({
               </option>
             ))}
           </select>
+          <p className="mt-2 text-sm text-muted">
+            Residents will see this bank directly on the payment instruction panel.
+          </p>
         </div>
 
         <div>
@@ -140,6 +198,9 @@ export function AdminSettingsForm({
             onChange={(event) => updatePreview("bank_account_number", event.target.value)}
             className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
           />
+          <p className="mt-2 text-sm text-muted">
+            Use the same account number shown in the QR to avoid transfer confusion.
+          </p>
         </div>
 
         <div className="md:col-span-2">
@@ -154,6 +215,9 @@ export function AdminSettingsForm({
             onChange={(event) => updatePreview("bank_account_name", event.target.value)}
             className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
           />
+          <p className="mt-2 text-sm text-muted">
+            This name should match the bank account and the wording residents expect to see.
+          </p>
         </div>
 
         <div className="md:col-span-2">
@@ -203,51 +267,70 @@ export function AdminSettingsForm({
             Save settings
           </FormSubmitButton>
         </div>
-      </form>
+        </form>
 
-      <div className="space-y-4">
-        <div
-          className="rounded-4xl border border-slate-900 p-6 text-white shadow-soft"
-          style={{
-            background:
-              "linear-gradient(135deg, #07111f 0%, #0b2f2d 55%, #064e48 100%)",
-          }}
-        >
-          <p className="text-sm font-bold uppercase tracking-[0.12em] text-teal-100">
-            Live preview
-          </p>
-          <h3 className="mt-3 font-display text-3xl font-bold">
-            {preview.community_name || "Community name"}
-          </h3>
-          <p className="mt-4 text-base text-slate-100">
-            Bank: {preview.bank_name || "Bank name"}
-          </p>
-          <p className="mt-2 text-base text-slate-100">
-            Holder: {preview.bank_account_name || "Account holder"}
-          </p>
-          <p className="mt-2 text-2xl font-bold text-white">
-            {preview.bank_account_number || "Account number"}
-          </p>
-          <p className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950">
-            {preview.monthly_fee ? `RM ${Number(preview.monthly_fee).toFixed(2)} / month` : "Monthly fee not set"}
-          </p>
-          <p className="mt-3 text-base font-bold text-slate-100">
-            Payment due every month on day {preview.due_day || "7"}.
-          </p>
-        </div>
+        <div className="space-y-4">
+          <div
+            className="rounded-4xl border border-slate-900 p-6 text-white shadow-soft"
+            style={{
+              background:
+                "linear-gradient(135deg, #07111f 0%, #0b2f2d 55%, #064e48 100%)",
+            }}
+          >
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-teal-100">
+              Resident-facing preview
+            </p>
+            <h3 className="mt-3 font-display text-3xl font-bold">
+              {preview.community_name || "Community name"}
+            </h3>
+            <p className="mt-4 text-base text-slate-100">
+              Bank: {preview.bank_name || "Bank name"}
+            </p>
+            <p className="mt-2 text-base text-slate-100">
+              Holder: {preview.bank_account_name || "Account holder"}
+            </p>
+            <p className="mt-2 text-2xl font-bold text-white">
+              {preview.bank_account_number || "Account number"}
+            </p>
+            <p className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950">
+              {preview.monthly_fee ? `RM ${Number(preview.monthly_fee).toFixed(2)} / month` : "Monthly fee not set"}
+            </p>
+            <p className="mt-3 text-base font-bold text-slate-100">
+              Payment due every month on day {preview.due_day || "7"}.
+            </p>
+          </div>
 
-        <div className="rounded-4xl border border-line bg-white p-6 shadow-soft">
-          <p className="text-sm font-bold uppercase tracking-[0.12em] text-primary">
-            QR preview
-          </p>
-          <div className="mt-4 overflow-hidden rounded-3xl border border-line bg-slate-50 p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              data-testid="payment-qr-preview-image"
-              src={preview.payment_qr_url || settings.payment_qr_url}
-              alt="Payment QR preview"
-              className="h-auto w-full rounded-2xl object-cover"
-            />
+          <div className="rounded-4xl border border-line bg-white p-6 shadow-soft">
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-primary">
+              QR preview
+            </p>
+            <div className="mt-4 overflow-hidden rounded-3xl border border-line bg-slate-50 p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                data-testid="payment-qr-preview-image"
+                src={preview.payment_qr_url || settings.payment_qr_url}
+                alt="Payment QR preview"
+                className="h-auto w-full rounded-2xl object-cover"
+              />
+            </div>
+            <p className="mt-3 text-sm text-muted">
+              Residents will see this QR on the payments page after the settings are saved.
+            </p>
+          </div>
+
+          <div className="rounded-4xl border border-line bg-slate-50/70 p-6 shadow-soft">
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-primary">
+              Admin checklist
+            </p>
+            <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
+              Before you finish this update
+            </h3>
+            <div className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+              <p>1. Confirm the monthly fee matches the current committee decision.</p>
+              <p>2. Check the due day is the same date used in reminders and reports.</p>
+              <p>3. Make sure the bank account and QR point to the same destination account.</p>
+              <p>4. Save settings, then open the resident payments page to verify the live result.</p>
+            </div>
           </div>
         </div>
       </div>

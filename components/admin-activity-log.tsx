@@ -92,6 +92,25 @@ export function AdminActivityLog({
     });
   }, [actionFilter, activityLogs, dateFilter, query, roleFilter]);
 
+  const summary = useMemo(() => {
+    const paymentActions = new Set([
+      "payment_uploaded",
+      "payment_approved",
+      "payment_rejected",
+      "cash_paid",
+      "bulk_cash_paid",
+      "payment_note_updated",
+    ]);
+
+    return {
+      total: activityLogs.length,
+      adminActions: activityLogs.filter((activity) => activity.users?.role === "admin").length,
+      residentActions: activityLogs.filter((activity) => activity.users?.role === "user").length,
+      paymentActions: activityLogs.filter((activity) => paymentActions.has(activity.action)).length,
+      filtered: filteredActivity.length,
+    };
+  }, [activityLogs, filteredActivity]);
+
   const csvHref = useMemo(() => {
     const rows = [
       ["Date", "House", "Resident", "Role", "Action", "Message"],
@@ -143,6 +162,44 @@ export function AdminActivityLog({
 
   return (
     <section className="space-y-4" aria-labelledby="activity-log-heading">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <Card className="bg-slate-50/80">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Latest window</p>
+          <p className="mt-3 text-4xl font-bold text-slate-950">{summary.total}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Total actions recorded in the latest 14 days.
+          </p>
+        </Card>
+        <Card className="bg-sky-50/80">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-sky-900">Admin actions</p>
+          <p className="mt-3 text-4xl font-bold text-slate-950">{summary.adminActions}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Settings, approvals, notices, and account management activity.
+          </p>
+        </Card>
+        <Card className="bg-teal-50/80">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Resident actions</p>
+          <p className="mt-3 text-4xl font-bold text-slate-950">{summary.residentActions}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Login, profile update, password change, and receipt uploads.
+          </p>
+        </Card>
+        <Card className="bg-amber-50/80">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-900">Payment actions</p>
+          <p className="mt-3 text-4xl font-bold text-slate-950">{summary.paymentActions}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Upload, review, note update, and cash-payment handling.
+          </p>
+        </Card>
+        <Card className="bg-white">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Current filter</p>
+          <p className="mt-3 text-4xl font-bold text-slate-950">{summary.filtered}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Actions that match the current search and filter set.
+          </p>
+        </Card>
+      </div>
+
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Audit log</p>
@@ -267,7 +324,7 @@ export function AdminActivityLog({
       <div className="grid gap-3" aria-live="polite">
         {filteredActivity.length === 0 ? (
           <Card className="text-base text-muted">
-            No resident activity matched the current search and filter.
+            No portal activity matched the current search and filter.
           </Card>
         ) : (
           paginatedActivity.map((activity) => (
