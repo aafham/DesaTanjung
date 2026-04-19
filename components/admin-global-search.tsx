@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
-import { Activity, Search, ShieldCheck, Users } from "lucide-react";
+import { Activity, ArrowRight, Search, ShieldCheck, Users } from "lucide-react";
 import { ContactActions } from "@/components/contact-actions";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -17,6 +17,46 @@ import { formatMalaysianPhoneNumber, formatTimestamp } from "@/lib/utils";
 type SearchPayment = ResidentPaymentRecord & {
   users: Pick<UserProfile, "house_number" | "name" | "address" | "phone_number"> | null;
 };
+
+type SearchResult =
+  | {
+      id: string;
+      kind: "resident";
+      title: string;
+      subtitle: string;
+      supporting: string;
+      badge: string;
+      primaryHref: string;
+      primaryLabel: string;
+      secondaryHref: string;
+      secondaryLabel: string;
+      phoneNumber: string | null | undefined;
+    }
+  | {
+      id: string;
+      kind: "payment";
+      title: string;
+      subtitle: string;
+      supporting: string;
+      status: SearchPayment["display_status"];
+      primaryHref: string;
+      primaryLabel: string;
+      secondaryHref?: string;
+      secondaryLabel?: string;
+      phoneNumber: string | null | undefined;
+    }
+  | {
+      id: string;
+      kind: "activity";
+      title: string;
+      subtitle: string;
+      supporting: string;
+      badge: string;
+      primaryHref?: string;
+      primaryLabel?: string;
+      secondaryHref?: string;
+      secondaryLabel?: string;
+    };
 
 export function AdminGlobalSearch({
   currentMonthLabel,
@@ -121,6 +161,106 @@ export function AdminGlobalSearch({
 
     return "Open resident";
   }
+
+  const residentResults = useMemo<SearchResult[]>(
+    () =>
+      filtered.residents.map((resident) => ({
+        id: `resident-${resident.id}`,
+        kind: "resident",
+        title: `${resident.house_number} - ${resident.name}`,
+        subtitle: resident.address,
+        supporting: resident.phone_number
+          ? formatMalaysianPhoneNumber(resident.phone_number)
+          : "No phone number saved yet",
+        badge: resident.role === "admin" ? "Admin" : "Resident",
+        primaryHref: `/admin/residents/${resident.id}`,
+        primaryLabel: "Open resident",
+        secondaryHref: `/admin/users?query=${encodeURIComponent(resident.house_number)}`,
+        secondaryLabel: "Open user",
+        phoneNumber: resident.phone_number,
+      })),
+    [filtered.residents],
+  );
+
+  const paymentResults = useMemo<SearchResult[]>(
+    () =>
+      filtered.payments.map((payment) => ({
+        id: `payment-${payment.id}`,
+        kind: "payment",
+        title: `${payment.users?.house_number ?? "-"} - ${payment.users?.name ?? "Resident"}`,
+        subtitle: `${currentMonthLabel} payment record`,
+        supporting: payment.reject_reason
+          ? `Reject reason: ${payment.reject_reason}`
+          : payment.notes
+            ? `Note: ${payment.notes}`
+            : `Updated ${formatTimestamp(payment.updated_at)}`,
+        status: payment.display_status,
+        primaryHref: `/admin/residents/${payment.user_id}?month=${payment.month}`,
+        primaryLabel: getPaymentActionLabel(payment),
+        secondaryHref:
+          payment.display_status === "pending" || payment.display_status === "rejected"
+            ? `/admin/approvals?month=${payment.month}`
+            : undefined,
+        secondaryLabel:
+          payment.display_status === "pending" || payment.display_status === "rejected"
+            ? "Open approvals"
+            : undefined,
+        phoneNumber: payment.users?.phone_number,
+      })),
+    [currentMonthLabel, filtered.payments],
+  );
+
+  const activityResults = useMemo<SearchResult[]>(
+    () =>
+      filtered.activityLogs.map((activity) => ({
+        id: `activity-${activity.id}`,
+        kind: "activity",
+        title: `${activity.users?.house_number ?? "Resident"} - ${activity.users?.name ?? "Activity"}`,
+        subtitle: activity.message,
+        supporting: formatTimestamp(activity.created_at),
+        badge: activity.action.replaceAll("_", " "),
+        primaryHref: activity.user_id ? `/admin/residents/${activity.user_id}` : undefined,
+        primaryLabel: activity.user_id ? "Open resident" : undefined,
+        secondaryHref: activity.user_id
+          ? `/admin/users?query=${encodeURIComponent(activity.users?.house_number ?? "")}`
+          : undefined,
+        secondaryLabel: activity.user_id ? "Open user" : undefined,
+      })),
+    [filtered.activityLogs],
+  );
+
+  const resultGroups = useMemo(() => {
+    if (focus === "residents") {
+      return residentResults.slice(0, 10);
+    }
+
+    if (focus === "payments") {
+      return paymentResults.slice(0, 10);
+    }
+
+    if (focus === "activity") {
+      return activityResults.slice(0, 10);
+    }
+
+    if (hasQuery) {
+      return [...residentResults, ...paymentResults, ...activityResults].slice(0, 12);
+    }
+
+    return [
+      ...residentResults.slice(0, 4),
+      ...paymentResults.slice(0, 4),
+      ...activityResults.slice(0, 4),
+    ];
+  }, [activityResults, focus, hasQuery, paymentResults, residentResults]);
+
+  const focusSummaryLabel =
+    focus === "all"
+      ? "Top matches across residents, payments, and activity."
+      : focus === "residents"
+        ? "Resident accounts and contact details only."
+        : focus === "payments"
+          ? `Payment records for ${currentMonthLabel}.`
+          : "Recent activity items only.";
 
   return (
     <div className="space-y-6">
@@ -239,221 +379,122 @@ export function AdminGlobalSearch({
         </Card>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.96fr_0.96fr] xl:items-start">
-        {(focus === "all" || focus === "residents") && (
-          <Card className="self-start p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Users</p>
-                <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-                  Resident accounts
-                </h3>
-              </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-                {filtered.residents.length}
-              </span>
-            </div>
+      <Card className="p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+              Global finder
+            </p>
+            <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
+              Search once, then jump straight to the right page
+            </h3>
+            <p className="mt-2 max-w-2xl text-base text-slate-600">
+              {focusSummaryLabel}
+            </p>
+          </div>
+          <div className="rounded-3xl bg-slate-50 px-4 py-4 text-sm font-semibold text-slate-700">
+            {hasQuery
+              ? `${resultGroups.length} top match${resultGroups.length === 1 ? "" : "es"} shown`
+              : "Showing a compact shortlist"}
+          </div>
+        </div>
 
-            <div className="mt-5 max-h-[42rem] space-y-3 overflow-y-auto pr-1">
-              {filtered.residents.length === 0 ? (
-                <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
-                  No users matched the current search.
-                </div>
-              ) : (
-                filtered.residents.map((resident) => (
-                  <div
-                    key={resident.id}
-                    className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-lg font-bold text-slate-950">{resident.house_number}</p>
-                        <p className="text-base text-slate-800">{resident.name}</p>
-                        <p className="mt-1 text-sm text-muted">{resident.address}</p>
-                        <p className="mt-2 text-sm text-muted">
-                          {resident.phone_number
-                            ? formatMalaysianPhoneNumber(resident.phone_number)
-                            : "No phone saved"}
-                        </p>
-                        <ContactActions
-                          phoneNumber={resident.phone_number}
-                          compact
-                          className="mt-3"
-                        />
-                      </div>
-                      <div className="flex w-full max-w-[8rem] flex-col items-end gap-2">
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
-                          {resident.role}
-                        </span>
-                        <div className="flex flex-wrap justify-end gap-2">
-                          <Link
-                            href={`/admin/residents/${resident.id}`}
-                            className="rounded-full bg-slate-950 px-3 py-1 text-sm font-semibold text-white"
-                          >
-                            Open resident
-                          </Link>
-                          <Link
-                            href={`/admin/users?query=${encodeURIComponent(resident.house_number)}`}
-                            className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-700"
-                          >
-                            Open user
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+        <div className="mt-5 space-y-3">
+          {resultGroups.length === 0 ? (
+            <div className="rounded-3xl bg-slate-50 px-4 py-8 text-center text-base text-muted">
+              No residents, payments, or activity items matched this search. Try a shorter keyword
+              or switch the focus cards above.
             </div>
-          </Card>
-        )}
-
-        {(focus === "all" || focus === "payments") && (
-          <Card className="self-start p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-                  Payments
-                </p>
-                <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-                  {currentMonthLabel}
-                </h3>
-              </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-                {filtered.payments.length}
-              </span>
-            </div>
-
-            <div className="mt-5 max-h-[42rem] space-y-3 overflow-y-auto pr-1">
-              {filtered.payments.length === 0 ? (
-                <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
-                  No payments matched the current search.
-                </div>
-              ) : (
-                filtered.payments.map((payment) => (
-                  <div
-                    key={payment.id}
-                    className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-lg font-bold text-slate-950">
-                          {payment.users?.house_number ?? "-"}
-                        </p>
-                        <p className="text-base text-slate-800">
-                          {payment.users?.name ?? "Resident"}
-                        </p>
-                        <p className="mt-1 text-sm text-muted">
-                          Updated {formatTimestamp(payment.updated_at)}
-                        </p>
-                        {payment.reject_reason ? (
-                          <p className="mt-2 text-sm font-semibold text-rose-700">
-                            Reject reason: {payment.reject_reason}
-                          </p>
-                        ) : null}
-                        {payment.notes ? (
-                          <p className="mt-2 text-sm text-slate-700">Note: {payment.notes}</p>
-                        ) : null}
-                        <ContactActions
-                          phoneNumber={payment.users?.phone_number}
-                          compact
-                          className="mt-3"
-                        />
-                      </div>
-                      <div className="flex w-full max-w-[9rem] flex-col items-end gap-2">
-                        <StatusBadge status={payment.display_status} />
-                        <div className="flex flex-wrap justify-end gap-2">
-                          <Link
-                            href={`/admin/residents/${payment.user_id}?month=${payment.month}`}
-                            className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700"
-                          >
-                            {getPaymentActionLabel(payment)}
-                          </Link>
-                          {(payment.display_status === "pending" ||
-                            payment.display_status === "rejected") && (
-                            <Link
-                              href={`/admin/approvals?month=${payment.month}`}
-                              className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white"
-                            >
-                              Open approvals
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </Card>
-        )}
-
-        {(focus === "all" || focus === "activity") && (
-          <Card className="self-start p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-                  Activity
-                </p>
-                <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-                  Latest actions
-                </h3>
-              </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-                {filtered.activityLogs.length}
-              </span>
-            </div>
-
-            <div className="mt-5 max-h-[42rem] space-y-3 overflow-y-auto pr-1">
-              {filtered.activityLogs.length === 0 ? (
-                <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
-                  No activity matched the current search.
-                </div>
-              ) : (
-                filtered.activityLogs.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-lg font-bold text-slate-950">
-                          {activity.users?.house_number ?? "Resident"}
-                        </p>
-                        <p className="text-base text-slate-800">{activity.message}</p>
-                      </div>
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
-                        {activity.action.replaceAll("_", " ")}
+          ) : (
+            resultGroups.map((result) => (
+              <div
+                key={result.id}
+                className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
+              >
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
+                        {result.kind}
                       </span>
+                      {"status" in result ? (
+                        <StatusBadge status={result.status} />
+                      ) : (
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
+                          {result.badge}
+                        </span>
+                      )}
                     </div>
-                    <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                      {formatTimestamp(activity.created_at)}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {activity.user_id ? (
-                        <Link
-                          href={`/admin/residents/${activity.user_id}`}
-                          className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700"
-                        >
-                          Open resident
-                        </Link>
-                      ) : null}
-                      {activity.user_id ? (
-                        <Link
-                          href={`/admin/users?query=${encodeURIComponent(activity.users?.house_number ?? "")}`}
-                          className="inline-flex rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white"
-                        >
-                          Open user
-                        </Link>
-                      ) : null}
-                    </div>
+                    <p className="mt-3 text-xl font-bold text-slate-950">{result.title}</p>
+                    <p className="mt-1 text-base text-slate-800">{result.subtitle}</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">{result.supporting}</p>
+                    {"phoneNumber" in result ? (
+                      <ContactActions
+                        phoneNumber={result.phoneNumber}
+                        compact
+                        className="mt-3"
+                      />
+                    ) : null}
                   </div>
-                ))
-              )}
-            </div>
-          </Card>
-        )}
-      </section>
+
+                  <div className="flex w-full flex-wrap gap-2 lg:w-auto lg:max-w-[15rem] lg:justify-end">
+                    {"primaryHref" in result && result.primaryHref && result.primaryLabel ? (
+                      <Link
+                        href={result.primaryHref}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+                      >
+                        {result.primaryLabel}
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : null}
+                    {"secondaryHref" in result && result.secondaryHref && result.secondaryLabel ? (
+                      <Link
+                        href={result.secondaryHref}
+                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-700"
+                      >
+                        {result.secondaryLabel}
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <Link
+            href="/admin/residents"
+            className="rounded-3xl border border-slate-200 bg-white px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">Residents</p>
+            <p className="mt-2 text-base font-bold text-slate-950">Open resident payment list</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Best for browsing statuses and monthly settlement.
+            </p>
+          </Link>
+          <Link
+            href="/admin/users"
+            className="rounded-3xl border border-slate-200 bg-white px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">Users</p>
+            <p className="mt-2 text-base font-bold text-slate-950">Open account management</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Best for onboarding, phone numbers, and login follow-up.
+            </p>
+          </Link>
+          <Link
+            href="/admin/activity"
+            className="rounded-3xl border border-slate-200 bg-white px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">Activity</p>
+            <p className="mt-2 text-base font-bold text-slate-950">Open full activity log</p>
+            <p className="mt-1 text-sm text-slate-600">
+              Best for browsing login, uploads, and resident actions over time.
+            </p>
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 }
