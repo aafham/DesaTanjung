@@ -221,6 +221,7 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
     - [x] activity
   - [x] shortcut action pada search result untuk terus approve / follow-up
   - [x] `Search` dikemas semula sebagai compact global finder
+  - [x] `Search` result dipagination supaya tidak terlalu panjang untuk discroll
 - [x] Onboarding banner untuk admin bila ada `missing phone` atau `never logged in`
 - [x] Resident notification management:
   - [x] mark as read
