@@ -364,13 +364,8 @@ export function AdminUsersManager({
                         </p>
                       </div>
                     </div>
-                    <ContactActions
-                      phoneNumber={user.phone_number}
-                      compact
-                      className="mt-3"
-                    />
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col items-start gap-3 sm:items-end">
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       {!user.phone_number ? (
                         <div className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap text-rose-800">
@@ -393,6 +388,11 @@ export function AdminUsersManager({
                     <div className="rounded-full bg-slate-950 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] whitespace-nowrap text-white">
                       Open details
                     </div>
+                    <ContactActions
+                      phoneNumber={user.phone_number}
+                      compact
+                      className="sm:justify-end"
+                    />
                   </div>
                 </summary>
 

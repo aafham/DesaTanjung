@@ -354,8 +354,8 @@ Bahagian ini sesuai dijadikan rujukan cepat untuk tengok progress semasa project
   - [x] approvals page
   - [x] residents page
   - [x] resident detail page
-  - [ ] users page
-  - [ ] search page
+  - [x] users page
+  - [x] search page
   - [ ] activity page
   - [ ] reports page
   - [ ] announcements page
@@ -401,8 +401,8 @@ Untuk saya kemaskan semula UI dengan lebih tepat, saya perlukan screenshot berik
   - [x] `/admin/approvals`
   - [x] `/admin/residents`
   - [x] `/admin/residents/[id]`
-  - [ ] `/admin/users`
-  - [ ] `/admin/search`
+  - [x] `/admin/users`
+  - [x] `/admin/search`
   - [ ] `/admin/activity`
   - [ ] `/admin/reports`
   - [ ] `/admin/announcements`
@@ -451,8 +451,8 @@ Nota untuk screenshot:
   - [x] `/admin`
   - [x] `/admin/approvals`
   - [x] `/admin/residents`
-  - [ ] `/admin/users`
-  - [ ] `/admin/search`
+  - [x] `/admin/users`
+  - [x] `/admin/search`
   - [ ] `/admin/settings`
   - [ ] `/admin/reports`
 

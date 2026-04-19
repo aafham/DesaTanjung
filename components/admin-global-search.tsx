@@ -239,9 +239,9 @@ export function AdminGlobalSearch({
         </Card>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-3">
+      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.96fr_0.96fr] xl:items-start">
         {(focus === "all" || focus === "residents") && (
-          <Card className="p-5">
+          <Card className="self-start p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Users</p>
@@ -254,7 +254,7 @@ export function AdminGlobalSearch({
               </span>
             </div>
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 max-h-[42rem] space-y-3 overflow-y-auto pr-1">
               {filtered.residents.length === 0 ? (
                 <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
                   No users matched the current search.
@@ -281,7 +281,7 @@ export function AdminGlobalSearch({
                           className="mt-3"
                         />
                       </div>
-                      <div className="flex flex-col items-end gap-2">
+                      <div className="flex w-full max-w-[8rem] flex-col items-end gap-2">
                         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
                           {resident.role}
                         </span>
@@ -309,7 +309,7 @@ export function AdminGlobalSearch({
         )}
 
         {(focus === "all" || focus === "payments") && (
-          <Card className="p-5">
+          <Card className="self-start p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
@@ -324,7 +324,7 @@ export function AdminGlobalSearch({
               </span>
             </div>
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 max-h-[42rem] space-y-3 overflow-y-auto pr-1">
               {filtered.payments.length === 0 ? (
                 <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
                   No payments matched the current search.
@@ -335,7 +335,7 @@ export function AdminGlobalSearch({
                     key={payment.id}
                     className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-lg font-bold text-slate-950">
                           {payment.users?.house_number ?? "-"}
@@ -360,7 +360,7 @@ export function AdminGlobalSearch({
                           className="mt-3"
                         />
                       </div>
-                      <div className="flex flex-col items-end gap-2">
+                      <div className="flex w-full max-w-[9rem] flex-col items-end gap-2">
                         <StatusBadge status={payment.display_status} />
                         <div className="flex flex-wrap justify-end gap-2">
                           <Link
@@ -389,7 +389,7 @@ export function AdminGlobalSearch({
         )}
 
         {(focus === "all" || focus === "activity") && (
-          <Card className="p-5">
+          <Card className="self-start p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
@@ -404,7 +404,7 @@ export function AdminGlobalSearch({
               </span>
             </div>
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 max-h-[42rem] space-y-3 overflow-y-auto pr-1">
               {filtered.activityLogs.length === 0 ? (
                 <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
                   No activity matched the current search.
@@ -415,7 +415,7 @@ export function AdminGlobalSearch({
                     key={activity.id}
                     className="rounded-3xl border border-line bg-slate-50 px-4 py-4"
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-lg font-bold text-slate-950">
                           {activity.users?.house_number ?? "Resident"}

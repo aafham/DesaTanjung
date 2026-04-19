@@ -61,7 +61,7 @@ export default async function AdminUsersPage({
       </section>
 
       <Card>
-        <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr] xl:items-start">
           <div>
             <div className="mb-5">
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Create user</p>
@@ -134,20 +134,22 @@ export default async function AdminUsersPage({
                 />
                 <p className="mt-2 text-sm text-muted">Use Malaysian mobile format such as 012-345 6789.</p>
               </div>
-              <div className="md:col-span-2 flex items-center justify-between gap-3 rounded-3xl bg-slate-50 px-4 py-4">
-                <p className="text-base text-muted">
-                  Every new resident is created with username based on house number and default
-                  password <span className="font-semibold text-slate-900">password</span>.
-                </p>
-                <FormSubmitButton className="min-h-14 shrink-0 px-6 py-3 sm:min-w-[10rem]" pendingLabel="Adding user...">
-                  Add user
-                </FormSubmitButton>
+              <div className="md:col-span-2 rounded-3xl bg-slate-50 px-4 py-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <p className="max-w-xl text-base text-muted">
+                    Every new resident is created with username based on house number and default
+                    password <span className="font-semibold text-slate-900">password</span>.
+                  </p>
+                  <FormSubmitButton className="min-h-14 shrink-0 px-6 py-3 sm:min-w-[10rem]" pendingLabel="Adding user...">
+                    Add user
+                  </FormSubmitButton>
+                </div>
               </div>
             </form>
           </div>
           <div className="rounded-4xl border border-line bg-slate-50 p-5">
             <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Quick guide</p>
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 grid gap-3">
               <div className="rounded-3xl bg-white px-4 py-4">
                 <p className="text-base font-bold text-slate-950">1. Add complete contact details</p>
                 <p className="mt-2 text-sm leading-7 text-slate-600">
