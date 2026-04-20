@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Download } from "lucide-react";
-import type { UserActivityWithUser } from "@/lib/types";
+import type { PaginationMeta, UserActivityWithUser } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Card } from "@/components/ui/card";
@@ -46,75 +47,120 @@ function escapeCsv(value: string) {
 
 export function AdminActivityLog({
   activityLogs,
+  filters,
+  pagination,
+  summary,
 }: {
   activityLogs: UserActivityWithUser[];
+  filters: {
+    query: string;
+    actionFilter: string;
+    roleFilter: "all" | "user" | "admin";
+    dateFilter: "today" | "7d" | "14d";
+  };
+  pagination: PaginationMeta;
+  summary: {
+    total: number;
+    adminActions: number;
+    residentActions: number;
+    paymentActions: number;
+    filtered: number;
+  };
 }) {
-  const PAGE_SIZE = 5;
-  const [query, setQuery] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(filters.query);
   const [actionFilter, setActionFilter] =
-    useState<(typeof ACTION_OPTIONS)[number]["value"]>("all");
+    useState<(typeof ACTION_OPTIONS)[number]["value"]>(filters.actionFilter as (typeof ACTION_OPTIONS)[number]["value"]);
   const [roleFilter, setRoleFilter] =
-    useState<(typeof ROLE_OPTIONS)[number]["value"]>("all");
+    useState<(typeof ROLE_OPTIONS)[number]["value"]>(filters.roleFilter);
   const [dateFilter, setDateFilter] =
-    useState<(typeof DATE_OPTIONS)[number]["value"]>("14d");
-  const [currentPage, setCurrentPage] = useState(1);
+    useState<(typeof DATE_OPTIONS)[number]["value"]>(filters.dateFilter);
+  const deferredQuery = useDeferredValue(query);
 
-  const filteredActivity = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    const now = Date.now();
+  useEffect(() => {
+    setQuery(filters.query);
+  }, [filters.query]);
 
-    return activityLogs.filter((activity) => {
-      const matchesAction =
-        actionFilter === "all" || activity.action === actionFilter;
-      const matchesRole =
-        roleFilter === "all" || activity.users?.role === roleFilter;
-      const searchable = [
-        activity.users?.house_number,
-        activity.users?.name,
-        activity.message,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+  useEffect(() => {
+    setActionFilter(filters.actionFilter as (typeof ACTION_OPTIONS)[number]["value"]);
+  }, [filters.actionFilter]);
 
-      const age = now - new Date(activity.created_at).getTime();
-      const matchesDate =
-        (dateFilter === "today" && age < 1000 * 60 * 60 * 24) ||
-        (dateFilter === "7d" && age < 1000 * 60 * 60 * 24 * 7) ||
-        (dateFilter === "14d" && age < 1000 * 60 * 60 * 24 * 14);
+  useEffect(() => {
+    setRoleFilter(filters.roleFilter);
+  }, [filters.roleFilter]);
 
-      return (
-        matchesAction &&
-        matchesRole &&
-        matchesDate &&
-        (!normalized || searchable.includes(normalized))
-      );
-    });
-  }, [actionFilter, activityLogs, dateFilter, query, roleFilter]);
+  useEffect(() => {
+    setDateFilter(filters.dateFilter);
+  }, [filters.dateFilter]);
 
-  const summary = useMemo(() => {
-    const paymentActions = new Set([
-      "payment_uploaded",
-      "payment_approved",
-      "payment_rejected",
-      "cash_paid",
-      "bulk_cash_paid",
-      "payment_note_updated",
-    ]);
+  const updateUrl = useCallback((next: {
+    page?: number;
+    query?: string;
+    action?: string;
+    role?: "all" | "user" | "admin";
+    date?: "today" | "7d" | "14d";
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
 
-    return {
-      total: activityLogs.length,
-      adminActions: activityLogs.filter((activity) => activity.users?.role === "admin").length,
-      residentActions: activityLogs.filter((activity) => activity.users?.role === "user").length,
-      paymentActions: activityLogs.filter((activity) => paymentActions.has(activity.action)).length,
-      filtered: filteredActivity.length,
-    };
-  }, [activityLogs, filteredActivity]);
+    params.delete("message");
+    params.delete("error");
+
+    const nextQuery = next.query ?? deferredQuery;
+    const nextAction = next.action ?? actionFilter;
+    const nextRole = next.role ?? roleFilter;
+    const nextDate = next.date ?? dateFilter;
+    const nextPage = next.page ?? pagination.currentPage;
+
+    if (nextQuery.trim()) {
+      params.set("q", nextQuery.trim());
+    } else {
+      params.delete("q");
+    }
+
+    if (nextAction !== "all") {
+      params.set("action", nextAction);
+    } else {
+      params.delete("action");
+    }
+
+    if (nextRole !== "all") {
+      params.set("role", nextRole);
+    } else {
+      params.delete("role");
+    }
+
+    if (nextDate !== "14d") {
+      params.set("date", nextDate);
+    } else {
+      params.delete("date");
+    }
+
+    if (nextPage > 1) {
+      params.set("page", String(nextPage));
+    } else {
+      params.delete("page");
+    }
+
+    const href = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.replace(href, { scroll: false });
+  }, [actionFilter, dateFilter, deferredQuery, pagination.currentPage, pathname, roleFilter, router, searchParams]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (deferredQuery !== filters.query) {
+        updateUrl({ query: deferredQuery, page: 1 });
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [deferredQuery, filters.query, updateUrl]);
 
   const csvHref = useMemo(() => {
     const rows = [
       ["Date", "House", "Resident", "Role", "Action", "Message"],
-      ...filteredActivity.map((activity) => [
+      ...activityLogs.map((activity) => [
         formatTimestamp(activity.created_at),
         activity.users?.house_number ?? "",
         activity.users?.name ?? "",
@@ -126,27 +172,11 @@ export function AdminActivityLog({
     const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
 
     return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
-  }, [filteredActivity]);
+  }, [activityLogs]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredActivity.length / PAGE_SIZE));
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [query, actionFilter, roleFilter, dateFilter]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  const paginatedActivity = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredActivity.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [currentPage, filteredActivity]);
-
-  const startItem = filteredActivity.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const endItem = Math.min(currentPage * PAGE_SIZE, filteredActivity.length);
+  const startItem =
+    pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1;
+  const endItem = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems);
   const hasActiveFilters =
     query.trim().length > 0 ||
     actionFilter !== "all" ||
@@ -158,6 +188,13 @@ export function AdminActivityLog({
     setActionFilter("all");
     setRoleFilter("all");
     setDateFilter("14d");
+    updateUrl({
+      query: "",
+      action: "all",
+      role: "all",
+      date: "14d",
+      page: 1,
+    });
   }
 
   return (
@@ -235,9 +272,11 @@ export function AdminActivityLog({
             <select
               id="activity-filter"
               value={actionFilter}
-              onChange={(event) =>
-                setActionFilter(event.target.value as (typeof ACTION_OPTIONS)[number]["value"])
-              }
+              onChange={(event) => {
+                const nextAction = event.target.value as (typeof ACTION_OPTIONS)[number]["value"];
+                setActionFilter(nextAction);
+                updateUrl({ action: nextAction, page: 1 });
+              }}
               className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
             >
               {ACTION_OPTIONS.map((option) => (
@@ -254,9 +293,11 @@ export function AdminActivityLog({
             <select
               id="role-filter"
               value={roleFilter}
-              onChange={(event) =>
-                setRoleFilter(event.target.value as (typeof ROLE_OPTIONS)[number]["value"])
-              }
+              onChange={(event) => {
+                const nextRole = event.target.value as (typeof ROLE_OPTIONS)[number]["value"];
+                setRoleFilter(nextRole);
+                updateUrl({ role: nextRole, page: 1 });
+              }}
               className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
             >
               {ROLE_OPTIONS.map((option) => (
@@ -273,9 +314,11 @@ export function AdminActivityLog({
             <select
               id="date-filter"
               value={dateFilter}
-              onChange={(event) =>
-                setDateFilter(event.target.value as (typeof DATE_OPTIONS)[number]["value"])
-              }
+              onChange={(event) => {
+                const nextDate = event.target.value as (typeof DATE_OPTIONS)[number]["value"];
+                setDateFilter(nextDate);
+                updateUrl({ date: nextDate, page: 1 });
+              }}
               aria-describedby="activity-results-summary"
               className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
             >
@@ -297,8 +340,8 @@ export function AdminActivityLog({
         aria-atomic="true"
       >
         <p>
-          Showing {startItem}-{endItem} of {filteredActivity.length} filtered actions
-          {" "}from {activityLogs.length} recorded portal actions in the latest 14 days.
+          Showing {startItem}-{endItem} of {summary.filtered} filtered actions
+          {" "}from {summary.total} recorded portal actions in the selected window.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {hasActiveFilters ? (
@@ -312,7 +355,7 @@ export function AdminActivityLog({
           ) : null}
           <a
             href={csvHref}
-            download="resident-activity-log.csv"
+            download={`resident-activity-log-page-${pagination.currentPage}.csv`}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold whitespace-nowrap text-white"
           >
             <Download className="h-4 w-4" />
@@ -322,12 +365,12 @@ export function AdminActivityLog({
       </div>
 
       <div className="grid gap-3" aria-live="polite">
-        {filteredActivity.length === 0 ? (
+        {pagination.totalItems === 0 ? (
           <Card className="text-base text-muted">
             No portal activity matched the current search and filter.
           </Card>
         ) : (
-          paginatedActivity.map((activity) => (
+          activityLogs.map((activity) => (
             <Card key={activity.id}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -353,11 +396,11 @@ export function AdminActivityLog({
         )}
       </div>
 
-      {filteredActivity.length > 0 ? (
+      {pagination.totalItems > 0 ? (
         <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={(page) => updateUrl({ page })}
         />
       ) : null}
     </section>

@@ -3,15 +3,30 @@ import { AdminPageHeader } from "@/components/admin-page-header";
 import { DataWarning } from "@/components/data-warning";
 import { MonthFilter } from "@/components/month-filter";
 import { PageToast } from "@/components/page-toast";
-import { getAdminDashboardData } from "@/lib/data";
+import { getAdminResidentsData } from "@/lib/data";
 
 export default async function AdminResidentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; message?: string; error?: string }>;
+  searchParams: Promise<{
+    month?: string;
+    message?: string;
+    error?: string;
+    page?: string;
+    q?: string;
+    status?: "all" | "paid" | "pending" | "unpaid" | "overdue" | "rejected";
+    method?: "all" | "online" | "cash";
+  }>;
 }) {
   const params = await searchParams;
-  const { currentMonth, currentMonthLabel, residents, warnings } = await getAdminDashboardData(params.month);
+  const { currentMonth, currentMonthLabel, residents, warnings, filters, pagination, summary } =
+    await getAdminResidentsData({
+      filterMonth: params.month,
+      page: Number(params.page ?? "1"),
+      query: params.q ?? "",
+      statusFilter: params.status ?? "all",
+      methodFilter: params.method ?? "all",
+    });
 
   return (
     <div className="space-y-6">
@@ -32,6 +47,9 @@ export default async function AdminResidentsPage({
         residents={residents}
         currentMonth={currentMonth}
         currentMonthLabel={currentMonthLabel}
+        filters={filters}
+        pagination={pagination}
+        summary={summary}
       />
     </div>
   );

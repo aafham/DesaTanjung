@@ -1,6 +1,7 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { FilterX, Search } from "lucide-react";
 import {
   deleteManagedUserAction,
@@ -14,60 +15,42 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { Card } from "@/components/ui/card";
+import type { PaginationMeta } from "@/lib/types";
 
 export function AdminUsersManager({
   users,
   currentAdminId,
+  filters,
+  pagination,
+  summary,
 }: {
   users: ManagedUser[];
   currentAdminId: string;
+  filters: {
+    query: string;
+    roleFilter: "all" | "admin" | "user";
+    followUpFilter: "all" | "missing-phone" | "never-logged-in" | "inactive";
+  };
+  pagination: PaginationMeta;
+  summary: {
+    totalUsers: number;
+    adminCount: number;
+    residentCount: number;
+    passwordResetCount: number;
+    missingPhoneCount: number;
+    inactiveCount: number;
+    neverLoggedInCount: number;
+  };
 }) {
-  const PAGE_SIZE = 5;
-  const [query, setQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(filters.query);
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">(filters.roleFilter);
   const [followUpFilter, setFollowUpFilter] = useState<
     "all" | "missing-phone" | "never-logged-in" | "inactive"
-  >("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  >(filters.followUpFilter);
   const deferredQuery = useDeferredValue(query);
-
-  const filteredUsers = useMemo(() => {
-    const normalized = deferredQuery.trim().toLowerCase();
-
-    return users.filter((user) => {
-      const matchesRole = roleFilter === "all" || user.role === roleFilter;
-      const matchesFollowUp =
-        followUpFilter === "all" ||
-        (followUpFilter === "missing-phone" && !user.phone_number) ||
-        (followUpFilter === "never-logged-in" && !user.last_login_at) ||
-        (followUpFilter === "inactive" &&
-          !!user.last_login_at &&
-          Date.now() - new Date(user.last_login_at).getTime() >= 1000 * 60 * 60 * 24 * 30);
-      const matchesSearch =
-        !normalized ||
-        user.house_number.toLowerCase().includes(normalized) ||
-        user.name.toLowerCase().includes(normalized) ||
-        user.phone_number?.toLowerCase().includes(normalized) ||
-        user.address.toLowerCase().includes(normalized) ||
-        user.email.toLowerCase().includes(normalized);
-
-      return matchesRole && matchesFollowUp && matchesSearch;
-    });
-  }, [deferredQuery, followUpFilter, roleFilter, users]);
-
-  const adminCount = users.filter((user) => user.role === "admin").length;
-  const residentCount = users.filter((user) => user.role === "user").length;
-  const passwordResetCount = users.filter((user) => user.must_change_password).length;
-  const missingPhoneCount = users.filter((user) => !user.phone_number).length;
-  const inactiveCount = users.filter((user) => {
-    if (!user.last_login_at) {
-      return false;
-    }
-
-    const age = Date.now() - new Date(user.last_login_at).getTime();
-    return age >= 1000 * 60 * 60 * 24 * 30;
-  }).length;
-  const neverLoggedInCount = users.filter((user) => !user.last_login_at).length;
   const activeRoleFilterLabel =
     roleFilter === "all" ? "All users" : roleFilter === "admin" ? "Admins only" : "Residents only";
   const activeFollowUpLabel =
@@ -78,24 +61,76 @@ export function AdminUsersManager({
         : followUpFilter === "never-logged-in"
           ? "Never logged in"
           : "Inactive 30+ days";
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [query, roleFilter, followUpFilter]);
+    setQuery(filters.query);
+  }, [filters.query]);
 
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
+    setRoleFilter(filters.roleFilter);
+  }, [filters.roleFilter]);
+
+  useEffect(() => {
+    setFollowUpFilter(filters.followUpFilter);
+  }, [filters.followUpFilter]);
+
+  const updateUrl = useCallback((next: {
+    page?: number;
+    query?: string;
+    role?: "all" | "admin" | "user";
+    follow?: "all" | "missing-phone" | "never-logged-in" | "inactive";
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    params.delete("message");
+    params.delete("error");
+
+    const nextQuery = next.query ?? deferredQuery;
+    const nextRole = next.role ?? roleFilter;
+    const nextFollow = next.follow ?? followUpFilter;
+    const nextPage = next.page ?? pagination.currentPage;
+
+    if (nextQuery.trim()) {
+      params.set("q", nextQuery.trim());
+    } else {
+      params.delete("q");
     }
-  }, [currentPage, totalPages]);
 
-  const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredUsers.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [currentPage, filteredUsers]);
-  const startItem = filteredUsers.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const endItem = Math.min(currentPage * PAGE_SIZE, filteredUsers.length);
+    if (nextRole !== "all") {
+      params.set("role", nextRole);
+    } else {
+      params.delete("role");
+    }
+
+    if (nextFollow !== "all") {
+      params.set("follow", nextFollow);
+    } else {
+      params.delete("follow");
+    }
+
+    if (nextPage > 1) {
+      params.set("page", String(nextPage));
+    } else {
+      params.delete("page");
+    }
+
+    const href = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.replace(href, { scroll: false });
+  }, [deferredQuery, followUpFilter, pagination.currentPage, pathname, roleFilter, router, searchParams]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (deferredQuery !== filters.query) {
+        updateUrl({ query: deferredQuery, page: 1 });
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [deferredQuery, filters.query, updateUrl]);
+
+  const startItem =
+    pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1;
+  const endItem = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems);
   const hasActiveFilters =
     query.trim().length > 0 || roleFilter !== "all" || followUpFilter !== "all";
 
@@ -137,7 +172,7 @@ export function AdminUsersManager({
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">
             Current view
           </p>
-          <p className="mt-2 text-2xl font-bold text-slate-950">{filteredUsers.length}</p>
+          <p className="mt-2 text-2xl font-bold text-slate-950">{pagination.totalItems}</p>
           <p className="mt-2 text-sm text-slate-600">
             {activeRoleFilterLabel} with {activeFollowUpLabel.toLowerCase()}.
           </p>
@@ -146,7 +181,7 @@ export function AdminUsersManager({
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-800">
             Need first login
           </p>
-          <p className="mt-2 text-2xl font-bold text-amber-950">{neverLoggedInCount}</p>
+          <p className="mt-2 text-2xl font-bold text-amber-950">{summary.neverLoggedInCount}</p>
           <p className="mt-2 text-sm text-amber-900">
             Accounts that have never entered the portal yet.
           </p>
@@ -155,7 +190,7 @@ export function AdminUsersManager({
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-800">
             Missing contact
           </p>
-          <p className="mt-2 text-2xl font-bold text-rose-950">{missingPhoneCount}</p>
+          <p className="mt-2 text-2xl font-bold text-rose-950">{summary.missingPhoneCount}</p>
           <p className="mt-2 text-sm text-rose-900">
             Residents who still need a phone number for follow-up.
           </p>
@@ -168,7 +203,7 @@ export function AdminUsersManager({
             {startItem}-{endItem}
           </p>
           <p className="mt-2 text-sm text-slate-600">
-            Page {currentPage} of {totalPages}.
+            Page {pagination.currentPage} of {pagination.totalPages}.
           </p>
         </Card>
       </section>
@@ -176,7 +211,10 @@ export function AdminUsersManager({
       <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
         <button
           type="button"
-          onClick={() => setRoleFilter("all")}
+          onClick={() => {
+            setRoleFilter("all");
+            updateUrl({ role: "all", page: 1 });
+          }}
           aria-pressed={roleFilter === "all"}
           aria-controls="user-results-list"
           className={`rounded-3xl px-4 py-3 text-left text-base font-bold transition ${
@@ -193,12 +231,15 @@ export function AdminUsersManager({
               : undefined
           }
         >
-          <span className="block font-semibold">{users.length}</span>
+          <span className="block font-semibold">{summary.totalUsers}</span>
           All users
         </button>
         <button
           type="button"
-          onClick={() => setRoleFilter("user")}
+          onClick={() => {
+            setRoleFilter("user");
+            updateUrl({ role: "user", page: 1 });
+          }}
           aria-pressed={roleFilter === "user"}
           aria-controls="user-results-list"
           className={`rounded-3xl px-4 py-3 text-left text-base font-bold transition ${
@@ -207,12 +248,15 @@ export function AdminUsersManager({
               : "border border-slate-200 bg-slate-50 text-muted"
           }`}
         >
-          <span className="block font-semibold">{residentCount}</span>
+          <span className="block font-semibold">{summary.residentCount}</span>
           Residents
         </button>
         <button
           type="button"
-          onClick={() => setRoleFilter("admin")}
+          onClick={() => {
+            setRoleFilter("admin");
+            updateUrl({ role: "admin", page: 1 });
+          }}
           aria-pressed={roleFilter === "admin"}
           aria-controls="user-results-list"
           className={`rounded-3xl px-4 py-3 text-left text-base font-bold transition ${
@@ -221,19 +265,19 @@ export function AdminUsersManager({
               : "border border-slate-200 bg-slate-50 text-muted"
           }`}
         >
-          <span className="block font-semibold">{adminCount}</span>
+          <span className="block font-semibold">{summary.adminCount}</span>
           Admins
         </button>
         <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-3 text-base font-bold text-amber-900">
-          <span className="block font-semibold">{passwordResetCount}</span>
+          <span className="block font-semibold">{summary.passwordResetCount}</span>
           Need password change
         </div>
         <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-base font-bold text-rose-900">
-          <span className="block font-semibold">{missingPhoneCount}</span>
+          <span className="block font-semibold">{summary.missingPhoneCount}</span>
           Missing phone
         </div>
         <div className="rounded-3xl border border-slate-200 bg-slate-100 px-4 py-3 text-base font-bold text-slate-900">
-          <span className="block font-semibold">{inactiveCount}</span>
+          <span className="block font-semibold">{summary.inactiveCount}</span>
           Inactive 30+ days
         </div>
       </div>
@@ -254,11 +298,18 @@ export function AdminUsersManager({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() =>
-                    setFollowUpFilter(
-                      option.value as "all" | "missing-phone" | "never-logged-in" | "inactive",
-                    )
-                  }
+                  onClick={() => {
+                    const nextFollow = option.value as
+                      | "all"
+                      | "missing-phone"
+                      | "never-logged-in"
+                      | "inactive";
+                    setFollowUpFilter(nextFollow);
+                    updateUrl({
+                      follow: nextFollow,
+                      page: 1,
+                    });
+                  }}
                   aria-pressed={followUpFilter === option.value}
                   aria-controls="user-results-list"
                   className={`rounded-full px-4 py-2 text-sm font-bold transition ${
@@ -272,7 +323,7 @@ export function AdminUsersManager({
               ))}
             </div>
             <p className="mt-4 text-base text-slate-600">
-              {neverLoggedInCount} users have never logged in yet. Use these filters to quickly
+              {summary.neverLoggedInCount} users have never logged in yet. Use these filters to quickly
               spot accounts that still need setup or follow-up.
             </p>
             {hasActiveFilters ? (
@@ -282,6 +333,12 @@ export function AdminUsersManager({
                   setQuery("");
                   setRoleFilter("all");
                   setFollowUpFilter("all");
+                  updateUrl({
+                    query: "",
+                    role: "all",
+                    follow: "all",
+                    page: 1,
+                  });
                 }}
                 className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
               >
@@ -298,17 +355,17 @@ export function AdminUsersManager({
               {activeRoleFilterLabel} - {activeFollowUpLabel}
             </p>
             <p id="user-results-summary" className="mt-2 text-sm text-slate-600">
-              Showing {startItem}-{endItem} of {filteredUsers.length} matched users.
+              Showing {startItem}-{endItem} of {pagination.totalItems} matched users.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
-                {passwordResetCount} need password change
+                {summary.passwordResetCount} need password change
               </span>
               <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
-                {missingPhoneCount} missing phone
+                {summary.missingPhoneCount} missing phone
               </span>
               <span className="rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
-                {inactiveCount} inactive 30+ days
+                {summary.inactiveCount} inactive 30+ days
               </span>
             </div>
           </div>
@@ -316,7 +373,7 @@ export function AdminUsersManager({
       </Card>
 
       <div id="user-results-list" className="grid gap-4">
-        {filteredUsers.length === 0 ? (
+        {pagination.totalItems === 0 ? (
           <Card className="rounded-4xl border-dashed text-center text-sm text-muted">
             <p className="text-lg font-bold text-slate-950">No users matched this view.</p>
             <p className="mt-2 text-sm text-muted">
@@ -330,6 +387,12 @@ export function AdminUsersManager({
                     setQuery("");
                     setRoleFilter("all");
                     setFollowUpFilter("all");
+                    updateUrl({
+                      query: "",
+                      role: "all",
+                      follow: "all",
+                      page: 1,
+                    });
                   }}
                   className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
                 >
@@ -340,7 +403,7 @@ export function AdminUsersManager({
             ) : null}
           </Card>
         ) : (
-          paginatedUsers.map((user) => (
+          users.map((user) => (
             <Card key={user.id} className="p-0">
               <details className="group">
                 <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-4 rounded-3xl px-6 py-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
@@ -552,7 +615,11 @@ export function AdminUsersManager({
         )}
       </div>
 
-      <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+      <PaginationControls
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        onPageChange={(page) => updateUrl({ page })}
+      />
     </section>
   );
 }

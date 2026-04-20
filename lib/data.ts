@@ -12,8 +12,10 @@ import type {
   ManagedUser,
   MissingPhoneResident,
   NotificationRecord,
+  PaginationMeta,
   PaymentAuditLog,
   PaymentRecord,
+  PaymentStatus,
   ResidentPaymentRecord,
   ResidentWithPayment,
   UserActivityWithUser,
@@ -120,6 +122,19 @@ function enrichPaymentRecord(
     display_status: displayStatus,
     is_overdue: displayStatus === "overdue",
     signed_proof_url: null,
+  };
+}
+
+function createPaginationMeta(
+  currentPage: number,
+  pageSize: number,
+  totalItems: number,
+): PaginationMeta {
+  return {
+    currentPage,
+    pageSize,
+    totalItems,
+    totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
   };
 }
 
@@ -530,7 +545,21 @@ export async function getAdminSettingsData() {
   };
 }
 
-export async function getAdminUserManagementData() {
+export async function getAdminResidentsData({
+  filterMonth,
+  page = 1,
+  pageSize = 5,
+  query = "",
+  statusFilter = "all",
+  methodFilter = "all",
+}: {
+  filterMonth?: string;
+  page?: number;
+  pageSize?: number;
+  query?: string;
+  statusFilter?: "all" | PaymentStatus | "overdue";
+  methodFilter?: "all" | "online" | "cash";
+}) {
   const profile = await requireUserProfile();
 
   if (profile.role !== "admin") {
@@ -542,19 +571,154 @@ export async function getAdminUserManagementData() {
   }
 
   const supabase = await createClient();
-  const [{ data: users }, { data: activityLogs }] = await Promise.all([
-    supabase
-      .from("users")
-      .select(
-        "id, house_number, email, name, address, phone_number, role, must_change_password, created_at, last_login_at, last_logout_at",
-      )
-      .order("role", { ascending: false })
-      .order("house_number", { ascending: true }),
-    supabase
-      .from("user_activity_logs")
-      .select("id, user_id, action, message, created_at")
-      .order("created_at", { ascending: false }),
-  ]);
+  const settings = await getAppSettings();
+  const month = filterMonth ?? getMonthKey();
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const { data: residents, error: residentsError } = await supabase
+    .from("users")
+    .select("id, house_number, name, address, phone_number, role, must_change_password")
+    .eq("role", "user")
+    .order("house_number", { ascending: true });
+  const { data: monthlyRecords, error: monthlyRecordsError } = await supabase
+    .from("payments")
+    .select(
+      "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
+    )
+    .eq("month", month);
+
+  const warnings = [
+    ...getSystemHealthWarnings(settings),
+    ...(residentsError ? [createWarningMessage("Residents", residentsError.message)] : []),
+    ...(monthlyRecordsError ? [createWarningMessage("Monthly records", monthlyRecordsError.message)] : []),
+  ];
+
+  const allResidents = ((residents as UserProfile[] | null) ?? []).map((resident) => {
+    const currentPayment =
+      (monthlyRecords as PaymentRecord[] | null)?.find((payment) => payment.user_id === resident.id) ?? null;
+
+    return {
+      ...resident,
+      currentPayment: enrichPaymentRecord(currentPayment, month, settings.due_day),
+    } satisfies ResidentWithPayment;
+  });
+
+  const filteredResidents = allResidents.filter((resident) => {
+    const residentStatus = resident.currentPayment?.status ?? "unpaid";
+    const displayStatus = resident.currentPayment?.display_status ?? "unpaid";
+    const matchesStatus =
+      statusFilter === "all" || residentStatus === statusFilter || displayStatus === statusFilter;
+    const matchesMethod =
+      methodFilter === "all" || resident.currentPayment?.payment_method === methodFilter;
+    const matchesQuery =
+      !normalizedQuery ||
+      resident.house_number.toLowerCase().includes(normalizedQuery) ||
+      resident.name.toLowerCase().includes(normalizedQuery) ||
+      resident.address.toLowerCase().includes(normalizedQuery) ||
+      resident.phone_number?.toLowerCase().includes(normalizedQuery);
+
+    return matchesStatus && matchesMethod && matchesQuery;
+  });
+
+  const pagination = createPaginationMeta(safePage, safePageSize, filteredResidents.length);
+  const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
+  const paginatedResidents = filteredResidents.slice(startIndex, startIndex + pagination.pageSize);
+
+  return {
+    profile,
+    currentMonth: month,
+    currentMonthLabel: formatMonthLabel(month),
+    residents: paginatedResidents,
+    warnings,
+    filters: {
+      query,
+      statusFilter,
+      methodFilter,
+    },
+    pagination,
+    summary: {
+      settledCount: filteredResidents.filter((resident) => resident.currentPayment?.display_status === "paid").length,
+      reviewedCount: filteredResidents.filter((resident) =>
+        ["paid", "rejected"].includes(resident.currentPayment?.status ?? "unpaid"),
+      ).length,
+      followUpCount: filteredResidents.filter((resident) =>
+        ["unpaid", "overdue", "rejected"].includes(resident.currentPayment?.display_status ?? "unpaid"),
+      ).length,
+    },
+  };
+}
+
+export async function getAdminUserManagementData({
+  page = 1,
+  pageSize = 5,
+  query = "",
+  roleFilter = "all",
+  followUpFilter = "all",
+}: {
+  page?: number;
+  pageSize?: number;
+  query?: string;
+  roleFilter?: "all" | "admin" | "user";
+  followUpFilter?: "all" | "missing-phone" | "never-logged-in" | "inactive";
+} = {}) {
+  const profile = await requireUserProfile();
+
+  if (profile.role !== "admin") {
+    redirect("/dashboard");
+  }
+
+  if (profile.must_change_password) {
+    redirect("/change-password");
+  }
+
+  const supabase = await createClient();
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const normalizedQuery = query.trim().toLowerCase();
+  const inactivityCutoff = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
+
+  const { data: users, error: usersError } = await supabase
+    .from("users")
+    .select(
+      "id, house_number, email, name, address, phone_number, role, must_change_password, created_at, last_login_at, last_logout_at",
+    )
+    .order("role", { ascending: false })
+    .order("house_number", { ascending: true });
+
+  const allUsers = ((users as ManagedUser[] | null) ?? []).filter((user) => {
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    const matchesFollowUp =
+      followUpFilter === "all" ||
+      (followUpFilter === "missing-phone" && !user.phone_number) ||
+      (followUpFilter === "never-logged-in" && !user.last_login_at) ||
+      (followUpFilter === "inactive" &&
+        !!user.last_login_at &&
+        new Date(user.last_login_at).getTime() <= inactivityCutoff.getTime());
+    const matchesSearch =
+      !normalizedQuery ||
+      user.house_number.toLowerCase().includes(normalizedQuery) ||
+      user.name.toLowerCase().includes(normalizedQuery) ||
+      user.phone_number?.toLowerCase().includes(normalizedQuery) ||
+      user.address.toLowerCase().includes(normalizedQuery) ||
+      user.email.toLowerCase().includes(normalizedQuery);
+
+    return matchesRole && matchesFollowUp && matchesSearch;
+  });
+
+  const pagination = createPaginationMeta(safePage, safePageSize, allUsers.length);
+  const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
+  const pagedUsers = allUsers.slice(startIndex, startIndex + pagination.pageSize);
+  const pagedUserIds = pagedUsers.map((user) => user.id);
+
+  const { data: activityLogs } = pagedUserIds.length
+    ? await supabase
+        .from("user_activity_logs")
+        .select("id, user_id, action, message, created_at")
+        .in("user_id", pagedUserIds)
+        .order("created_at", { ascending: false })
+    : { data: [] };
 
   const logsByUser = new Map<string, UserActivityLog[]>();
 
@@ -569,14 +733,50 @@ export async function getAdminUserManagementData() {
 
   return {
     profile,
-    users: (((users as ManagedUser[] | null) ?? []).map((user) => ({
+    users: (pagedUsers.map((user) => ({
       ...user,
       activityLogs: logsByUser.get(user.id) ?? [],
     }))),
+    warnings: usersError ? [createWarningMessage("Users", usersError.message)] : [],
+    filters: {
+      query,
+      roleFilter,
+      followUpFilter,
+    },
+    pagination,
+    summary: {
+      totalUsers: ((users as ManagedUser[] | null) ?? []).length,
+      adminCount: ((users as ManagedUser[] | null) ?? []).filter((user) => user.role === "admin").length,
+      residentCount: ((users as ManagedUser[] | null) ?? []).filter((user) => user.role === "user").length,
+      passwordResetCount: ((users as ManagedUser[] | null) ?? []).filter((user) => user.must_change_password).length,
+      missingPhoneCount: ((users as ManagedUser[] | null) ?? []).filter((user) => !user.phone_number).length,
+      inactiveCount: ((users as ManagedUser[] | null) ?? []).filter((user) => {
+        if (!user.last_login_at) {
+          return false;
+        }
+
+        return new Date(user.last_login_at).getTime() <= inactivityCutoff.getTime();
+      }).length,
+      neverLoggedInCount: ((users as ManagedUser[] | null) ?? []).filter((user) => !user.last_login_at).length,
+    },
   };
 }
 
-export async function getAdminActivityLogData() {
+export async function getAdminActivityLogData({
+  page = 1,
+  pageSize = 5,
+  query = "",
+  actionFilter = "all",
+  roleFilter = "all",
+  dateFilter = "14d",
+}: {
+  page?: number;
+  pageSize?: number;
+  query?: string;
+  actionFilter?: string;
+  roleFilter?: "all" | "user" | "admin";
+  dateFilter?: "today" | "7d" | "14d";
+} = {}) {
   const profile = await requireUserProfile();
 
   if (profile.role !== "admin") {
@@ -588,19 +788,54 @@ export async function getAdminActivityLogData() {
   }
 
   const supabase = await createClient();
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.max(1, pageSize);
+  const normalizedQuery = query.trim().toLowerCase();
   const recentCutoff = new Date();
-  recentCutoff.setDate(recentCutoff.getDate() - 14);
+  recentCutoff.setDate(
+    recentCutoff.getDate() - (dateFilter === "today" ? 1 : dateFilter === "7d" ? 7 : 14),
+  );
   const { data, error } = await supabase
     .from("user_activity_logs")
     .select("id, user_id, action, message, created_at, users(house_number, name, role)")
     .gte("created_at", recentCutoff.toISOString())
-    .order("created_at", { ascending: false })
-    .limit(100);
+    .order("created_at", { ascending: false });
+
+  const allActivityLogs = ((data as UserActivityWithUser[] | null) ?? []).filter((activity) => {
+    const matchesAction = actionFilter === "all" || activity.action === actionFilter;
+    const matchesRole = roleFilter === "all" || activity.users?.role === roleFilter;
+    const searchable = [activity.users?.house_number, activity.users?.name, activity.message]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    const matchesQuery = !normalizedQuery || searchable.includes(normalizedQuery);
+
+    return matchesAction && matchesRole && matchesQuery;
+  });
+  const pagination = createPaginationMeta(safePage, safePageSize, allActivityLogs.length);
+  const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
+  const paginatedActivityLogs = allActivityLogs.slice(startIndex, startIndex + pagination.pageSize);
 
   return {
     profile,
-    activityLogs: (data as UserActivityWithUser[] | null) ?? [],
+    activityLogs: paginatedActivityLogs,
     warnings: error ? [createWarningMessage("Activity log", error.message)] : [],
+    filters: {
+      query,
+      actionFilter,
+      roleFilter,
+      dateFilter,
+    },
+    pagination,
+    summary: {
+      total: ((data as UserActivityWithUser[] | null) ?? []).length,
+      adminActions: ((data as UserActivityWithUser[] | null) ?? []).filter((activity) => activity.users?.role === "admin").length,
+      residentActions: ((data as UserActivityWithUser[] | null) ?? []).filter((activity) => activity.users?.role === "user").length,
+      paymentActions: ((data as UserActivityWithUser[] | null) ?? []).filter((activity) =>
+        ["payment_uploaded", "payment_approved", "payment_rejected", "cash_paid", "bulk_cash_paid", "payment_note_updated"].includes(activity.action),
+      ).length,
+      filtered: allActivityLogs.length,
+    },
   };
 }
 

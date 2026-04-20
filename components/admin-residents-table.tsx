@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Copy, Download, MessageCircle, Search } from "lucide-react";
 import { ContactActions } from "@/components/contact-actions";
 import {
@@ -19,6 +20,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { Card } from "@/components/ui/card";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { StatusBadge } from "@/components/ui/status-badge";
+import type { PaginationMeta } from "@/lib/types";
 
 const filterOptions: Array<{ label: string; value: "all" | PaymentStatus | "overdue" }> = [
   { label: "All", value: "all" },
@@ -51,42 +53,38 @@ export function AdminResidentsTable({
   residents,
   currentMonth,
   currentMonthLabel,
+  filters,
+  pagination,
+  summary,
 }: {
   residents: ResidentWithPayment[];
   currentMonth: string;
   currentMonthLabel: string;
+  filters: {
+    query: string;
+    statusFilter: "all" | PaymentStatus | "overdue";
+    methodFilter: "all" | "online" | "cash";
+  };
+  pagination: PaginationMeta;
+  summary: {
+    settledCount: number;
+    reviewedCount: number;
+    followUpCount: number;
+  };
 }) {
-  const PAGE_SIZE = 5;
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | PaymentStatus | "overdue">("all");
-  const [methodFilter, setMethodFilter] = useState<"all" | "online" | "cash">("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(filters.query);
+  const [statusFilter, setStatusFilter] = useState<"all" | PaymentStatus | "overdue">(
+    filters.statusFilter,
+  );
+  const [methodFilter, setMethodFilter] = useState<"all" | "online" | "cash">(
+    filters.methodFilter,
+  );
   const [selectedResidentIds, setSelectedResidentIds] = useState<string[]>([]);
   const [copiedResidentId, setCopiedResidentId] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const deferredQuery = useDeferredValue(query);
-
-  const filteredResidents = useMemo(() => {
-    const normalized = deferredQuery.trim().toLowerCase();
-
-    return residents.filter((resident) => {
-      const status = getStatus(resident);
-      const displayStatus = getDisplayStatus(resident);
-      const matchesStatus =
-        statusFilter === "all" ||
-        status === statusFilter ||
-        displayStatus === statusFilter;
-      const matchesMethod =
-        methodFilter === "all" || resident.currentPayment?.payment_method === methodFilter;
-      const matchesSearch =
-        !normalized ||
-        resident.house_number.toLowerCase().includes(normalized) ||
-        resident.name.toLowerCase().includes(normalized) ||
-        resident.address.toLowerCase().includes(normalized) ||
-        resident.phone_number?.toLowerCase().includes(normalized);
-
-      return matchesStatus && matchesMethod && matchesSearch;
-    });
-  }, [deferredQuery, methodFilter, residents, statusFilter]);
 
   function toggleResident(residentId: string) {
     setSelectedResidentIds((current) =>
@@ -104,10 +102,76 @@ export function AdminResidentsTable({
     window.setTimeout(() => setCopiedResidentId(null), 1800);
   }
 
+  useEffect(() => {
+    setQuery(filters.query);
+  }, [filters.query]);
+
+  useEffect(() => {
+    setStatusFilter(filters.statusFilter);
+  }, [filters.statusFilter]);
+
+  useEffect(() => {
+    setMethodFilter(filters.methodFilter);
+  }, [filters.methodFilter]);
+
+  const updateUrl = useCallback((next: {
+    page?: number;
+    query?: string;
+    status?: "all" | PaymentStatus | "overdue";
+    method?: "all" | "online" | "cash";
+  }) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    params.delete("message");
+    params.delete("error");
+
+    const nextQuery = next.query ?? deferredQuery;
+    const nextStatus = next.status ?? statusFilter;
+    const nextMethod = next.method ?? methodFilter;
+    const nextPage = next.page ?? pagination.currentPage;
+
+    if (nextQuery.trim()) {
+      params.set("q", nextQuery.trim());
+    } else {
+      params.delete("q");
+    }
+
+    if (nextStatus !== "all") {
+      params.set("status", nextStatus);
+    } else {
+      params.delete("status");
+    }
+
+    if (nextMethod !== "all") {
+      params.set("method", nextMethod);
+    } else {
+      params.delete("method");
+    }
+
+    if (nextPage > 1) {
+      params.set("page", String(nextPage));
+    } else {
+      params.delete("page");
+    }
+
+    const href = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.replace(href, { scroll: false });
+  }, [deferredQuery, methodFilter, pagination.currentPage, pathname, router, searchParams, statusFilter]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (deferredQuery !== filters.query) {
+        updateUrl({ query: deferredQuery, page: 1 });
+      }
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [deferredQuery, filters.query, updateUrl]);
+
   const csvHref = useMemo(() => {
     const rows = [
       ["House", "Owner", "Address", "Phone", "Status", "Updated", "Payment method"],
-      ...filteredResidents.map((resident) => [
+      ...residents.map((resident) => [
         resident.house_number,
         resident.name,
         resident.address,
@@ -120,11 +184,11 @@ export function AdminResidentsTable({
     const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
 
     return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
-  }, [filteredResidents]);
+  }, [residents]);
 
   const selectedResidents = useMemo(
-    () => filteredResidents.filter((resident) => selectedResidentIds.includes(resident.id)),
-    [filteredResidents, selectedResidentIds],
+    () => residents.filter((resident) => selectedResidentIds.includes(resident.id)),
+    [residents, selectedResidentIds],
   );
 
   const selectedResidentsWithPhone = useMemo(
@@ -163,33 +227,9 @@ export function AdminResidentsTable({
     return `https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`;
   }, [currentMonthLabel, selectedResidentsWithPhone]);
 
-  const settledCount = filteredResidents.filter(
-    (resident) => getDisplayStatus(resident) === "paid",
-  ).length;
-  const followUpCount = filteredResidents.filter((resident) =>
-    ["unpaid", "overdue", "rejected"].includes(getDisplayStatus(resident)),
-  ).length;
-  const reviewedCount = filteredResidents.filter((resident) =>
-    ["paid", "rejected"].includes(getStatus(resident)),
-  ).length;
-  const totalPages = Math.max(1, Math.ceil(filteredResidents.length / PAGE_SIZE));
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [query, statusFilter, methodFilter]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  const paginatedResidents = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredResidents.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [currentPage, filteredResidents]);
-  const startItem = filteredResidents.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const endItem = Math.min(currentPage * PAGE_SIZE, filteredResidents.length);
+  const startItem =
+    pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1;
+  const endItem = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems);
 
   return (
     <Card className="overflow-hidden p-0">
@@ -225,22 +265,25 @@ export function AdminResidentsTable({
                   Status filter
                 </p>
                 <div className="flex flex-wrap gap-2">
-                {filterOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setStatusFilter(option.value)}
-                    aria-pressed={statusFilter === option.value}
-                    aria-controls="resident-results-list"
-                    className={`min-h-11 rounded-full px-4 py-2 text-base font-bold transition ${
-                      statusFilter === option.value
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+                  {filterOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setStatusFilter(option.value);
+                        updateUrl({ status: option.value, page: 1 });
+                      }}
+                      aria-pressed={statusFilter === option.value}
+                      aria-controls="resident-results-list"
+                      className={`min-h-11 rounded-full px-4 py-2 text-base font-bold transition ${
+                        statusFilter === option.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -251,7 +294,11 @@ export function AdminResidentsTable({
               <label className="mb-2 block text-base font-bold text-slate-950">Payment method</label>
               <select
                 value={methodFilter}
-                onChange={(event) => setMethodFilter(event.target.value as "all" | "online" | "cash")}
+                onChange={(event) => {
+                  const nextMethod = event.target.value as "all" | "online" | "cash";
+                  setMethodFilter(nextMethod);
+                  updateUrl({ method: nextMethod, page: 1 });
+                }}
                 aria-describedby="resident-results-summary"
                 className="min-h-12 w-full rounded-full border border-line bg-white px-4 py-2 text-base font-bold text-slate-950 outline-none focus:border-primary"
               >
@@ -265,11 +312,11 @@ export function AdminResidentsTable({
 
             <a
               href={csvHref}
-              download={`desa-tanjung-${currentMonth}-payments.csv`}
+              download={`desa-tanjung-${currentMonth}-payments-page-${pagination.currentPage}.csv`}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white"
             >
               <Download className="h-4 w-4" />
-              Export CSV
+              Export current page CSV
             </a>
           </div>
         </div>
@@ -282,7 +329,7 @@ export function AdminResidentsTable({
         aria-live="polite"
         aria-atomic="true"
       >
-        Showing {startItem}-{endItem} of {filteredResidents.length} filtered residents for {currentMonthLabel}.
+        Showing {startItem}-{endItem} of {pagination.totalItems} filtered residents for {currentMonthLabel}.
       </div>
 
       <div className="grid gap-3 border-b border-line bg-white p-4 md:grid-cols-3">
@@ -290,19 +337,19 @@ export function AdminResidentsTable({
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-emerald-800">
             Settled in list
           </p>
-          <p className="mt-2 text-3xl font-bold text-emerald-950">{settledCount}</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-950">{summary.settledCount}</p>
         </div>
         <div className="rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4">
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-800">
             Reviewed records
           </p>
-          <p className="mt-2 text-3xl font-bold text-amber-950">{reviewedCount}</p>
+          <p className="mt-2 text-3xl font-bold text-amber-950">{summary.reviewedCount}</p>
         </div>
         <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-4">
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-800">
             Need follow-up
           </p>
-          <p className="mt-2 text-3xl font-bold text-rose-950">{followUpCount}</p>
+          <p className="mt-2 text-3xl font-bold text-rose-950">{summary.followUpCount}</p>
         </div>
       </div>
 
@@ -349,7 +396,7 @@ export function AdminResidentsTable({
       </form>
 
       <div id="resident-results-list" className="grid gap-4 p-4 md:hidden">
-        {paginatedResidents.map((resident) => (
+        {residents.map((resident) => (
           <details key={resident.id} className="rounded-3xl border border-line bg-white p-4">
             <summary className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
               <div>
@@ -417,14 +464,14 @@ export function AdminResidentsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-line text-base text-slate-800">
-            {filteredResidents.length === 0 ? (
+            {pagination.totalItems === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-10 text-center text-muted">
                   No residents matched this search or filter.
                 </td>
               </tr>
             ) : (
-              paginatedResidents.map((resident) => (
+              residents.map((resident) => (
                 <tr key={resident.id} className="align-top">
                   <td className="px-4 py-5">
                     <div className="flex items-center gap-3">
@@ -527,9 +574,9 @@ export function AdminResidentsTable({
 
       <div className="border-t border-line bg-white px-4 py-4">
         <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={(page) => updateUrl({ page })}
         />
       </div>
 
@@ -541,13 +588,13 @@ export function AdminResidentsTable({
             Use these notes for handover, cash tracking, or quick context before opening resident detail.
           </p>
         </div>
-        {paginatedResidents.filter((resident) => resident.currentPayment).length === 0 ? (
+        {residents.filter((resident) => resident.currentPayment).length === 0 ? (
           <div className="rounded-3xl border border-dashed border-line bg-white px-4 py-6 text-base text-slate-600">
             No payment records are available on this page yet, so there are no notes to update.
           </div>
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
-            {paginatedResidents
+            {residents
               .filter((resident) => resident.currentPayment)
               .map((resident) => (
               <form

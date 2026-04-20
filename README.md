@@ -35,7 +35,9 @@ Nota penting:
 - Flow `upload`, `approve/reject`, `cash paid`, dan `settings` akan mengubah data sebenar.
 - Gunakan account atau environment disposable untuk mutation tests.
 - Wiring suite telah disemak semula dan `npx playwright test --list` mengesan semua `10` test dengan betul.
-- Item checklist `full E2E mutation flow admin` masih belum boleh ditanda siap sehingga credential disposable sebenar diisi dan suite dijalankan penuh.
+- Suite disposable terkini berjaya dengan `9 passed, 1 skipped`; skip yang tinggal ialah `first-login resident` kerana env `E2E_FIRST_LOGIN_*` belum diisi.
+- Flow admin mutation yang telah disahkan secara E2E: `approve`, `reject`, `cash paid`, `settings update`, dan `QR upload`.
+- Playwright config kini dijalankan secara serial untuk kurangkan flaky login pada environment Supabase remote.
 
 1. Salin `.env.e2e.example` ke `.env.e2e.local`
 2. Isi account yang sesuai untuk test:
@@ -280,6 +282,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] activity
   - [x] users
   - [x] residents
+- [x] Pagination berpandukan server / URL untuk page admin besar:
+  - [x] activity
+  - [x] users
+  - [x] residents
 - [x] Test automation tersedia untuk flow admin utama:
   - [x] admin login
   - [x] resident upload -> admin approve / reject
@@ -293,13 +299,14 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] Jalankan suite penuh E2E pada disposable environment sebenar untuk mutation flow admin
+- [x] Jalankan suite penuh E2E pada disposable environment sebenar untuk mutation flow admin
 - [x] Tambah assertion visual / accessibility pada flow admin yang paling penting
 - [x] Contrast audit kecil yang masih berbaki pada komponen admin tertentu
 - [x] Keyboard flow audit penuh untuk page admin utama
 - [ ] Performance / scalability bila data makin besar:
   - [x] server-side narrowing untuk global search
   - [x] semakan index database untuk query admin yang kerap
+  - [x] pagination berpandukan server / URL untuk users, residents, dan activity
 - [ ] UI audit dan final polish untuk page admin yang belum disemak penuh:
   - [x] activity
   - [x] reports

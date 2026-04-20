@@ -212,7 +212,7 @@ export function AdminGlobalSearch({
         badge: resident.role === "admin" ? "Admin" : "Resident",
         primaryHref: `/admin/residents/${resident.id}`,
         primaryLabel: "Open resident",
-        secondaryHref: `/admin/users?query=${encodeURIComponent(resident.house_number)}`,
+        secondaryHref: `/admin/users?q=${encodeURIComponent(resident.house_number)}`,
         secondaryLabel: "Open user",
         phoneNumber: resident.phone_number,
       })),
@@ -259,7 +259,7 @@ export function AdminGlobalSearch({
         primaryHref: activity.user_id ? `/admin/residents/${activity.user_id}` : undefined,
         primaryLabel: activity.user_id ? "Open resident" : undefined,
         secondaryHref: activity.user_id
-          ? `/admin/users?query=${encodeURIComponent(activity.users?.house_number ?? "")}`
+          ? `/admin/users?q=${encodeURIComponent(activity.users?.house_number ?? "")}`
           : undefined,
         secondaryLabel: activity.user_id ? "Open user" : undefined,
       })),

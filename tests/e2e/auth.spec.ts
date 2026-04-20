@@ -12,13 +12,6 @@ test.describe("authentication", () => {
     await expect(page.getByRole("button", { name: "Masuk portal" })).toBeVisible();
   });
 
-  test("shows an error for invalid credentials", async ({ page }) => {
-    await loginWithCredentials(page, "unknown-user", "wrong-password");
-
-    await expect(page).toHaveURL(/\/login\?error=/);
-    await expect(page.getByText("Invalid username or password.")).toBeVisible();
-  });
-
   test("allows an admin to sign in and open the dashboard", async ({ page }) => {
     test.skip(
       !env.adminIdentifier || !env.adminPassword,
@@ -62,5 +55,12 @@ test.describe("authentication", () => {
 
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
     await expect(page.getByText("Current month")).toBeVisible();
+  });
+
+  test("shows an error for invalid credentials", async ({ page }) => {
+    await loginWithCredentials(page, "unknown-user", "wrong-password");
+
+    await expect(page).toHaveURL(/\/login\?error=/);
+    await expect(page.getByText("Invalid username or password.")).toBeVisible();
   });
 });

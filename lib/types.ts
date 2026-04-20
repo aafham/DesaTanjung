@@ -124,3 +124,10 @@ export type AnnouncementRecord = {
 export type ResidentWithPayment = UserProfile & {
   currentPayment: ResidentPaymentRecord | null;
 };
+
+export type PaginationMeta = {
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+};

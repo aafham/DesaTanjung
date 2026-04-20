@@ -3,6 +3,7 @@ import {
 } from "@/lib/actions";
 import { AdminUsersManager } from "@/components/admin-users-manager";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { DataWarning } from "@/components/data-warning";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
@@ -11,19 +12,28 @@ import { getAdminUserManagementData } from "@/lib/data";
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; message?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    message?: string;
+    page?: string;
+    q?: string;
+    role?: "all" | "admin" | "user";
+    follow?: "all" | "missing-phone" | "never-logged-in" | "inactive";
+  }>;
 }) {
-  const [{ users, profile }, params] = await Promise.all([
-    getAdminUserManagementData(),
-    searchParams,
-  ]);
-  const residentCount = users.filter((user) => user.role === "user").length;
-  const missingPhoneCount = users.filter((user) => !user.phone_number).length;
-  const neverLoggedInCount = users.filter((user) => !user.last_login_at).length;
+  const params = await searchParams;
+  const { users, profile, warnings, filters, pagination, summary } =
+    await getAdminUserManagementData({
+      page: Number(params.page ?? "1"),
+      query: params.q ?? "",
+      roleFilter: params.role ?? "all",
+      followUpFilter: params.follow ?? "all",
+    });
 
   return (
     <div className="space-y-6">
       <PageToast message={params.message} error={params.error} />
+      <DataWarning warnings={warnings} />
       <AdminPageHeader
         eyebrow="User management"
         title="Add, edit, delete, and reset user accounts"
@@ -35,7 +45,7 @@ export default async function AdminUsersPage({
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-slate-700">
             Resident accounts
           </p>
-          <p className="mt-2 text-3xl font-bold text-slate-950">{residentCount}</p>
+          <p className="mt-2 text-3xl font-bold text-slate-950">{summary.residentCount}</p>
           <p className="mt-2 text-sm text-slate-600">
             Active resident profiles available for billing and follow-up.
           </p>
@@ -44,7 +54,7 @@ export default async function AdminUsersPage({
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-800">
             Missing phone
           </p>
-          <p className="mt-2 text-3xl font-bold text-rose-950">{missingPhoneCount}</p>
+          <p className="mt-2 text-3xl font-bold text-rose-950">{summary.missingPhoneCount}</p>
           <p className="mt-2 text-sm text-rose-900">
             These residents are not ready for WhatsApp and call shortcuts.
           </p>
@@ -53,7 +63,7 @@ export default async function AdminUsersPage({
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-800">
             Never logged in
           </p>
-          <p className="mt-2 text-3xl font-bold text-amber-950">{neverLoggedInCount}</p>
+          <p className="mt-2 text-3xl font-bold text-amber-950">{summary.neverLoggedInCount}</p>
           <p className="mt-2 text-sm text-amber-900">
             Useful for onboarding follow-up after new accounts are created.
           </p>
@@ -198,7 +208,13 @@ export default async function AdminUsersPage({
       </Card>
 
       <div id="user-directory">
-        <AdminUsersManager users={users} currentAdminId={profile.id} />
+        <AdminUsersManager
+          users={users}
+          currentAdminId={profile.id}
+          filters={filters}
+          pagination={pagination}
+          summary={summary}
+        />
       </div>
     </div>
   );
