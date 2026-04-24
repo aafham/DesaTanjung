@@ -138,6 +138,22 @@ function createPaginationMeta(
   };
 }
 
+function escapeLikeTerm(value: string) {
+  return value.replaceAll(",", " ").replaceAll("%", "");
+}
+
+function buildUserSearchClause(query: string) {
+  const likeQuery = `%${escapeLikeTerm(query)}%`;
+
+  return `house_number.ilike.${likeQuery},name.ilike.${likeQuery},address.ilike.${likeQuery},phone_number.ilike.${likeQuery},email.ilike.${likeQuery}`;
+}
+
+function buildResidentSearchClause(query: string) {
+  const likeQuery = `%${escapeLikeTerm(query)}%`;
+
+  return `house_number.ilike.${likeQuery},name.ilike.${likeQuery},address.ilike.${likeQuery},phone_number.ilike.${likeQuery}`;
+}
+
 export const getCurrentUserProfile = cache(async () => {
   const supabase = await createClient();
   const {
@@ -576,6 +592,125 @@ export async function getAdminResidentsData({
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
   const normalizedQuery = query.trim().toLowerCase();
+  const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
+  const hasPaymentFilters = statusFilter !== "all" || methodFilter !== "all";
+
+  if (!hasPaymentFilters) {
+    let residentsCountQuery = supabase
+      .from("users")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "user");
+    let residentsPageQuery = supabase
+      .from("users")
+      .select("id, house_number, name, address, phone_number, role, must_change_password")
+      .eq("role", "user")
+      .order("house_number", { ascending: true })
+      .range(from, to);
+
+    if (normalizedQuery) {
+      const residentSearchClause = buildResidentSearchClause(query);
+      residentsCountQuery = residentsCountQuery.or(residentSearchClause);
+      residentsPageQuery = residentsPageQuery.or(residentSearchClause);
+    }
+
+    const [{ count: residentCount, error: residentsCountError }, { data: residents, error: residentsError }] =
+      await Promise.all([residentsCountQuery, residentsPageQuery]);
+    const residentIds = ((residents as UserProfile[] | null) ?? []).map((resident) => resident.id);
+    const { data: monthlyRecords, error: monthlyRecordsError } = residentIds.length
+      ? await supabase
+          .from("payments")
+          .select(
+            "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
+          )
+          .eq("month", month)
+          .in("user_id", residentIds)
+      : { data: [], error: null };
+
+    const summaryUserIds =
+      normalizedQuery
+        ? (
+            await supabase
+              .from("users")
+              .select("id")
+              .eq("role", "user")
+              .or(buildResidentSearchClause(query))
+          ).data?.map((resident) => resident.id) ?? []
+        : [];
+
+    const buildPaymentsSummaryQuery = (status?: "paid" | "pending" | "rejected") => {
+      let paymentQuery = supabase
+        .from("payments")
+        .select("id", { count: "exact", head: true })
+        .eq("month", month);
+
+      if (status) {
+        paymentQuery = paymentQuery.eq("status", status);
+      }
+
+      if (normalizedQuery) {
+        if (summaryUserIds.length === 0) {
+          return null;
+        }
+
+        paymentQuery = paymentQuery.in("user_id", summaryUserIds);
+      }
+
+      return paymentQuery;
+    };
+
+    const [paidSummary, pendingSummary, rejectedSummary] = await Promise.all([
+      buildPaymentsSummaryQuery("paid"),
+      buildPaymentsSummaryQuery("pending"),
+      buildPaymentsSummaryQuery("rejected"),
+    ]);
+
+    const [paidCountResponse, pendingCountResponse, rejectedCountResponse] = await Promise.all([
+      paidSummary ?? Promise.resolve({ count: 0 }),
+      pendingSummary ?? Promise.resolve({ count: 0 }),
+      rejectedSummary ?? Promise.resolve({ count: 0 }),
+    ]);
+
+    const warnings = [
+      ...getSystemHealthWarnings(settings),
+      ...(residentsCountError ? [createWarningMessage("Resident count", residentsCountError.message)] : []),
+      ...(residentsError ? [createWarningMessage("Residents", residentsError.message)] : []),
+      ...(monthlyRecordsError ? [createWarningMessage("Monthly records", monthlyRecordsError.message)] : []),
+    ];
+
+    const pagination = createPaginationMeta(safePage, safePageSize, residentCount ?? 0);
+    const paginatedResidents = ((residents as UserProfile[] | null) ?? []).map((resident) => {
+      const currentPayment =
+        (monthlyRecords as PaymentRecord[] | null)?.find((payment) => payment.user_id === resident.id) ?? null;
+
+      return {
+        ...resident,
+        currentPayment: enrichPaymentRecord(currentPayment, month, settings.due_day),
+      } satisfies ResidentWithPayment;
+    });
+    const paidCount = paidCountResponse.count ?? 0;
+    const pendingCount = pendingCountResponse.count ?? 0;
+    const rejectedCount = rejectedCountResponse.count ?? 0;
+
+    return {
+      profile,
+      currentMonth: month,
+      currentMonthLabel: formatMonthLabel(month),
+      residents: paginatedResidents,
+      warnings,
+      filters: {
+        query,
+        statusFilter,
+        methodFilter,
+      },
+      pagination,
+      summary: {
+        settledCount: paidCount,
+        reviewedCount: paidCount + rejectedCount,
+        followUpCount: Math.max(0, (residentCount ?? 0) - paidCount - pendingCount),
+      },
+    };
+  }
 
   const { data: residents, error: residentsError } = await supabase
     .from("users")
@@ -676,40 +811,53 @@ export async function getAdminUserManagementData({
   const supabase = await createClient();
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const normalizedQuery = query.trim().toLowerCase();
   const inactivityCutoff = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
+  const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
+  const normalizedQuery = query.trim();
+  const userSearchClause = normalizedQuery ? buildUserSearchClause(query) : null;
 
-  const { data: users, error: usersError } = await supabase
-    .from("users")
-    .select(
-      "id, house_number, email, name, address, phone_number, role, must_change_password, created_at, last_login_at, last_logout_at",
-    )
-    .order("role", { ascending: false })
-    .order("house_number", { ascending: true });
+  const applyUserDirectoryFilters = (queryBuilder: any) => {
+    let scopedQuery = queryBuilder;
 
-  const allUsers = ((users as ManagedUser[] | null) ?? []).filter((user) => {
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesFollowUp =
-      followUpFilter === "all" ||
-      (followUpFilter === "missing-phone" && !user.phone_number) ||
-      (followUpFilter === "never-logged-in" && !user.last_login_at) ||
-      (followUpFilter === "inactive" &&
-        !!user.last_login_at &&
-        new Date(user.last_login_at).getTime() <= inactivityCutoff.getTime());
-    const matchesSearch =
-      !normalizedQuery ||
-      user.house_number.toLowerCase().includes(normalizedQuery) ||
-      user.name.toLowerCase().includes(normalizedQuery) ||
-      user.phone_number?.toLowerCase().includes(normalizedQuery) ||
-      user.address.toLowerCase().includes(normalizedQuery) ||
-      user.email.toLowerCase().includes(normalizedQuery);
+    if (roleFilter !== "all") {
+      scopedQuery = scopedQuery.eq("role", roleFilter);
+    }
 
-    return matchesRole && matchesFollowUp && matchesSearch;
-  });
+    if (followUpFilter === "missing-phone") {
+      scopedQuery = scopedQuery.is("phone_number", null);
+    } else if (followUpFilter === "never-logged-in") {
+      scopedQuery = scopedQuery.is("last_login_at", null);
+    } else if (followUpFilter === "inactive") {
+      scopedQuery = scopedQuery.not("last_login_at", "is", null).lte("last_login_at", inactivityCutoff.toISOString());
+    }
 
-  const pagination = createPaginationMeta(safePage, safePageSize, allUsers.length);
-  const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
-  const pagedUsers = allUsers.slice(startIndex, startIndex + pagination.pageSize);
+    if (userSearchClause) {
+      scopedQuery = scopedQuery.or(userSearchClause);
+    }
+
+    return scopedQuery;
+  };
+
+  const [{ count: filteredCount, error: usersCountError }, { data: users, error: usersError }] =
+    await Promise.all([
+      applyUserDirectoryFilters(
+        supabase.from("users").select("id", { count: "exact", head: true }),
+      ),
+      applyUserDirectoryFilters(
+        supabase
+          .from("users")
+          .select(
+            "id, house_number, email, name, address, phone_number, role, must_change_password, created_at, last_login_at, last_logout_at",
+          )
+          .order("role", { ascending: false })
+          .order("house_number", { ascending: true })
+          .range(from, to),
+      ),
+    ]);
+
+  const pagination = createPaginationMeta(safePage, safePageSize, filteredCount ?? 0);
+  const pagedUsers = (users as ManagedUser[] | null) ?? [];
   const pagedUserIds = pagedUsers.map((user) => user.id);
 
   const { data: activityLogs } = pagedUserIds.length
@@ -731,13 +879,41 @@ export async function getAdminUserManagementData({
     }
   }
 
+  const [
+    totalUsersResponse,
+    adminCountResponse,
+    residentCountResponse,
+    passwordResetCountResponse,
+    missingPhoneCountResponse,
+    inactiveCountResponse,
+    neverLoggedInCountResponse,
+  ] = await Promise.all([
+    supabase.from("users").select("id", { count: "exact", head: true }),
+    supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "admin"),
+    supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "user"),
+    supabase
+      .from("users")
+      .select("id", { count: "exact", head: true })
+      .eq("must_change_password", true),
+    supabase.from("users").select("id", { count: "exact", head: true }).is("phone_number", null),
+    supabase
+      .from("users")
+      .select("id", { count: "exact", head: true })
+      .not("last_login_at", "is", null)
+      .lte("last_login_at", inactivityCutoff.toISOString()),
+    supabase.from("users").select("id", { count: "exact", head: true }).is("last_login_at", null),
+  ]);
+
   return {
     profile,
     users: (pagedUsers.map((user) => ({
       ...user,
       activityLogs: logsByUser.get(user.id) ?? [],
     }))),
-    warnings: usersError ? [createWarningMessage("Users", usersError.message)] : [],
+    warnings: [
+      ...(usersCountError ? [createWarningMessage("User count", usersCountError.message)] : []),
+      ...(usersError ? [createWarningMessage("Users", usersError.message)] : []),
+    ],
     filters: {
       query,
       roleFilter,
@@ -745,19 +921,13 @@ export async function getAdminUserManagementData({
     },
     pagination,
     summary: {
-      totalUsers: ((users as ManagedUser[] | null) ?? []).length,
-      adminCount: ((users as ManagedUser[] | null) ?? []).filter((user) => user.role === "admin").length,
-      residentCount: ((users as ManagedUser[] | null) ?? []).filter((user) => user.role === "user").length,
-      passwordResetCount: ((users as ManagedUser[] | null) ?? []).filter((user) => user.must_change_password).length,
-      missingPhoneCount: ((users as ManagedUser[] | null) ?? []).filter((user) => !user.phone_number).length,
-      inactiveCount: ((users as ManagedUser[] | null) ?? []).filter((user) => {
-        if (!user.last_login_at) {
-          return false;
-        }
-
-        return new Date(user.last_login_at).getTime() <= inactivityCutoff.getTime();
-      }).length,
-      neverLoggedInCount: ((users as ManagedUser[] | null) ?? []).filter((user) => !user.last_login_at).length,
+      totalUsers: totalUsersResponse.count ?? 0,
+      adminCount: adminCountResponse.count ?? 0,
+      residentCount: residentCountResponse.count ?? 0,
+      passwordResetCount: passwordResetCountResponse.count ?? 0,
+      missingPhoneCount: missingPhoneCountResponse.count ?? 0,
+      inactiveCount: inactiveCountResponse.count ?? 0,
+      neverLoggedInCount: neverLoggedInCountResponse.count ?? 0,
     },
   };
 }
@@ -790,36 +960,101 @@ export async function getAdminActivityLogData({
   const supabase = await createClient();
   const safePage = Math.max(1, page);
   const safePageSize = Math.max(1, pageSize);
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedQuery = query.trim();
   const recentCutoff = new Date();
   recentCutoff.setDate(
     recentCutoff.getDate() - (dateFilter === "today" ? 1 : dateFilter === "7d" ? 7 : 14),
   );
-  const { data, error } = await supabase
-    .from("user_activity_logs")
-    .select("id, user_id, action, message, created_at, users(house_number, name, role)")
-    .gte("created_at", recentCutoff.toISOString())
-    .order("created_at", { ascending: false });
+  const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
+  const likeQuery = normalizedQuery ? `%${escapeLikeTerm(query)}%` : "";
+  const matchedUserIds =
+    normalizedQuery
+      ? (
+          await supabase
+            .from("users")
+            .select("id")
+            .or(`house_number.ilike.${likeQuery},name.ilike.${likeQuery}`)
+        ).data?.map((user) => user.id) ?? []
+      : [];
 
-  const allActivityLogs = ((data as UserActivityWithUser[] | null) ?? []).filter((activity) => {
-    const matchesAction = actionFilter === "all" || activity.action === actionFilter;
-    const matchesRole = roleFilter === "all" || activity.users?.role === roleFilter;
-    const searchable = [activity.users?.house_number, activity.users?.name, activity.message]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-    const matchesQuery = !normalizedQuery || searchable.includes(normalizedQuery);
+  const applyActivityFilters = (queryBuilder: any) => {
+    let scopedQuery = queryBuilder.gte("created_at", recentCutoff.toISOString());
 
-    return matchesAction && matchesRole && matchesQuery;
-  });
-  const pagination = createPaginationMeta(safePage, safePageSize, allActivityLogs.length);
-  const startIndex = (pagination.currentPage - 1) * pagination.pageSize;
-  const paginatedActivityLogs = allActivityLogs.slice(startIndex, startIndex + pagination.pageSize);
+    if (actionFilter !== "all") {
+      scopedQuery = scopedQuery.eq("action", actionFilter);
+    }
+
+    if (roleFilter !== "all") {
+      scopedQuery = scopedQuery.eq("users.role", roleFilter);
+    }
+
+    if (normalizedQuery) {
+      const orParts = [`message.ilike.${likeQuery}`, `action.ilike.${likeQuery}`];
+
+      if (matchedUserIds.length > 0) {
+        orParts.push(`user_id.in.(${matchedUserIds.join(",")})`);
+      }
+
+      scopedQuery = scopedQuery.or(orParts.join(","));
+    }
+
+    return scopedQuery;
+  };
+
+  const [{ count: filteredCount, error: filteredCountError }, { data, error }] = await Promise.all([
+    applyActivityFilters(
+      supabase
+        .from("user_activity_logs")
+        .select("id, users!inner(role)", { count: "exact", head: true }),
+    ),
+    applyActivityFilters(
+      supabase
+        .from("user_activity_logs")
+        .select("id, user_id, action, message, created_at, users!inner(house_number, name, role)")
+        .order("created_at", { ascending: false })
+        .range(from, to),
+    ),
+  ]);
+  const paginatedActivityLogs = (data as UserActivityWithUser[] | null) ?? [];
+  const pagination = createPaginationMeta(safePage, safePageSize, filteredCount ?? 0);
+
+  const [totalCountResponse, adminCountResponse, residentCountResponse, paymentCountResponse] = await Promise.all([
+    supabase
+      .from("user_activity_logs")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", recentCutoff.toISOString()),
+    supabase
+      .from("user_activity_logs")
+      .select("id, users!inner(role)", { count: "exact", head: true })
+      .gte("created_at", recentCutoff.toISOString())
+      .eq("users.role", "admin"),
+    supabase
+      .from("user_activity_logs")
+      .select("id, users!inner(role)", { count: "exact", head: true })
+      .gte("created_at", recentCutoff.toISOString())
+      .eq("users.role", "user"),
+    supabase
+      .from("user_activity_logs")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", recentCutoff.toISOString())
+      .in("action", [
+        "payment_uploaded",
+        "payment_approved",
+        "payment_rejected",
+        "cash_paid",
+        "bulk_cash_paid",
+        "payment_note_updated",
+      ]),
+  ]);
 
   return {
     profile,
     activityLogs: paginatedActivityLogs,
-    warnings: error ? [createWarningMessage("Activity log", error.message)] : [],
+    warnings: [
+      ...(filteredCountError ? [createWarningMessage("Activity count", filteredCountError.message)] : []),
+      ...(error ? [createWarningMessage("Activity log", error.message)] : []),
+    ],
     filters: {
       query,
       actionFilter,
@@ -828,13 +1063,11 @@ export async function getAdminActivityLogData({
     },
     pagination,
     summary: {
-      total: ((data as UserActivityWithUser[] | null) ?? []).length,
-      adminActions: ((data as UserActivityWithUser[] | null) ?? []).filter((activity) => activity.users?.role === "admin").length,
-      residentActions: ((data as UserActivityWithUser[] | null) ?? []).filter((activity) => activity.users?.role === "user").length,
-      paymentActions: ((data as UserActivityWithUser[] | null) ?? []).filter((activity) =>
-        ["payment_uploaded", "payment_approved", "payment_rejected", "cash_paid", "bulk_cash_paid", "payment_note_updated"].includes(activity.action),
-      ).length,
-      filtered: allActivityLogs.length,
+      total: totalCountResponse.count ?? 0,
+      adminActions: adminCountResponse.count ?? 0,
+      residentActions: residentCountResponse.count ?? 0,
+      paymentActions: paymentCountResponse.count ?? 0,
+      filtered: filteredCount ?? 0,
     },
   };
 }

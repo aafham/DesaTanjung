@@ -286,6 +286,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] activity
   - [x] users
   - [x] residents
+- [x] Query admin diperkemas lagi pada data layer:
+  - [x] users guna filter + count + range terus dari database
+  - [x] activity guna filter + count + range terus dari database
+  - [x] residents default list dipage terus dari database bila tiada payment filter tambahan
 - [x] Test automation tersedia untuk flow admin utama:
   - [x] admin login
   - [x] resident upload -> admin approve / reject
@@ -307,6 +311,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] server-side narrowing untuk global search
   - [x] semakan index database untuk query admin yang kerap
   - [x] pagination berpandukan server / URL untuk users, residents, dan activity
+  - [x] query database diperketat lagi untuk users, activity, dan default residents list
 - [ ] UI audit dan final polish untuk page admin yang belum disemak penuh:
   - [x] activity
   - [x] reports
