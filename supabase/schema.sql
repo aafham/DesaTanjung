@@ -153,6 +153,31 @@ on public.user_activity_logs (created_at desc);
 create index if not exists announcements_audience_pinned_published_idx
 on public.announcements (audience, is_pinned desc, published_at desc);
 
+create or replace function public.prune_user_activity_logs(p_keep_days integer default 90)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_deleted integer;
+  v_keep_days integer := greatest(coalesce(p_keep_days, 90), 14);
+begin
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  delete from public.user_activity_logs
+  where created_at < timezone('utc', now()) - make_interval(days => v_keep_days);
+
+  get diagnostics v_deleted = row_count;
+  return v_deleted;
+end;
+$$;
+
+comment on function public.prune_user_activity_logs(integer) is
+  'Deletes old global portal activity logs while preserving payment records and payment audit history.';
+
 insert into public.app_settings (id)
 values (true)
 on conflict (id) do nothing;

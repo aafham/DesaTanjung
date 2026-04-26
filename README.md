@@ -308,11 +308,16 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] users guna filter + count + range terus dari database
   - [x] activity guna filter + count + range terus dari database
   - [x] residents default list dipage terus dari database bila tiada payment filter tambahan
+- [x] Activity retention policy:
+  - [x] global activity page kekal paparkan log terbaru 14 hari
+  - [x] fungsi database `prune_user_activity_logs(90)` disediakan untuk prune log global lama
+  - [x] payment history dan payment audit kekal pada resident/payment detail
 - [x] Performance / scalability admin yang sudah dibuat:
   - [x] server-side narrowing untuk global search
   - [x] semakan index database untuk query admin yang kerap
   - [x] pagination berpandukan server / URL untuk users, residents, dan activity
   - [x] query database diperketat lagi untuk users, activity, dan default residents list
+  - [x] activity retention / prune function disediakan dalam schema
 - [x] Test automation tersedia untuk flow admin utama:
   - [x] admin login
   - [x] resident upload -> admin approve / reject
@@ -338,7 +343,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Performance / scalability admin fasa seterusnya:
   - [ ] DB-level query penuh untuk residents bila guna `status` / `payment method` filter
   - [ ] export CSV penuh ikut filter untuk residents dan activity, bukan current page sahaja
-  - [ ] activity retention / archive policy supaya table log tidak membesar tanpa had
+  - [ ] jadualkan `prune_user_activity_logs(90)` sebagai rutin bulanan selepas live
   - [ ] semak query plan Supabase selepas data sebenar sudah banyak
 - [ ] Operational readiness admin:
   - [ ] SOP bulanan AJK untuk review payment, export report, dan backup data
@@ -720,6 +725,9 @@ Nota:
 
 - page `Admin Activity` memaparkan log terbaru 14 hari sahaja supaya view global kekal ringan
 - history penting payment masih kekal pada `Resident detail`
+- schema menyediakan fungsi `public.prune_user_activity_logs(90)` untuk buang global activity log yang lebih lama daripada 90 hari
+- fungsi prune ini hanya menyentuh `user_activity_logs`, bukan `payments` atau `payment_audit_logs`
+- cadangan operasi live: jalankan prune sebulan sekali selepas backup atau selepas laporan bulanan disimpan
 
 ## Notification flow
 
@@ -759,7 +767,7 @@ Semakan semula codebase terkini menunjukkan sistem sudah kuat untuk flow asas ad
 
 Keutamaan seterusnya:
 
-- `activity retention / archive policy` supaya table log tidak membesar tanpa had
+- jadualkan rutin `prune_user_activity_logs(90)` selepas portal live
 - `DB-level residents filter` untuk status dan payment method bila jumlah penduduk meningkat
 - `full filtered CSV export` untuk residents dan activity
 - `mobile UI audit` untuk user dan admin
