@@ -243,6 +243,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] status filter
   - [x] payment method filter
   - [x] export CSV
+  - [x] export CSV penuh ikut filter semasa, bukan current page sahaja
   - [x] bulk action
   - [x] follow-up tools
 - [x] Resident detail page:
@@ -322,6 +323,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] query database diperketat lagi untuk users, activity, dan default residents list
   - [x] activity retention / prune function disediakan dalam schema
   - [x] export CSV penuh ikut filter untuk activity
+  - [x] export CSV penuh ikut filter untuk residents
 - [x] Test automation tersedia untuk flow admin utama:
   - [x] admin login
   - [x] resident upload -> admin approve / reject
@@ -346,7 +348,6 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 
 - [ ] Performance / scalability admin fasa seterusnya:
   - [ ] DB-level query penuh untuk residents bila guna `status` / `payment method` filter
-  - [ ] export CSV penuh ikut filter untuk residents, bukan current page sahaja
   - [ ] jadualkan `prune_user_activity_logs(90)` sebagai rutin bulanan selepas live
   - [ ] semak query plan Supabase selepas data sebenar sudah banyak
 - [ ] Operational readiness admin:
@@ -420,6 +421,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Activity page diperkemas dari segi summary filter, clear filters, dan hierarchy
 - [x] Activity page pagination diperkemas supaya tidak memaparkan semua nombor page sekaligus
 - [x] Activity page export CSV dipindahkan ke server route supaya ikut semua filter dan tidak bergantung pada current page
+- [x] Residents page export CSV dipindahkan ke server route supaya ikut semua filter dan tidak bergantung pada current page
 
 ##### Masih perlu dibuat / boleh dipertingkatkan
 

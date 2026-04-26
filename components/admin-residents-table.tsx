@@ -45,10 +45,6 @@ function getDisplayStatus(resident: ResidentWithPayment) {
   return resident.currentPayment?.display_status ?? "unpaid";
 }
 
-function escapeCsv(value: string) {
-  return `"${value.replaceAll('"', '""')}"`;
-}
-
 export function AdminResidentsTable({
   residents,
   currentMonth,
@@ -168,24 +164,6 @@ export function AdminResidentsTable({
     return () => window.clearTimeout(timer);
   }, [deferredQuery, filters.query, updateUrl]);
 
-  const csvHref = useMemo(() => {
-    const rows = [
-      ["House", "Owner", "Address", "Phone", "Status", "Updated", "Payment method"],
-      ...residents.map((resident) => [
-        resident.house_number,
-        resident.name,
-        resident.address,
-        resident.phone_number ?? "",
-        getDisplayStatus(resident),
-        resident.currentPayment ? formatTimestamp(resident.currentPayment.updated_at) : "No record yet",
-        resident.currentPayment?.payment_method ?? "-",
-      ]),
-    ];
-    const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
-
-    return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
-  }, [residents]);
-
   const selectedResidents = useMemo(
     () => residents.filter((resident) => selectedResidentIds.includes(resident.id)),
     [residents, selectedResidentIds],
@@ -230,6 +208,21 @@ export function AdminResidentsTable({
   const startItem =
     pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1;
   const endItem = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems);
+  const exportParams = new URLSearchParams({ month: currentMonth });
+
+  if (deferredQuery.trim()) {
+    exportParams.set("q", deferredQuery.trim());
+  }
+
+  if (statusFilter !== "all") {
+    exportParams.set("status", statusFilter);
+  }
+
+  if (methodFilter !== "all") {
+    exportParams.set("method", methodFilter);
+  }
+
+  const exportHref = `/admin/residents/export?${exportParams.toString()}`;
 
   return (
     <Card className="overflow-hidden p-0">
@@ -311,12 +304,11 @@ export function AdminResidentsTable({
             </div>
 
             <a
-              href={csvHref}
-              download={`desa-tanjung-${currentMonth}-payments-page-${pagination.currentPage}.csv`}
+              href={exportHref}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white"
             >
               <Download className="h-4 w-4" />
-              Export current page CSV
+              Export filtered CSV
             </a>
           </div>
         </div>
