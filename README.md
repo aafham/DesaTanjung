@@ -34,9 +34,10 @@ Nota penting:
 
 - Flow `upload`, `approve/reject`, `cash paid`, dan `settings` akan mengubah data sebenar.
 - Gunakan account atau environment disposable untuk mutation tests.
-- Wiring suite telah disemak semula dan Playwright mengesan semua `13` test dengan betul.
-- Suite disposable terkini berjaya dengan `11 passed, 2 skipped`; skip yang tinggal ialah first-login tetap tanpa env disposable kekal dan settings mutation bila `E2E_ALLOW_SETTINGS_MUTATION` tidak dihidupkan.
-- First-login resident telah disahkan dengan akaun disposable sementara: `1 passed`.
+- Wiring suite telah disemak semula dan Playwright mengesan semua `15` test dengan betul.
+- Suite disposable terkini berjaya dengan `14 passed, 1 skipped`; skip yang tinggal ialah settings mutation bila `E2E_ALLOW_SETTINGS_MUTATION` tidak dihidupkan.
+- First-login resident kini boleh disediakan/reset dengan `npm run setup:e2e:first-login` sebelum full suite dijalankan.
+- Mobile smoke coverage ditambah untuk page penting user dan admin melalui projek Playwright `mobile-smoke`.
 - Flow admin mutation yang telah disahkan secara E2E: `approve`, `reject`, `cash paid`, `settings update`, dan `QR upload`.
 - Flow user yang telah disahkan secara E2E: resident login, first-login change password, upload resit, profile update, notification selepas approve, dan notification selepas reject.
 - Next dev origin warning untuk Playwright/localhost sudah dikemaskan melalui `allowedDevOrigins` di `next.config.ts`.
@@ -53,6 +54,7 @@ Nota penting:
 3. Jalankan:
 
 ```bash
+npm run setup:e2e:first-login
 npm run test:e2e
 ```
 
@@ -62,6 +64,8 @@ Command tambahan:
 npm run test:e2e:ui
 npm run test:e2e:headed
 ```
+
+Nota: `npm run setup:e2e:first-login` menggunakan service role local untuk cipta/reset akaun disposable `E2E_FIRST_LOGIN_*`, kemudian mengemas kini `.env.e2e.local`. Jalankan semula command ini sebelum full suite jika test first-login baru sahaja menukar password account tersebut.
 
 ### Cadangan setup disposable untuk flow admin
 
@@ -203,11 +207,16 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] invalid login error
   - [x] resident login smoke test
 - [x] Suite E2E user pada disposable/test account:
-  - [x] first-login resident dengan akaun disposable sementara
+  - [x] first-login resident dengan akaun disposable yang boleh di-reset melalui script
   - [x] upload resit user
   - [x] notification selepas approve
   - [x] notification selepas reject
   - [x] profile update
+- [x] Mobile smoke E2E user:
+  - [x] dashboard user
+  - [x] payments page
+  - [x] notifications page
+  - [x] profile page
 - [x] Scalability user bila history makin panjang:
   - [x] payment history user guna `range` + `count` dari database
   - [x] notification inbox penuh guna `range` + `count` dari database
@@ -215,8 +224,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 #### Masih perlu dibuat / boleh dipertingkatkan
 
 - [ ] E2E user fasa seterusnya:
-  - [ ] kekalkan akaun `E2E_FIRST_LOGIN_*` disposable tetap jika mahu run full suite tanpa cipta akaun sementara
-  - [ ] tambah mobile assertions untuk flow upload, notification, dan profile
+  - [ ] tambah mobile mutation assertions untuk upload sebenar pada disposable account khas
+  - [ ] tambah assertion visual untuk layout mobile yang paling kritikal
 - [ ] Tambah assertion visual / accessibility pada flow user yang paling penting:
   - [ ] upload resit
   - [ ] receipt preview modal
@@ -377,6 +386,11 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] cash paid
   - [x] settings update
   - [x] QR upload
+- [x] Mobile smoke E2E admin:
+  - [x] dashboard admin
+  - [x] residents page
+  - [x] activity page
+  - [x] health page
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
@@ -412,15 +426,16 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Skip to content link disediakan
 - [x] Live region untuk toast success / error
 - [x] Contrast token global diperkuatkan
+- [x] Mobile smoke test mengesahkan page user utama boleh dibuka pada viewport telefon
 
 ##### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] Audit UI mobile penuh untuk:
+- [ ] Audit UI mobile penuh secara visual untuk:
   - [ ] `/login`
-  - [ ] `/dashboard`
-  - [ ] `/payments`
-  - [ ] `/notifications`
-  - [ ] `/profile`
+  - [x] `/dashboard` smoke-tested
+  - [x] `/payments` smoke-tested
+  - [x] `/notifications` smoke-tested
+  - [x] `/profile` smoke-tested
 - [ ] Contrast audit kecil pada komponen user yang masih berbaki
 - [ ] Semakan visual untuk empty state, error state, dan loading state pada page user
 - [ ] Screenshot audit UI untuk page user utama
@@ -455,17 +470,20 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Activity page pagination diperkemas supaya tidak memaparkan semua nombor page sekaligus
 - [x] Activity page export CSV dipindahkan ke server route supaya ikut semua filter dan tidak bergantung pada current page
 - [x] Residents page export CSV dipindahkan ke server route supaya ikut semua filter dan tidak bergantung pada current page
+- [x] Mobile smoke test mengesahkan page admin utama boleh dibuka pada viewport telefon
 
 ##### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] Audit mobile UI admin penuh untuk:
-  - [ ] `/admin`
+- [ ] Audit mobile UI admin penuh secara visual untuk:
+  - [x] `/admin` smoke-tested
   - [ ] `/admin/approvals`
-  - [ ] `/admin/residents`
+  - [x] `/admin/residents` smoke-tested
   - [ ] `/admin/users`
   - [ ] `/admin/search`
   - [ ] `/admin/settings`
   - [ ] `/admin/reports`
+  - [x] `/admin/activity` smoke-tested
+  - [x] `/admin/health` smoke-tested
 - [ ] Semakan visual state admin:
   - [ ] empty state
   - [ ] success state
@@ -484,11 +502,13 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] README disusun semula ikut fungsi sebenar `User` dan `Admin`
 - [x] Checklist lama yang bercampur-campur diringkaskan supaya senang audit progress
 - [x] ESLint diarah ignore output generated seperti `.next`, `playwright-report`, dan `test-results`
+- [x] Playwright dipecahkan kepada projek `chromium` dan `mobile-smoke` supaya mutation test tidak digandakan pada viewport mobile
+- [x] Script `setup:e2e:first-login` ditambah untuk cipta/reset akaun first-login disposable
 
 #### Masih boleh dibuat
 
 - [ ] Semakan berkala untuk dead code bila feature lama diubah atau dibuang
-- [ ] Semakan semula struktur test/helper jika suite E2E terus bertambah
+- [ ] Semakan semula struktur test/helper jika suite E2E terus bertambah melebihi smoke + mutation flow semasa
 - [ ] Pecahkan `lib/data.ts` kepada modul lebih kecil jika data layer terus membesar:
   - [ ] user data
   - [ ] admin dashboard data
@@ -845,14 +865,14 @@ Project sekarang ada loading state pada action penting:
 
 ## Review terkini
 
-Semakan semula codebase terkini menunjukkan sistem sudah kuat untuk flow asas admin dan user. Fokus penambahbaikan selepas ini patut bergerak kepada operasi live, data yang semakin besar, dan pengalaman mobile sebenar.
+Semakan semula codebase terkini menunjukkan sistem sudah kuat untuk flow asas admin dan user. E2E kini meliputi desktop mutation flow, first-login disposable reset, dan mobile smoke untuk page utama. Fokus penambahbaikan selepas ini patut bergerak kepada operasi live, data yang semakin besar, dan audit visual mobile sebenar.
 
 Keutamaan seterusnya:
 
 - jadualkan rutin `prune_user_activity_logs(90)` selepas portal live
 - run `supabase/query-plan-checklist.sql` di Supabase SQL Editor selepas data sebenar sudah banyak
-- `mobile UI audit` untuk user dan admin
-- tambah mobile assertions untuk flow penting user dan admin
+- `mobile UI audit` visual untuk user dan admin menggunakan screenshot sebenar telefon
+- tambah mobile mutation assertions hanya untuk flow yang benar-benar kritikal supaya suite tidak terlalu berat
 - pantau Production error monitor di Health selepas portal digunakan komuniti sebenar
 
 ## Scripts yang tersedia
@@ -862,6 +882,7 @@ npm run dev
 npm run build
 npm run start
 npm run lint
+npm run setup:e2e:first-login
 npm run test:e2e
 npm run test:e2e:ui
 npm run test:e2e:headed
