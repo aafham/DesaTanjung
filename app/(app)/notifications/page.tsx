@@ -3,8 +3,15 @@ import { DataWarning } from "@/components/data-warning";
 import { ResidentNotificationList } from "@/components/resident-notification-list";
 import { getResidentNotificationsPageData } from "@/lib/data";
 
-export default async function ResidentNotificationsPage() {
-  const { announcements, notifications, warnings } = await getResidentNotificationsPageData();
+export default async function ResidentNotificationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const params = await searchParams;
+  const page = Number.parseInt(params.page ?? "1", 10) || 1;
+  const { announcements, notificationPagination, notifications, warnings } =
+    await getResidentNotificationsPageData(page);
 
   return (
     <div className="space-y-6">
@@ -20,7 +27,11 @@ export default async function ResidentNotificationsPage() {
         </p>
       </section>
 
-      <ResidentNotificationList notifications={notifications} />
+      <ResidentNotificationList
+        notifications={notifications}
+        pagination={notificationPagination}
+        getPageHref={(nextPage) => (nextPage <= 1 ? "/notifications" : `/notifications?page=${nextPage}`)}
+      />
 
       <AnnouncementFeed
         announcements={announcements}

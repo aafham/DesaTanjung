@@ -161,6 +161,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] retry / rollback flow jika submit gagal
 - [x] Timeline aktiviti bayaran user
 - [x] Sejarah bayaran user
+- [x] Sejarah bayaran user dipage dari server supaya tidak load semua rekod lama sekali gus
 - [x] Preview resit lama
 - [x] Resident inbox / notification list
 - [x] Notification management:
@@ -169,6 +170,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] filter by type
   - [x] badge count pada sidebar
   - [x] pagination untuk senarai panjang
+  - [x] pagination server-side pada inbox penuh supaya notifikasi lama tidak diload semua sekali gus
 - [x] Announcement / notice feed untuk user
 - [x] Profile page:
   - [x] update nama
@@ -197,6 +199,9 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] login page render
   - [x] invalid login error
   - [x] resident login smoke test
+- [x] Scalability user bila history makin panjang:
+  - [x] payment history user guna `range` + `count` dari database
+  - [x] notification inbox penuh guna `range` + `count` dari database
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
@@ -221,9 +226,9 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [ ] `/payments`
   - [ ] `/notifications`
   - [ ] `/profile`
-- [ ] Scalability user bila history makin panjang:
-  - [ ] pagination / limit untuk payment history jika rekod bertahun-tahun
-  - [ ] pagination server-side untuk notification inbox jika notifikasi makin banyak
+- [ ] Scalability user fasa seterusnya:
+  - [ ] semak query plan Supabase selepas rekod payment/notification sebenar makin banyak
+  - [ ] pertimbangkan archive view berasingan jika penduduk mahu lihat rekod bertahun-tahun dalam satu carian khas
 
 ### Checklist admin
 
@@ -284,6 +289,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] duplicate payment cleanup helper
   - [x] missing phone export
   - [x] quick action links ke page berkaitan
+  - [x] environment security reminder untuk Vercel dan Supabase secret
 - [x] Admin activity page
 - [x] Admin activity dihadkan kepada log terbaru 14 hari untuk view global yang lebih ringan
 - [x] Activity pagination dipadatkan dengan ellipsis supaya nombor page tidak serabut bila log banyak
@@ -344,6 +350,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Operational readiness admin:
   - [x] SOP bulanan AJK untuk review payment, export report, backup data, dan maintenance log
   - [x] rhythm operasi bulanan dipaparkan di Health page
+  - [x] go-live env security checklist dikemaskini untuk Vercel Sensitive secret dan key rotation
 - [x] Safety refinement admin:
   - [x] reset password perlukan admin taip nombor rumah / username
   - [x] delete user perlukan admin taip `DELETE {nombor rumah}`
@@ -479,7 +486,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 
 - [ ] `NEXT_PUBLIC_SUPABASE_URL` betul
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` betul
-- [ ] `SUPABASE_SERVICE_ROLE_KEY` betul
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` betul, server-only, dan ditanda `Sensitive` di Vercel
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` sudah dirotate jika pernah terdedah di chat, screenshot, log, atau repo
 - [ ] `supabase/schema.sql` versi terbaru sudah dirun
 - [ ] bucket `payment-proofs` wujud
 - [ ] bucket `app-assets` wujud
@@ -624,6 +632,8 @@ Nota:
 - `NEXT_PUBLIC_SUPABASE_URL` ambil dari Supabase project
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` ambil dari `Publishable / anon key`
 - `SUPABASE_SERVICE_ROLE_KEY` ambil dari `Secret key`
+- `NEXT_PUBLIC_*` memang public dan boleh dilihat browser
+- `SUPABASE_SERVICE_ROLE_KEY` ialah server secret; jangan paste dalam chat, jangan commit, dan rotate jika terdedah
 
 ## Setup Supabase
 
@@ -793,6 +803,12 @@ Resident akan nampak inbox untuk:
 - payment marked as cash paid
 - update sistem berkaitan payment semasa
 
+Nota:
+
+- page `Notifications` guna server-side pagination, 10 rekod setiap page
+- dashboard user hanya paparkan ringkasan notifikasi terbaru supaya page utama kekal ringan
+- payment history user guna pagination server-side, 6 rekod setiap page
+
 ## Loading states yang ada
 
 Project sekarang ada loading state pada action penting:
@@ -814,11 +830,10 @@ Semakan semula codebase terkini menunjukkan sistem sudah kuat untuk flow asas ad
 Keutamaan seterusnya:
 
 - jadualkan rutin `prune_user_activity_logs(90)` selepas portal live
-- `DB-level residents filter` untuk status dan payment method bila jumlah penduduk meningkat
-- `full filtered CSV export` untuk residents dan activity
+- semak query plan Supabase selepas data sebenar sudah banyak
 - `mobile UI audit` untuk user dan admin
 - `user E2E lengkap` termasuk first-login, upload, notification, dan profile update
-- `operational SOP` untuk AJK bila portal sudah digunakan komuniti sebenar
+- monitoring production untuk server action error yang kritikal
 
 ## Scripts yang tersedia
 
@@ -880,6 +895,14 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ```
+
+Security penting:
+
+- `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` boleh kekal sebagai regular env kerana ia public by design.
+- `SUPABASE_SERVICE_ROLE_KEY` mesti server-only, jangan ada prefix `NEXT_PUBLIC_`.
+- Di Vercel, mark `SUPABASE_SERVICE_ROLE_KEY` sebagai `Sensitive`.
+- Jika key pernah terlihat dalam screenshot, chat, terminal log, atau commit, rotate key baru di Supabase dahulu.
+- Selepas update env di Vercel, redeploy production supaya key baru digunakan.
 
 ### 4. Deploy
 
@@ -949,6 +972,8 @@ npm run lint
 
 - jangan dedahkan `SUPABASE_SERVICE_ROLE_KEY`
 - kalau key pernah terdedah, rotate key di Supabase
+- lepas rotate, update `SUPABASE_SERVICE_ROLE_KEY` di Vercel dan `.env.local`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` bukan secret, tapi tetap perlu guna project Supabase yang betul
 - password tidak disimpan di `public.users`
 - password diurus oleh `Supabase Auth`
 

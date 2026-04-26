@@ -1,9 +1,16 @@
 import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
-import type { ResidentPaymentRecord } from "@/lib/types";
+import { ServerPaginationControls } from "@/components/ui/server-pagination-controls";
+import type { PaginationMeta, ResidentPaymentRecord } from "@/lib/types";
 import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
 
-export function PaymentHistoryTable({ history }: { history: ResidentPaymentRecord[] }) {
+export function PaymentHistoryTable({
+  history,
+  pagination,
+}: {
+  history: ResidentPaymentRecord[];
+  pagination?: PaginationMeta;
+}) {
   if (history.length === 0) {
     return (
       <div className="rounded-4xl border border-line bg-slate-50 px-5 py-8 text-base font-medium text-muted">
@@ -13,7 +20,15 @@ export function PaymentHistoryTable({ history }: { history: ResidentPaymentRecor
   }
 
   return (
-    <>
+    <div className="space-y-4">
+      {pagination ? (
+        <div className="rounded-3xl border border-line bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+          Showing {pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1}-
+          {Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)} of{" "}
+          {pagination.totalItems} payment records.
+        </div>
+      ) : null}
+
       <div className="grid gap-3 md:hidden">
         {history.map((payment) => (
           <div key={payment.id} className="rounded-4xl border border-line bg-white p-4 shadow-soft">
@@ -92,6 +107,13 @@ export function PaymentHistoryTable({ history }: { history: ResidentPaymentRecor
         </table>
       </div>
       </div>
-    </>
+
+      {pagination ? (
+        <ServerPaginationControls
+          pagination={pagination}
+          getHref={(page) => (page <= 1 ? "/dashboard" : `/dashboard?historyPage=${page}`)}
+        />
+      ) : null}
+    </div>
   );
 }

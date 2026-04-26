@@ -7,9 +7,11 @@ import {
   markSingleResidentNotificationReadAction,
 } from "@/lib/actions";
 import type { NotificationRecord } from "@/lib/types";
+import type { PaginationMeta } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
 import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+import { ServerPaginationControls } from "@/components/ui/server-pagination-controls";
 import { Card } from "@/components/ui/card";
 
 function getNotificationPresentation(message: string) {
@@ -72,10 +74,14 @@ function getNotificationCategory(message: string) {
 export function ResidentNotificationList({
   notifications,
   compact = false,
+  pagination,
+  getPageHref,
   redirectPath = "/notifications",
 }: {
   notifications: NotificationRecord[];
   compact?: boolean;
+  pagination?: PaginationMeta;
+  getPageHref?: (page: number) => string;
   redirectPath?: string;
 }) {
   const PAGE_SIZE = 5;
@@ -84,18 +90,24 @@ export function ResidentNotificationList({
   );
   const [currentPage, setCurrentPage] = useState(1);
   const unreadCount = notifications.filter((notification) => !notification.is_read).length;
+  const serverPaginated = Boolean(pagination);
+  const showLocalFilters = !compact && !serverPaginated;
   const filteredNotifications = useMemo(
     () =>
       notifications.filter((notification) => {
+        if (serverPaginated) {
+          return true;
+        }
+
         if (filter === "all") {
           return true;
         }
 
         return getNotificationCategory(notification.message) === filter;
       }),
-    [filter, notifications],
+    [filter, notifications, serverPaginated],
   );
-  const totalPages = compact ? 1 : Math.max(1, Math.ceil(filteredNotifications.length / PAGE_SIZE));
+  const totalPages = pagination?.totalPages ?? (compact ? 1 : Math.max(1, Math.ceil(filteredNotifications.length / PAGE_SIZE)));
 
   useEffect(() => {
     setCurrentPage(1);
@@ -108,17 +120,32 @@ export function ResidentNotificationList({
   }, [currentPage, totalPages]);
 
   const paginatedNotifications = useMemo(() => {
+    if (serverPaginated) {
+      return filteredNotifications;
+    }
+
     if (compact) {
       return filteredNotifications;
     }
 
     const startIndex = (currentPage - 1) * PAGE_SIZE;
     return filteredNotifications.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [compact, currentPage, filteredNotifications]);
-  const startItem = filteredNotifications.length === 0 ? 0 : compact ? 1 : (currentPage - 1) * PAGE_SIZE + 1;
-  const endItem = compact
-    ? filteredNotifications.length
-    : Math.min(currentPage * PAGE_SIZE, filteredNotifications.length);
+  }, [compact, currentPage, filteredNotifications, serverPaginated]);
+  const startItem = pagination
+    ? pagination.totalItems === 0
+      ? 0
+      : (pagination.currentPage - 1) * pagination.pageSize + 1
+    : filteredNotifications.length === 0
+      ? 0
+      : compact
+        ? 1
+        : (currentPage - 1) * PAGE_SIZE + 1;
+  const endItem = pagination
+    ? Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems)
+    : compact
+      ? filteredNotifications.length
+      : Math.min(currentPage * PAGE_SIZE, filteredNotifications.length);
+  const totalItems = pagination?.totalItems ?? filteredNotifications.length;
 
   return (
     <Card>
@@ -156,7 +183,7 @@ export function ResidentNotificationList({
         ) : null}
       </div>
 
-      {!compact ? (
+      {showLocalFilters ? (
         <>
           <div className="mt-5 flex flex-wrap gap-2">
             {[
@@ -191,6 +218,12 @@ export function ResidentNotificationList({
             Showing {startItem}-{endItem} of {filteredNotifications.length} notifications.
           </div>
         </>
+      ) : null}
+
+      {!compact && serverPaginated ? (
+        <div className="mt-4 rounded-3xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+          Showing {startItem}-{endItem} of {totalItems} notifications. Older updates stay available through the next page buttons.
+        </div>
       ) : null}
 
       <div className="mt-5 space-y-3">
@@ -257,13 +290,19 @@ export function ResidentNotificationList({
         )}
       </div>
 
-      {!compact ? (
+      {!compact && !serverPaginated ? (
         <div className="mt-4">
           <PaginationControls
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
+        </div>
+      ) : null}
+
+      {!compact && pagination && getPageHref ? (
+        <div className="mt-4">
+          <ServerPaginationControls pagination={pagination} getHref={getPageHref} />
         </div>
       ) : null}
     </Card>

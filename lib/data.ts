@@ -256,7 +256,7 @@ export async function ensureCurrentMonthPayment(userId: string) {
   }
 }
 
-export async function getUserDashboardData() {
+export async function getUserDashboardData(historyPage = 1, historyPageSize = 6) {
   const profile = await requireUserProfile();
 
   if (profile.role === "admin") {
@@ -285,13 +285,40 @@ export async function getUserDashboardData() {
     warnings.push(createWarningMessage("Current payment", currentPaymentError.message));
   }
 
-  const { data: history, error: historyError } = await supabase
+  const safeHistoryPage = Math.max(1, historyPage);
+  const safeHistoryPageSize = Math.min(Math.max(1, historyPageSize), 12);
+  const historyFrom = (safeHistoryPage - 1) * safeHistoryPageSize;
+  const historyTo = historyFrom + safeHistoryPageSize - 1;
+  let { data: history, error: historyError, count: historyCount } = await supabase
     .from("payments")
     .select(
       "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
+      { count: "exact" },
     )
     .eq("user_id", profile.id)
-    .order("month", { ascending: false });
+    .order("month", { ascending: false })
+    .range(historyFrom, historyTo);
+  let resolvedHistoryPage = safeHistoryPage;
+  const historyTotalPages = Math.max(1, Math.ceil((historyCount ?? 0) / safeHistoryPageSize));
+
+  if (!historyError && (historyCount ?? 0) > 0 && safeHistoryPage > historyTotalPages) {
+    resolvedHistoryPage = historyTotalPages;
+    const correctedFrom = (resolvedHistoryPage - 1) * safeHistoryPageSize;
+    const correctedTo = correctedFrom + safeHistoryPageSize - 1;
+    const correctedHistory = await supabase
+      .from("payments")
+      .select(
+        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
+        { count: "exact" },
+      )
+      .eq("user_id", profile.id)
+      .order("month", { ascending: false })
+      .range(correctedFrom, correctedTo);
+
+    history = correctedHistory.data;
+    historyError = correctedHistory.error;
+    historyCount = correctedHistory.count;
+  }
   if (historyError) {
     warnings.push(createWarningMessage("Payment history", historyError.message));
   }
@@ -345,6 +372,12 @@ export async function getUserDashboardData() {
           : null,
       }))),
     ),
+    historyPagination: {
+      currentPage: resolvedHistoryPage,
+      pageSize: safeHistoryPageSize,
+      totalItems: historyCount ?? 0,
+      totalPages: Math.max(1, Math.ceil((historyCount ?? 0) / safeHistoryPageSize)),
+    },
     notifications: (notifications as NotificationRecord[] | null) ?? [],
     auditLogs: (auditLogs as PaymentAuditLog[] | null) ?? [],
     announcements,
@@ -522,6 +555,64 @@ export async function getResidentNotifications(userId: string, limit = 8) {
   }
 
   return (data as NotificationRecord[] | null) ?? [];
+}
+
+export async function getResidentNotificationsPage(userId: string, page = 1, pageSize = 10) {
+  const supabase = await createClient();
+  const safePage = Math.max(1, page);
+  const safePageSize = Math.min(Math.max(1, pageSize), 20);
+  const from = (safePage - 1) * safePageSize;
+  const to = from + safePageSize - 1;
+  let { data, error, count } = await supabase
+    .from("notifications")
+    .select("id, user_id, payment_id, message, is_read, scope, created_at", { count: "exact" })
+    .eq("user_id", userId)
+    .eq("scope", "resident")
+    .order("created_at", { ascending: false })
+    .range(from, to);
+  let resolvedPage = safePage;
+  const totalPages = Math.max(1, Math.ceil((count ?? 0) / safePageSize));
+
+  if (!error && (count ?? 0) > 0 && safePage > totalPages) {
+    resolvedPage = totalPages;
+    const correctedFrom = (resolvedPage - 1) * safePageSize;
+    const correctedTo = correctedFrom + safePageSize - 1;
+    const correctedPage = await supabase
+      .from("notifications")
+      .select("id, user_id, payment_id, message, is_read, scope, created_at", { count: "exact" })
+      .eq("user_id", userId)
+      .eq("scope", "resident")
+      .order("created_at", { ascending: false })
+      .range(correctedFrom, correctedTo);
+
+    data = correctedPage.data;
+    error = correctedPage.error;
+    count = correctedPage.count;
+  }
+
+  if (error) {
+    return {
+      notifications: [],
+      pagination: {
+        currentPage: resolvedPage,
+        pageSize: safePageSize,
+        totalItems: 0,
+        totalPages: 1,
+      },
+      warning: createWarningMessage("Notifications", error.message),
+    };
+  }
+
+  return {
+    notifications: (data as NotificationRecord[] | null) ?? [],
+    pagination: {
+      currentPage: resolvedPage,
+      pageSize: safePageSize,
+      totalItems: count ?? 0,
+      totalPages: Math.max(1, Math.ceil((count ?? 0) / safePageSize)),
+    },
+    warning: null,
+  };
 }
 
 export async function getPaymentAuditLogs(paymentId: string) {
@@ -1374,13 +1465,22 @@ export async function getAdminHealthData() {
       action: "Set the value in Vercel and local .env.local if needed.",
     },
     {
+      id: "env-anon-key",
+      label: "Supabase anon key",
+      status: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "healthy" : "error",
+      detail: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        ? "NEXT_PUBLIC_SUPABASE_ANON_KEY is configured. This key is public by design and is used by browser/client auth."
+        : "NEXT_PUBLIC_SUPABASE_ANON_KEY is missing.",
+      action: "Set the publishable/anon key in Vercel and local .env.local.",
+    },
+    {
       id: "env-service-role",
       label: "Service role key",
       status: process.env.SUPABASE_SERVICE_ROLE_KEY ? "healthy" : "error",
       detail: process.env.SUPABASE_SERVICE_ROLE_KEY
-        ? "SUPABASE_SERVICE_ROLE_KEY is available on the server."
+        ? "SUPABASE_SERVICE_ROLE_KEY is available on the server. Keep it server-only, mark it Sensitive in Vercel, and rotate it if it was exposed."
         : "SUPABASE_SERVICE_ROLE_KEY is missing on the server.",
-      action: "Add the secret key to Vercel and local server env values.",
+      action: "Use a rotated Supabase secret key, mark it Sensitive in Vercel, and never prefix it with NEXT_PUBLIC_.",
     },
     {
       id: "monthly-fee",
@@ -1467,7 +1567,7 @@ export async function getAdminHealthData() {
   };
 }
 
-export async function getResidentNotificationsPageData() {
+export async function getResidentNotificationsPageData(page = 1) {
   const profile = await requireUserProfile();
 
   if (profile.role === "admin") {
@@ -1478,17 +1578,21 @@ export async function getResidentNotificationsPageData() {
     redirect("/change-password");
   }
 
-  const [notifications, announcements, settings] = await Promise.all([
-    getResidentNotifications(profile.id, 30),
+  const [notificationPage, announcements, settings] = await Promise.all([
+    getResidentNotificationsPage(profile.id, page, 10),
     getAnnouncements({ audience: "residents", limit: 6 }),
     getAppSettings(),
   ]);
 
   return {
     profile,
-    notifications,
+    notifications: notificationPage.notifications,
+    notificationPagination: notificationPage.pagination,
     announcements,
-    warnings: getSystemHealthWarnings(settings),
+    warnings: [
+      ...getSystemHealthWarnings(settings),
+      ...(notificationPage.warning ? [notificationPage.warning] : []),
+    ],
   };
 }
 

@@ -448,6 +448,33 @@ where id in (
         </Card>
       </section>
 
+      <Card className="border-sky-200 bg-sky-50">
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-sky-900">Environment security</p>
+        <h3 className="mt-2 text-2xl font-bold text-slate-950">
+          Vercel and Supabase secret handling
+        </h3>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Public keys</p>
+            <p className="mt-2 text-sm leading-7 text-slate-700">
+              `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are expected to be visible in the browser.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Server secret</p>
+            <p className="mt-2 text-sm leading-7 text-slate-700">
+              `SUPABASE_SERVICE_ROLE_KEY` must stay server-only and should be marked Sensitive in Vercel.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Rotate when exposed</p>
+            <p className="mt-2 text-sm leading-7 text-slate-700">
+              If the service role key was pasted or revealed, rotate it in Supabase and redeploy Vercel.
+            </p>
+          </div>
+        </div>
+      </Card>
+
       <Card>
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">SQL cleanup helper</p>
         <p className="mt-2 text-base text-slate-600">

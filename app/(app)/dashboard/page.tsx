@@ -11,7 +11,13 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { getUserDashboardData } from "@/lib/data";
 import { formatMalaysianPhoneNumber } from "@/lib/utils";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ historyPage?: string }>;
+}) {
+  const params = await searchParams;
+  const historyPage = Number.parseInt(params.historyPage ?? "1", 10) || 1;
   const {
     announcements,
     auditLogs,
@@ -19,12 +25,13 @@ export default async function DashboardPage() {
     currentPayment,
     dueDateLabel,
     history,
+    historyPagination,
     notifications,
     profile,
     settings,
     warnings,
   } =
-    await getUserDashboardData();
+    await getUserDashboardData(historyPage, 6);
   const statusMessage = {
     paid: "Payment approved. Thank you for keeping your account up to date.",
     pending: "Receipt uploaded. Please wait for committee approval.",
@@ -207,7 +214,7 @@ export default async function DashboardPage() {
             Payment history
           </h3>
         </div>
-        <PaymentHistoryTable history={history} />
+        <PaymentHistoryTable history={history} pagination={historyPagination} />
       </section>
     </div>
   );
