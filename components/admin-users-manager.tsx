@@ -372,6 +372,32 @@ export function AdminUsersManager({
         </div>
       </Card>
 
+      <Card className="border-amber-200 bg-amber-50 p-5">
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-900">
+          Account safety
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Reset password</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              Requires typing the exact house number before the default password is restored.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Delete user</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              Requires typing DELETE plus house number because it removes the login account.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">Current admin</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              The signed-in admin account cannot delete itself from this page.
+            </p>
+          </div>
+        </div>
+      </Card>
+
       <div id="user-results-list" className="grid gap-4">
         {pagination.totalItems === 0 ? (
           <Card className="rounded-4xl border-dashed text-center text-sm text-muted">
@@ -565,7 +591,9 @@ export function AdminUsersManager({
                       <input type="hidden" name="house_number" value={user.house_number} />
                       <ConfirmSubmitButton
                         confirmTitle="Reset this password?"
-                        confirmMessage={`Reset password for ${user.house_number} to default password?`}
+                        confirmMessage={`Reset password for ${user.house_number} to the default ${user.role === "admin" ? "admin" : "resident"} password. The user must change it again on next login.`}
+                        confirmLabel="Reset password"
+                        requiredConfirmationText={user.house_number}
                         className="rounded-full bg-amber-500 px-5 py-3 text-base font-bold text-slate-950"
                       >
                         Reset to default password
@@ -577,7 +605,9 @@ export function AdminUsersManager({
                       <input type="hidden" name="house_number" value={user.house_number} />
                       <ConfirmSubmitButton
                         confirmTitle="Delete this user?"
-                        confirmMessage={`Delete ${user.house_number}? This also removes the login account and payment records.`}
+                        confirmMessage={`Delete ${user.house_number}? This removes the Supabase Auth login account and linked profile data. Do this only after backup or committee approval.`}
+                        confirmLabel="Delete user"
+                        requiredConfirmationText={`DELETE ${user.house_number}`}
                         disabled={user.id === currentAdminId}
                         variant="danger"
                         className="rounded-full bg-rose-700 px-5 py-3 text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"

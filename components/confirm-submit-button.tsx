@@ -16,6 +16,7 @@ type ConfirmSubmitButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   confirmTitle?: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  requiredConfirmationText?: string;
   variant?: "primary" | "secondary" | "ghost" | "danger";
 };
 
@@ -24,22 +25,29 @@ export function ConfirmSubmitButton({
   confirmTitle = "Please confirm this action",
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
+  requiredConfirmationText,
   type = "submit",
   variant = "primary",
   onClick,
   ...props
 }: ConfirmSubmitButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [confirmationText, setConfirmationText] = useState("");
   const modalTitleId = useId();
   const modalDescriptionId = useId();
+  const confirmationInputId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
+  const confirmationInputRef = useRef<HTMLInputElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
+  const canConfirm =
+    !requiredConfirmationText || confirmationText.trim() === requiredConfirmationText;
 
   function handlePrimaryClick(event: MouseEvent<HTMLButtonElement>) {
     if (type === "submit") {
       event.preventDefault();
       triggerRef.current = event.currentTarget;
+      setConfirmationText("");
       setIsOpen(true);
       return;
     }
@@ -48,6 +56,10 @@ export function ConfirmSubmitButton({
   }
 
   function handleConfirm(event: MouseEvent<HTMLButtonElement>) {
+    if (!canConfirm) {
+      return;
+    }
+
     const button = event.currentTarget;
     const form = button.closest("form");
     setIsOpen(false);
@@ -65,7 +77,11 @@ export function ConfirmSubmitButton({
     const previousOverflow = document.body.style.overflow;
     const triggerElement = triggerRef.current;
     document.body.style.overflow = "hidden";
-    cancelButtonRef.current?.focus();
+    if (requiredConfirmationText) {
+      confirmationInputRef.current?.focus();
+    } else {
+      cancelButtonRef.current?.focus();
+    }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
@@ -103,7 +119,7 @@ export function ConfirmSubmitButton({
       window.removeEventListener("keydown", handleKeyDown);
       triggerElement?.focus();
     };
-  }, [isOpen]);
+  }, [isOpen, requiredConfirmationText]);
 
   return (
     <>
@@ -138,6 +154,25 @@ export function ConfirmSubmitButton({
               </div>
             </div>
 
+            {requiredConfirmationText ? (
+              <div className="mt-5 rounded-3xl bg-slate-50 p-4">
+                <label
+                  htmlFor={confirmationInputId}
+                  className="block text-sm font-bold text-slate-950"
+                >
+                  Type <span className="font-mono">{requiredConfirmationText}</span> to continue
+                </label>
+                <input
+                  ref={confirmationInputRef}
+                  id={confirmationInputId}
+                  value={confirmationText}
+                  onChange={(event) => setConfirmationText(event.target.value)}
+                  autoComplete="off"
+                  className="mt-2 min-h-12 w-full rounded-2xl border border-line px-4 py-2 font-mono text-base text-slate-950 outline-none focus:border-primary"
+                />
+              </div>
+            ) : null}
+
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <Button
                 ref={cancelButtonRef}
@@ -151,6 +186,7 @@ export function ConfirmSubmitButton({
                 type="button"
                 variant={variant === "danger" ? "danger" : "primary"}
                 onClick={handleConfirm}
+                disabled={!canConfirm}
               >
                 {confirmLabel}
               </Button>

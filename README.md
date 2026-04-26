@@ -259,6 +259,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] delete user
   - [x] last login / last logout
   - [x] onboarding filters
+  - [x] confirmation taip teks untuk reset password dan delete user
 - [x] Search page dikemas semula sebagai `compact global finder`
 - [x] Search features:
   - [x] focus mode `all / residents / payments / activity`
@@ -343,6 +344,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Operational readiness admin:
   - [x] SOP bulanan AJK untuk review payment, export report, backup data, dan maintenance log
   - [x] rhythm operasi bulanan dipaparkan di Health page
+- [x] Safety refinement admin:
+  - [x] reset password perlukan admin taip nombor rumah / username
+  - [x] delete user perlukan admin taip `DELETE {nombor rumah}`
+  - [x] Users page ada account safety guide untuk action berisiko
 - [x] Full admin E2E mutation flow sudah dijalankan pada disposable environment:
   - [x] approve
   - [x] reject
@@ -360,7 +365,6 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Security / permission refinement:
   - [ ] pecahkan role admin jika perlu, contoh `treasurer`, `viewer`, `super_admin`
   - [ ] hadkan action berisiko seperti delete user kepada admin tertentu
-  - [ ] tambah confirmation copy yang lebih kuat untuk delete user dan reset password
 - [ ] Monitoring production:
   - [ ] log error server action kritikal ke tempat yang senang disemak
   - [ ] semak warning deployment / runtime selepas live digunakan komuniti sebenar
@@ -718,6 +722,9 @@ Nota operasi admin:
 - elakkan kongsi satu login admin untuk ramai AJK
 - cipta satu akaun admin berasingan bagi setiap jawatankuasa yang perlu akses
 - ini akan buat audit log lebih jelas bila ada approve, reject, settings update, atau user management
+- untuk reset password, admin perlu taip nombor rumah / username sebelum confirm
+- untuk delete user, admin perlu taip `DELETE {nombor rumah}` sebelum confirm
+- sebelum delete akaun sebenar, export laporan/backup dahulu kerana login account akan dibuang
 
 ### SOP bulanan AJK
 
