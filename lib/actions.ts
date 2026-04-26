@@ -976,9 +976,17 @@ export async function resetManagedUserPasswordAction(formData: FormData) {
   const userId = String(formData.get("user_id") ?? "").trim();
   const role = String(formData.get("role") ?? "user").trim();
   const houseNumber = String(formData.get("house_number") ?? "").trim();
+  const confirmationText = String(formData.get("_confirmation_text") ?? "").trim();
 
   if (!userId || !["user", "admin"].includes(role)) {
     redirectWithError("/admin/users", "Invalid user for password reset.");
+  }
+
+  if (confirmationText !== houseNumber) {
+    redirectWithError(
+      "/admin/users",
+      `Password reset cancelled. Type ${houseNumber} exactly to confirm this action.`,
+    );
   }
 
   const defaultPassword = role === "admin" ? DEFAULT_ADMIN_PASSWORD : DEFAULT_USER_PASSWORD;
@@ -1027,9 +1035,17 @@ export async function deleteManagedUserAction(formData: FormData) {
 
   const userId = String(formData.get("user_id") ?? "").trim();
   const houseNumber = String(formData.get("house_number") ?? "").trim();
+  const confirmationText = String(formData.get("_confirmation_text") ?? "").trim();
 
   if (!userId) {
     redirectWithError("/admin/users", "Invalid user selected for deletion.");
+  }
+
+  if (confirmationText !== `DELETE ${houseNumber}`) {
+    redirectWithError(
+      "/admin/users",
+      `Deletion cancelled. Type DELETE ${houseNumber} exactly to confirm this action.`,
+    );
   }
 
   if (userId === profile.id) {
@@ -1037,6 +1053,48 @@ export async function deleteManagedUserAction(formData: FormData) {
   }
 
   const adminClient = createAdminClient();
+  const { data: targetUser, error: targetUserError } = await adminClient
+    .from("users")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (targetUserError || !targetUser) {
+    redirectWithActionError(
+      "/admin/users",
+      "Unable to confirm this user before deletion. Please refresh and try again.",
+      targetUserError,
+    );
+  }
+
+  const targetRole = targetUser?.role;
+
+  if (!targetRole) {
+    redirectWithError("/admin/users", "Unable to confirm the selected user role before deletion.");
+  }
+
+  if (targetRole === "admin") {
+    const { count: adminCount, error: adminCountError } = await adminClient
+      .from("users")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin");
+
+    if (adminCountError) {
+      redirectWithActionError(
+        "/admin/users",
+        "Unable to confirm admin account coverage before deletion. Please try again.",
+        adminCountError,
+      );
+    }
+
+    if ((adminCount ?? 0) <= 1) {
+      redirectWithError(
+        "/admin/users",
+        "You cannot delete the last admin account. Create another admin first.",
+      );
+    }
+  }
+
   const { error } = await adminClient.auth.admin.deleteUser(userId);
 
   if (error) {

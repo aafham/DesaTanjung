@@ -512,6 +512,59 @@ where id in (
         </div>
       </Card>
 
+      <Card className="border-amber-200 bg-amber-50">
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-900">Emergency restore checklist</p>
+        <h3 className="mt-2 text-2xl font-bold text-slate-950">
+          If a user or payment was changed by mistake
+        </h3>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">1. Stop editing</p>
+            <p className="mt-2 text-sm leading-7 text-slate-700">
+              Ask other admins to pause changes until the issue is understood.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">2. Check Activity</p>
+            <p className="mt-2 text-sm leading-7 text-slate-700">
+              Open the activity log to identify who changed what and when.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">3. Check resident detail</p>
+            <p className="mt-2 text-sm leading-7 text-slate-700">
+              Payment timeline and audit history still show important payment events.
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white/80 px-4 py-4">
+            <p className="text-base font-bold text-slate-950">4. Restore from backup</p>
+            <p className="mt-2 text-sm leading-7 text-slate-700">
+              Use the latest CSV/report backup or Supabase backup before re-entering data.
+            </p>
+          </div>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/admin/activity"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
+          >
+            Open Activity
+          </Link>
+          <Link
+            href="/admin/residents"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-line bg-white px-4 py-2 text-sm font-bold text-slate-950"
+          >
+            Open Residents
+          </Link>
+          <Link
+            href="/admin/users"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-line bg-white px-4 py-2 text-sm font-bold text-slate-950"
+          >
+            Open Users
+          </Link>
+        </div>
+      </Card>
+
       <Card className="bg-slate-50/70">
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">What this page should answer</p>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">

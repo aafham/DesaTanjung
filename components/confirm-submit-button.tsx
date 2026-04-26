@@ -165,6 +165,7 @@ export function ConfirmSubmitButton({
                 <input
                   ref={confirmationInputRef}
                   id={confirmationInputId}
+                  name="_confirmation_text"
                   value={confirmationText}
                   onChange={(event) => setConfirmationText(event.target.value)}
                   autoComplete="off"

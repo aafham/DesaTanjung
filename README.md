@@ -347,7 +347,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Safety refinement admin:
   - [x] reset password perlukan admin taip nombor rumah / username
   - [x] delete user perlukan admin taip `DELETE {nombor rumah}`
+  - [x] server action validate confirmation text untuk reset password dan delete user
+  - [x] delete user dilindungi supaya admin terakhir tidak boleh dipadam
   - [x] Users page ada account safety guide untuk action berisiko
+  - [x] Health page ada emergency restore checklist untuk salah delete / salah update
 - [x] Full admin E2E mutation flow sudah dijalankan pada disposable environment:
   - [x] approve
   - [x] reject
@@ -361,7 +364,6 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [ ] semak query plan Supabase selepas data sebenar sudah banyak
 - [ ] Operational readiness admin:
   - [ ] panduan rotate admin bila jawatankuasa bertukar
-  - [ ] checklist restore data / emergency jika tersilap delete user atau payment
 - [ ] Security / permission refinement:
   - [ ] pecahkan role admin jika perlu, contoh `treasurer`, `viewer`, `super_admin`
   - [ ] hadkan action berisiko seperti delete user kepada admin tertentu
@@ -724,6 +726,8 @@ Nota operasi admin:
 - ini akan buat audit log lebih jelas bila ada approve, reject, settings update, atau user management
 - untuk reset password, admin perlu taip nombor rumah / username sebelum confirm
 - untuk delete user, admin perlu taip `DELETE {nombor rumah}` sebelum confirm
+- sistem juga semak confirmation text di server action, bukan di browser sahaja
+- admin terakhir tidak boleh dipadam; cipta admin baru dahulu jika jawatankuasa bertukar
 - sebelum delete akaun sebenar, export laporan/backup dahulu kerana login account akan dibuang
 
 ### SOP bulanan AJK
@@ -734,6 +738,15 @@ Nota operasi admin:
 4. Selepas due date, export CSV dari `Residents`, print/download snapshot dari `Reports`, dan simpan backup laporan bulanan.
 5. Selepas laporan disimpan, run `Run 90-day prune` di `Health` jika mahu buang global activity log lama.
 6. Bila jawatankuasa bertukar, cipta akaun admin baru di `Users` dan elakkan berkongsi akaun lama.
+
+### Emergency jika tersilap update / delete
+
+1. Minta admin lain berhenti buat perubahan sementara.
+2. Buka `Activity` untuk semak siapa buat perubahan dan masa perubahan berlaku.
+3. Buka `Resident detail` untuk semak payment timeline, audit history, dan bukti bayaran lama.
+4. Jika user terpadam, cipta semula akaun di `Users` dan rujuk backup CSV/report untuk isi semula profil.
+5. Jika payment tersilap, guna `Residents` untuk mark cash / note semula atau semak Supabase backup sebelum update manual.
+6. Selepas selesai, catat dalam notes/report supaya AJK tahu apa yang dipulihkan.
 
 ## Log aktiviti yang direkod
 
