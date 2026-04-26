@@ -208,6 +208,9 @@ export function AdminResidentsTable({
   const startItem =
     pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1;
   const endItem = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems);
+  const noteResidents = residents.filter(
+    (resident) => resident.currentPayment && !resident.currentPayment.id.startsWith("virtual-"),
+  );
   const exportParams = new URLSearchParams({ month: currentMonth });
 
   if (deferredQuery.trim()) {
@@ -226,65 +229,42 @@ export function AdminResidentsTable({
 
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-line p-4">
-        <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-              Resident directory
-            </p>
-            <div className="mt-3 grid gap-4">
-              <div className="max-w-xl">
-                <label htmlFor="resident-search" className="mb-2 block text-base font-bold text-slate-950">
-                  Search resident
-                </label>
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                  <input
-                    id="resident-search"
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search by house, owner, address, or phone number"
-                    aria-describedby="resident-search-help resident-results-summary"
-                    className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
-                  />
-                </div>
-                <p id="resident-search-help" className="mt-2 text-sm text-muted">
-                  Search by house number, owner, address, or phone number to narrow the monthly list.
-                </p>
-              </div>
+      <div className="border-b border-line bg-white p-4 sm:p-6">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
+            Resident directory
+          </p>
+          <p className="mt-2 max-w-2xl text-sm text-muted">
+            Search, filter, and export the full matching resident list for {currentMonthLabel}.
+          </p>
+        </div>
 
-              <div>
-                <p className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
-                  Status filter
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {filterOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => {
-                        setStatusFilter(option.value);
-                        updateUrl({ status: option.value, page: 1 });
-                      }}
-                      aria-pressed={statusFilter === option.value}
-                      aria-controls="resident-results-list"
-                      className={`min-h-11 rounded-full px-4 py-2 text-base font-bold transition ${
-                        statusFilter === option.value
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+          <div className="grid gap-4 lg:grid-cols-[minmax(18rem,1fr)_auto] lg:items-end">
             <div>
-              <label className="mb-2 block text-base font-bold text-slate-950">Payment method</label>
+              <label htmlFor="resident-search" className="mb-2 block text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
+                Search resident
+              </label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                <input
+                  id="resident-search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search house, owner, address, or phone"
+                  aria-describedby="resident-search-help resident-results-summary"
+                  className="min-h-14 w-full rounded-2xl border border-line py-3 pl-11 pr-4 text-base text-slate-950 outline-none focus:border-primary"
+                />
+              </div>
+              <p id="resident-search-help" className="mt-2 text-sm text-muted">
+                Example: A-12, Nur Aisyah, Jalan Tanjung, or phone number.
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
+                Payment method
+              </label>
               <select
                 value={methodFilter}
                 onChange={(event) => {
@@ -293,7 +273,7 @@ export function AdminResidentsTable({
                   updateUrl({ method: nextMethod, page: 1 });
                 }}
                 aria-describedby="resident-results-summary"
-                className="min-h-12 w-full rounded-full border border-line bg-white px-4 py-2 text-base font-bold text-slate-950 outline-none focus:border-primary"
+                className="min-h-12 w-full rounded-full border border-line bg-white px-4 py-2 text-base font-bold text-slate-950 outline-none focus:border-primary lg:w-44"
               >
                 {methodOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -302,14 +282,41 @@ export function AdminResidentsTable({
                 ))}
               </select>
             </div>
+          </div>
 
-            <a
-              href={exportHref}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white"
-            >
-              <Download className="h-4 w-4" />
-              Export filtered CSV
-            </a>
+          <a
+            href={exportHref}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white"
+          >
+            <Download className="h-4 w-4" />
+            Export filtered CSV
+          </a>
+        </div>
+
+        <div className="mt-5">
+          <p className="mb-2 text-sm font-bold uppercase tracking-[0.12em] text-slate-600">
+            Status filter
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {filterOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  setStatusFilter(option.value);
+                  updateUrl({ status: option.value, page: 1 });
+                }}
+                aria-pressed={statusFilter === option.value}
+                aria-controls="resident-results-list"
+                className={`min-h-11 rounded-full px-4 py-2 text-base font-bold transition ${
+                  statusFilter === option.value
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -351,7 +358,9 @@ export function AdminResidentsTable({
       >
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Bulk action</p>
-          <p className="mt-2 text-lg font-bold text-slate-950">Work on multiple residents at once</p>
+          <p className="mt-2 text-lg font-bold text-slate-950">
+            {selectedResidentIds.length} selected for bulk action
+          </p>
           <p className="mt-1 text-sm text-muted">
             Select residents to mark cash paid or prepare one reminder draft for follow-up.
           </p>
@@ -373,7 +382,7 @@ export function AdminResidentsTable({
             </a>
           ) : (
             <span className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-100 px-5 py-3 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-500">
-              Select residents with phone numbers
+              Select residents with phones
             </span>
           )}
           <ConfirmSubmitButton
@@ -464,8 +473,8 @@ export function AdminResidentsTable({
               </tr>
             ) : (
               residents.map((resident) => (
-                <tr key={resident.id} className="align-top">
-                  <td className="px-4 py-5">
+                <tr key={resident.id} className="align-top hover:bg-slate-50/80">
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
@@ -475,33 +484,33 @@ export function AdminResidentsTable({
                         className="h-5 w-5 rounded border-line"
                         aria-label={`Select ${resident.house_number}`}
                       />
-                      <span className="text-lg font-bold text-slate-950">
+                      <span className="inline-flex min-h-10 min-w-12 items-center justify-center rounded-2xl bg-slate-50 px-3 text-lg font-bold text-slate-950">
                         {resident.house_number}
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-5 font-semibold text-slate-950">{resident.name}</td>
+                  <td className="px-4 py-4 font-semibold text-slate-950">{resident.name}</td>
                   <td className="px-4 py-4">{resident.address}</td>
-                  <td className="px-4 py-4">
+                  <td className="whitespace-nowrap px-4 py-4">
                     {resident.phone_number
                       ? formatMalaysianPhoneNumber(resident.phone_number)
                       : "-"}
                   </td>
-                  <td className="px-4 py-5">
+                  <td className="px-4 py-4">
                     <StatusBadge status={getDisplayStatus(resident)} />
                   </td>
-                  <td className="px-4 py-5">
+                  <td className="px-4 py-4">
                     {resident.currentPayment
                       ? formatTimestamp(resident.currentPayment.updated_at)
                       : "No record yet"}
                   </td>
-                  <td className="px-4 py-5">
-                    <div className="max-w-[14rem] space-y-3">
+                  <td className="px-4 py-4">
+                    <div className="max-w-[16rem] space-y-2">
                       <div className="grid gap-2">
                         {getStatus(resident) === "pending" ? (
                           <Link
                             href={`/admin/approvals?month=${currentMonth}`}
-                            className="inline-flex min-h-11 items-center justify-center rounded-full bg-amber-500 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
+                            className="inline-flex min-h-10 items-center justify-center rounded-full bg-amber-500 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
                           >
                             Review proof
                           </Link>
@@ -509,7 +518,7 @@ export function AdminResidentsTable({
 
                         <Link
                           href={`/admin/residents/${resident.id}?month=${currentMonth}`}
-                          className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
+                          className="inline-flex min-h-10 items-center justify-center rounded-full bg-slate-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-slate-950"
                         >
                           View detail
                         </Link>
@@ -522,38 +531,30 @@ export function AdminResidentsTable({
                               data-testid={`mark-cash-${resident.house_number}`}
                               confirmMessage={`Mark ${resident.house_number} as paid by cash for ${currentMonthLabel}?`}
                               confirmTitle="Confirm cash payment"
-                              className="w-full whitespace-nowrap rounded-full bg-slate-950 px-4 py-2 text-sm font-bold uppercase tracking-[0.08em] text-white"
+                              className="min-h-10 w-full whitespace-nowrap rounded-full bg-slate-950 px-4 py-2 text-sm font-bold uppercase tracking-[0.08em] text-white"
                             >
                               Mark paid cash
                             </ConfirmSubmitButton>
                           </form>
                         ) : (
-                          <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-emerald-900">
+                          <span className="inline-flex min-h-10 items-center justify-center rounded-full bg-emerald-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-emerald-900">
                             Settled
                           </span>
                         )}
                       </div>
 
                       <div className="rounded-3xl bg-slate-50 px-3 py-3">
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
-                          Follow-up tools
-                        </p>
-                        <div className="mt-2 grid gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
                             onClick={() => copyReminder(resident)}
-                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-teal-950"
+                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-teal-950"
                           >
                             <Copy className="h-4 w-4" />
                             {copiedResidentId === resident.id ? "Copied" : "Reminder"}
                           </button>
                           <ContactActions phoneNumber={resident.phone_number} compact />
                         </div>
-                        {!resident.phone_number ? (
-                          <p className="mt-2 text-xs leading-6 text-slate-600">
-                            Add a valid Malaysian mobile number to enable Call and WhatsApp.
-                          </p>
-                        ) : null}
                       </div>
                     </div>
                   </td>
@@ -572,23 +573,27 @@ export function AdminResidentsTable({
         />
       </div>
 
-      <div className="border-t border-line bg-slate-50 p-4">
-        <div className="mb-4">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Payment notes</p>
-          <p className="mt-2 text-lg font-bold text-slate-950">Save short admin notes for the current page</p>
-          <p className="mt-1 text-sm text-muted">
-            Use these notes for handover, cash tracking, or quick context before opening resident detail.
-          </p>
-        </div>
-        {residents.filter((resident) => resident.currentPayment).length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-line bg-white px-4 py-6 text-base text-slate-600">
-            No payment records are available on this page yet, so there are no notes to update.
+      <details className="border-t border-line bg-slate-50 p-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-3xl bg-white px-4 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Payment notes</p>
+            <p className="mt-1 text-lg font-bold text-slate-950">Admin notes for this page</p>
+            <p className="mt-1 text-sm text-muted">
+              {noteResidents.length} editable payment records. Open only when handover notes are needed.
+            </p>
+          </div>
+          <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-950">
+            Open notes
+          </span>
+        </summary>
+
+        {noteResidents.length === 0 ? (
+          <div className="mt-4 rounded-3xl border border-dashed border-line bg-white px-4 py-6 text-base text-slate-600">
+            No real payment records are available on this page yet, so there are no notes to update.
           </div>
         ) : (
-          <div className="grid gap-3 lg:grid-cols-2">
-            {residents
-              .filter((resident) => resident.currentPayment)
-              .map((resident) => (
+          <div className="mt-4 grid gap-3 lg:grid-cols-2">
+            {noteResidents.map((resident) => (
               <form
                 key={resident.id}
                 action={updatePaymentNotesAction}
@@ -619,7 +624,7 @@ export function AdminResidentsTable({
             ))}
           </div>
         )}
-      </div>
+      </details>
     </Card>
   );
 }
