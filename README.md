@@ -458,6 +458,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Settings page dipolish semula dengan readiness summary, resident-facing preview, dan admin checklist
 - [x] Health page dipolish semula dengan launch readiness summary dan follow-up buckets
 - [x] Health page ditambah activity maintenance card dan monthly operation rhythm
+- [x] Health page dikemas semula sebagai readiness board yang lebih mesra admin penduduk:
+  - [x] action penting diletakkan di atas
+  - [x] ringkasan `Live access`, `Payment setup`, `Follow-up`, dan `Data safety`
+  - [x] technical checks, maintenance, security, dan SQL helper dipindahkan ke bahagian collapsible
 - [x] Activity page dipolish semula dengan audit summary dan clearer filtered export workflow
 - [x] Reports page dipolish semula dengan meeting highlights dan follow-up queue
 - [x] Keyboard-first admin filtering diperkemas pada users, residents, search, activity, dan month filter

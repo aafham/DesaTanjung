@@ -96,7 +96,6 @@ export default async function AdminHealthPage({
   const healthyCount = checks.filter((check) => check.status === "healthy").length;
   const warningCount = checks.filter((check) => check.status === "warning").length;
   const errorCount = checks.filter((check) => check.status === "error").length;
-  const actionItems = checks.filter((check) => check.status !== "healthy");
   const launchBlockers = checks.filter((check) =>
     ["core-data-readiness", "env-public-url", "env-service-role", "payment-qr"].includes(check.id),
   );
@@ -105,44 +104,6 @@ export default async function AdminHealthPage({
     0,
     Math.round((healthyCount / Math.max(1, checks.length)) * 100),
   );
-  const followUpBuckets = [
-    {
-      label: "Launch blockers",
-      count: launchBlockerCount,
-      tone:
-        launchBlockerCount > 0
-          ? "border-rose-200 bg-rose-50 text-rose-950"
-          : "border-emerald-200 bg-emerald-50 text-emerald-950",
-      help:
-        launchBlockerCount > 0
-          ? "Fix these before residents rely on the live portal."
-          : "Nothing critical is blocking live use right now.",
-    },
-    {
-      label: "Resident follow-up",
-      count: missingPhoneResidents.length,
-      tone:
-        missingPhoneResidents.length > 0
-          ? "border-amber-200 bg-amber-50 text-amber-950"
-          : "border-emerald-200 bg-emerald-50 text-emerald-950",
-      help:
-        missingPhoneResidents.length > 0
-          ? "Phone numbers are still missing for some residents."
-          : "Resident phone coverage is complete.",
-    },
-    {
-      label: "Data cleanup",
-      count: duplicateGroups.length,
-      tone:
-        duplicateGroups.length > 0
-          ? "border-amber-200 bg-amber-50 text-amber-950"
-          : "border-emerald-200 bg-emerald-50 text-emerald-950",
-      help:
-        duplicateGroups.length > 0
-          ? "Duplicate resident-month payment rows need a cleanup pass."
-          : "No duplicate payment groups were found.",
-    },
-  ] as const;
   const missingPhoneCsvHref = `data:text/csv;charset=utf-8,${encodeURIComponent(
     [
       ["House", "Owner", "Address"],
@@ -183,6 +144,17 @@ where id in (
   from ranked
   where rn > 1
 );`;
+  const launchReady = launchBlockerCount === 0;
+  const phoneReady = missingPhoneResidents.length === 0;
+  const dataReady = duplicateGroups.length === 0 && errorCount === 0;
+  const paymentReady = checks
+    .filter((check) => ["monthly-fee", "payment-qr", "payment-proofs-bucket"].includes(check.id))
+    .every((check) => check.status === "healthy");
+  const priorityActions = [
+    ...checks.filter((check) => check.status === "error"),
+    ...checks.filter((check) => check.status === "warning"),
+  ].slice(0, 5);
+  const healthyChecks = checks.filter((check) => check.status === "healthy");
 
   return (
     <div className="space-y-6">
@@ -191,95 +163,125 @@ where id in (
 
       <AdminPageHeader
         eyebrow="System health"
-        title="Check portal readiness before residents use it"
-        description="Use this page to confirm the environment, QR setup, storage buckets, phone number coverage, and duplicate payment risks are all in a healthy state."
+        title="Is the portal ready for residents?"
+        description="This page is a simple readiness board for committee admins. Start here before collection opens, after updates, or when something looks wrong."
       />
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card className="border-emerald-200 bg-emerald-50">
-          <p className="text-sm font-bold uppercase tracking-[0.12em] text-emerald-800">
-            Healthy checks
-          </p>
-          <p className="mt-2 text-4xl font-bold text-emerald-950">{healthyCount}</p>
-        </Card>
-        <Card className="border-amber-200 bg-amber-50">
-          <p className="text-sm font-bold uppercase tracking-[0.12em] text-amber-800">
-            Warnings
-          </p>
-          <p className="mt-2 text-4xl font-bold text-amber-950">{warningCount}</p>
-        </Card>
-        <Card className="border-rose-200 bg-rose-50">
-          <p className="text-sm font-bold uppercase tracking-[0.12em] text-rose-800">
-            Errors
-          </p>
-          <p className="mt-2 text-4xl font-bold text-rose-950">{errorCount}</p>
-        </Card>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+      <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <Card
-          className="text-white"
+          className="overflow-hidden text-white"
           style={{
             background:
               "linear-gradient(135deg, #07111f 0%, #10263a 45%, #134e4a 100%)",
           }}
         >
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">
-            Health summary
-          </p>
-          <h3 className="mt-3 text-3xl font-bold leading-tight text-white">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">Portal status</p>
+          <h3 className="mt-3 font-display text-4xl font-bold leading-tight text-white">
             {errorCount > 0
-              ? `${errorCount} critical issue${errorCount > 1 ? "s" : ""} need attention`
+              ? "Fix critical issues before residents rely on it"
               : warningCount > 0
-                ? `${warningCount} follow-up item${warningCount > 1 ? "s" : ""} before residents use the portal`
-                : "Portal setup looks healthy for day-to-day use"}
+                ? "Portal can run, but follow-up is needed"
+                : "Portal looks ready for day-to-day use"}
           </h3>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-slate-100">
-            Use this page before monthly collection opens, after Supabase changes, and whenever admin or resident data does not appear as expected.
+          <p className="mt-4 text-base leading-8 text-slate-100">
+            Score {readinessScore}%. {healthyCount} checks healthy, {warningCount} warning,
+            and {errorCount} error. Use the action list beside this card first.
           </p>
-          <div className="mt-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-bold text-slate-950">
-            Launch readiness score: {readinessScore}%
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-3xl bg-white/10 px-4 py-4">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-teal-100">Healthy</p>
+              <p className="mt-2 text-4xl font-bold text-white">{healthyCount}</p>
+            </div>
+            <div className="rounded-3xl bg-white/10 px-4 py-4">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-100">Warning</p>
+              <p className="mt-2 text-4xl font-bold text-white">{warningCount}</p>
+            </div>
+            <div className="rounded-3xl bg-white/10 px-4 py-4">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-rose-100">Error</p>
+              <p className="mt-2 text-4xl font-bold text-white">{errorCount}</p>
+            </div>
           </div>
         </Card>
 
-        <Card className="bg-slate-50">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Recommended next steps</p>
-          <div className="mt-4 space-y-3">
-            {actionItems.length === 0 ? (
-              <div className="rounded-3xl bg-white px-4 py-4 text-base text-slate-700">
-                No urgent action is needed now. You can continue using the portal normally.
+        <Card className="border-amber-200 bg-amber-50">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-900">Do this next</p>
+          <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
+            {priorityActions.length === 0 ? "No urgent action right now" : `${priorityActions.length} item${priorityActions.length === 1 ? "" : "s"} need admin attention`}
+          </h3>
+          <div className="mt-5 space-y-3">
+            {priorityActions.length === 0 ? (
+              <div className="rounded-3xl bg-white/80 px-4 py-4 text-base font-semibold text-emerald-900">
+                Everything important is ready. Come back here after monthly setup changes or before residents start paying.
               </div>
             ) : (
-              actionItems.slice(0, 4).map((check, index) => (
-                <div key={check.id} className="rounded-3xl bg-white px-4 py-4 shadow-sm">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">
-                    Step {index + 1}
-                  </p>
-                  <p className="mt-1 text-base font-bold text-slate-950">{check.label}</p>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">{check.action ?? check.detail}</p>
-                  <div className="mt-4">
+              priorityActions.map((check, index) => {
+                const fixPath = getSuggestedFixPath(check);
+
+                return (
+                  <div key={check.id} className="rounded-3xl bg-white/85 px-4 py-4 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                          Step {index + 1}
+                        </p>
+                        <p className="mt-1 text-lg font-bold text-slate-950">{check.label}</p>
+                      </div>
+                      <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${statusPresentation[check.status].labelClass}`}>
+                        {statusPresentation[check.status].label}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-base leading-7 text-slate-700">{check.action ?? check.detail}</p>
                     <Link
-                      href={getSuggestedFixPath(check).href}
+                      href={fixPath.href}
                       className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-sm font-bold text-white"
                     >
-                      {getSuggestedFixPath(check).label}
+                      {fixPath.label}
                     </Link>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </Card>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        {followUpBuckets.map((bucket) => (
-          <Card key={bucket.label} className={bucket.tone}>
-            <p className="text-sm font-bold uppercase tracking-[0.14em]">{bucket.label}</p>
-            <p className="mt-3 text-4xl font-bold">{bucket.count}</p>
-            <p className="mt-2 text-sm leading-6 text-slate-700">{bucket.help}</p>
-          </Card>
-        ))}
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Card className={launchReady ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-slate-700">Live access</p>
+          <h3 className="mt-3 text-2xl font-bold text-slate-950">
+            {launchReady ? "No blocker" : "Needs fix"}
+          </h3>
+          <p className="mt-2 text-base leading-7 text-slate-700">
+            {launchReady ? "Core setup is not blocking residents from using the portal." : "Fix environment or core setup before going live."}
+          </p>
+        </Card>
+        <Card className={paymentReady ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-slate-700">Payment setup</p>
+          <h3 className="mt-3 text-2xl font-bold text-slate-950">
+            {paymentReady ? "Ready" : "Check Settings"}
+          </h3>
+          <p className="mt-2 text-base leading-7 text-slate-700">
+            QR image, monthly fee, and receipt storage are checked here.
+          </p>
+        </Card>
+        <Card className={phoneReady ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-slate-700">Follow-up</p>
+          <h3 className="mt-3 text-2xl font-bold text-slate-950">
+            {missingPhoneResidents.length} missing phone
+          </h3>
+          <p className="mt-2 text-base leading-7 text-slate-700">
+            Phone numbers help Call and WhatsApp actions work smoothly.
+          </p>
+        </Card>
+        <Card className={dataReady ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-slate-700">Data safety</p>
+          <h3 className="mt-3 text-2xl font-bold text-slate-950">
+            {dataReady ? "Looks clean" : "Review needed"}
+          </h3>
+          <p className="mt-2 text-base leading-7 text-slate-700">
+            Duplicate payment rows and failed actions should stay at zero.
+          </p>
+        </Card>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
@@ -288,8 +290,8 @@ where id in (
           <h3 className="mt-2 text-2xl font-bold text-slate-950">
             Residents without phone numbers
           </h3>
-          <p className="mt-2 text-base text-slate-600">
-            Export this list and update phone numbers in `Admin Users` so Call and WhatsApp follow-up actions can work.
+          <p className="mt-2 text-base leading-7 text-slate-600">
+            This is the most useful admin cleanup list. Complete phone numbers so reminder, call, and WhatsApp tools work for every house.
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <span className="rounded-full bg-rose-100 px-3 py-1 text-sm font-bold text-rose-900">
@@ -329,7 +331,7 @@ where id in (
           </div>
         </Card>
 
-        <Card>
+        <Card className="border-slate-200 bg-slate-50/70">
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Duplicate payment helper</p>
           <h3 className="mt-2 text-2xl font-bold text-slate-950">
             Resident-month duplicate scan
@@ -378,36 +380,44 @@ where id in (
         </Card>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        {checks.map((check) => {
-          const presentation = statusPresentation[check.status];
-          const Icon = presentation.icon;
+      <details className="rounded-4xl border border-line bg-white p-5 shadow-soft">
+        <summary className="cursor-pointer text-sm font-bold uppercase tracking-[0.14em] text-primary">
+          Technical checks ({checks.length})
+        </summary>
+        <p className="mt-3 text-base leading-7 text-slate-600">
+          Open this section only when you are troubleshooting. Healthy items are kept here so the main page stays simple.
+        </p>
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
+          {[...priorityActions, ...healthyChecks].map((check) => {
+            const presentation = statusPresentation[check.status];
+            const Icon = presentation.icon;
 
-          return (
-            <Card key={check.id} className={presentation.card}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-white/80 p-3">
-                    <Icon className={`h-5 w-5 ${presentation.iconColor}`} />
+            return (
+              <div key={check.id} className={`rounded-3xl border px-4 py-4 ${presentation.card}`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-2xl bg-white/80 p-3">
+                      <Icon className={`h-5 w-5 ${presentation.iconColor}`} />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-slate-950">{check.label}</p>
+                      <p className="mt-2 text-sm leading-7 text-slate-700">{check.detail}</p>
+                      {check.action ? (
+                        <p className="mt-3 text-sm font-semibold text-slate-800">
+                          Next step: {check.action}
+                        </p>
+                      ) : null}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xl font-bold text-slate-950">{check.label}</p>
-                    <p className="mt-2 text-base leading-7 text-slate-700">{check.detail}</p>
-                    {check.action ? (
-                      <p className="mt-3 text-sm font-semibold text-slate-800">
-                        Next step: {check.action}
-                      </p>
-                    ) : null}
-                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${presentation.labelClass}`}>
+                    {presentation.label}
+                  </span>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${presentation.labelClass}`}>
-                  {presentation.label}
-                </span>
               </div>
-            </Card>
-          );
-        })}
-      </section>
+            );
+          })}
+        </div>
+      </details>
 
       <Card className={serverActionErrorCount > 0 ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}>
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Production error monitor</p>
@@ -450,48 +460,6 @@ where id in (
         </div>
       </Card>
 
-      <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="border-teal-200 bg-teal-50">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Activity maintenance</p>
-          <h3 className="mt-2 text-2xl font-bold text-slate-950">
-            Keep global activity logs light
-          </h3>
-          <p className="mt-2 text-base leading-7 text-slate-700">
-            The Activity page already shows the latest 14 days. This maintenance action removes global activity logs older than 90 days while keeping payment records and payment audit history.
-          </p>
-          <form action={pruneActivityLogsAction} className="mt-5">
-            <ConfirmSubmitButton
-              confirmTitle="Prune old activity logs?"
-              confirmMessage="This removes only global activity logs older than 90 days. Payment records, receipts, resident history, and payment audit logs are not removed."
-              confirmLabel="Prune old logs"
-              className="bg-slate-950 text-white"
-            >
-              Run 90-day prune
-            </ConfirmSubmitButton>
-          </form>
-        </Card>
-
-        <Card className="border-amber-200 bg-amber-50">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-900">Error monitor maintenance</p>
-          <h3 className="mt-2 text-2xl font-bold text-slate-950">
-            Keep production error logs focused
-          </h3>
-          <p className="mt-2 text-base leading-7 text-slate-700">
-            The Health page shows critical server action errors from the latest 7 days. This maintenance action removes old error monitor rows after 30 days so production debugging stays tidy.
-          </p>
-          <form action={pruneServerActionErrorsAction} className="mt-5">
-            <ConfirmSubmitButton
-              confirmTitle="Prune old server action errors?"
-              confirmMessage="This removes only server action error monitor rows older than 30 days. Resident data, payment records, receipts, and activity logs are not removed."
-              confirmLabel="Prune error logs"
-              className="bg-slate-950 text-white"
-            >
-              Run 30-day error prune
-            </ConfirmSubmitButton>
-          </form>
-        </Card>
-      </section>
-
       <Card>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Monthly operation rhythm</p>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -516,42 +484,83 @@ where id in (
           </div>
         </Card>
 
-      <Card className="border-sky-200 bg-sky-50">
-        <p className="text-sm font-bold uppercase tracking-[0.14em] text-sky-900">Environment security</p>
-        <h3 className="mt-2 text-2xl font-bold text-slate-950">
-          Vercel and Supabase secret handling
-        </h3>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <div className="rounded-3xl bg-white/80 px-4 py-4">
-            <p className="text-base font-bold text-slate-950">Public keys</p>
-            <p className="mt-2 text-sm leading-7 text-slate-700">
-              `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are expected to be visible in the browser.
+      <details className="rounded-4xl border border-line bg-white p-5 shadow-soft">
+        <summary className="cursor-pointer text-sm font-bold uppercase tracking-[0.14em] text-primary">
+          Advanced maintenance and security
+        </summary>
+        <div className="mt-5 grid gap-4 xl:grid-cols-2">
+          <div className="rounded-3xl border border-teal-200 bg-teal-50 px-5 py-5">
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Activity maintenance</p>
+            <h3 className="mt-2 text-2xl font-bold text-slate-950">Keep global activity logs light</h3>
+            <p className="mt-2 text-base leading-7 text-slate-700">
+              Removes global activity logs older than 90 days while keeping payment records and payment audit history.
             </p>
+            <form action={pruneActivityLogsAction} className="mt-5">
+              <ConfirmSubmitButton
+                confirmTitle="Prune old activity logs?"
+                confirmMessage="This removes only global activity logs older than 90 days. Payment records, receipts, resident history, and payment audit logs are not removed."
+                confirmLabel="Prune old logs"
+                className="bg-slate-950 text-white"
+              >
+                Run 90-day prune
+              </ConfirmSubmitButton>
+            </form>
           </div>
-          <div className="rounded-3xl bg-white/80 px-4 py-4">
-            <p className="text-base font-bold text-slate-950">Server secret</p>
-            <p className="mt-2 text-sm leading-7 text-slate-700">
-              `SUPABASE_SERVICE_ROLE_KEY` must stay server-only and should be marked Sensitive in Vercel.
+
+          <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-5">
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-900">Error monitor maintenance</p>
+            <h3 className="mt-2 text-2xl font-bold text-slate-950">Keep production error logs focused</h3>
+            <p className="mt-2 text-base leading-7 text-slate-700">
+              Removes server action error monitor rows older than 30 days. Resident data and payments are not removed.
             </p>
-          </div>
-          <div className="rounded-3xl bg-white/80 px-4 py-4">
-            <p className="text-base font-bold text-slate-950">Rotate when exposed</p>
-            <p className="mt-2 text-sm leading-7 text-slate-700">
-              If the service role key was pasted or revealed, rotate it in Supabase and redeploy Vercel.
-            </p>
+            <form action={pruneServerActionErrorsAction} className="mt-5">
+              <ConfirmSubmitButton
+                confirmTitle="Prune old server action errors?"
+                confirmMessage="This removes only server action error monitor rows older than 30 days. Resident data, payment records, receipts, and activity logs are not removed."
+                confirmLabel="Prune error logs"
+                className="bg-slate-950 text-white"
+              >
+                Run 30-day error prune
+              </ConfirmSubmitButton>
+            </form>
           </div>
         </div>
-      </Card>
 
-      <Card>
-        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">SQL cleanup helper</p>
-        <p className="mt-2 text-base text-slate-600">
-          If duplicate payment groups are found, copy this SQL into Supabase SQL Editor after taking a backup or checking the duplicate export.
-        </p>
-        <pre className="mt-4 overflow-x-auto rounded-3xl bg-slate-950 p-4 text-sm leading-7 text-slate-100">
-          <code>{duplicateCleanupSql}</code>
-        </pre>
-      </Card>
+        <div className="mt-4 rounded-3xl border border-sky-200 bg-sky-50 px-5 py-5">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-sky-900">Environment security</p>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">Vercel and Supabase secret handling</h3>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-3xl bg-white/80 px-4 py-4">
+              <p className="text-base font-bold text-slate-950">Public keys</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">
+                `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are expected to be visible in the browser.
+              </p>
+            </div>
+            <div className="rounded-3xl bg-white/80 px-4 py-4">
+              <p className="text-base font-bold text-slate-950">Server secret</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">
+                `SUPABASE_SERVICE_ROLE_KEY` must stay server-only and should be marked Sensitive in Vercel.
+              </p>
+            </div>
+            <div className="rounded-3xl bg-white/80 px-4 py-4">
+              <p className="text-base font-bold text-slate-950">Rotate when exposed</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">
+                If the service role key was pasted or revealed, rotate it in Supabase and redeploy Vercel.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-3xl border border-line bg-slate-50 px-5 py-5">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">SQL cleanup helper</p>
+          <p className="mt-2 text-base text-slate-600">
+            Use only if duplicate payment groups are found. Take a backup first.
+          </p>
+          <pre className="mt-4 overflow-x-auto rounded-3xl bg-slate-950 p-4 text-sm leading-7 text-slate-100">
+            <code>{duplicateCleanupSql}</code>
+          </pre>
+        </div>
+      </details>
 
       <Card>
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Quick admin checklist</p>
