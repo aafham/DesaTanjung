@@ -25,11 +25,12 @@ export default async function AdminResidentDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; logPage?: string }>;
 }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const {
     auditLogs,
+    auditPagination,
     currentMonth,
     currentMonthLabel,
     currentPayment,
@@ -39,7 +40,19 @@ export default async function AdminResidentDetailPage({
     resident,
     settings,
     warnings,
-  } = await getAdminResidentDetailData(id, query.month);
+  } = await getAdminResidentDetailData(
+    id,
+    query.month,
+    Number.parseInt(query.logPage ?? "1", 10) || 1,
+    4,
+  );
+  const getAuditPageHref = (page: number) => {
+    const params = new URLSearchParams();
+    params.set("month", currentMonth);
+    params.set("logPage", String(page));
+
+    return `/admin/residents/${resident.id}?${params.toString()}#payment-activity`;
+  };
 
   return (
     <div className="space-y-6">
@@ -270,7 +283,7 @@ export default async function AdminResidentDetailPage({
           )}
         </Card>
 
-        <Card className="self-start">
+        <Card id="payment-activity" className="self-start scroll-mt-6">
           <div className="flex items-center gap-3">
             <div className="rounded-2xl bg-teal-50 p-3">
               <ReceiptText className="h-5 w-5 text-primary" />
@@ -284,7 +297,12 @@ export default async function AdminResidentDetailPage({
           </div>
           <div className="mt-5">
             {currentPayment ? (
-              <PaymentTimeline payment={currentPayment} auditLogs={auditLogs} />
+              <PaymentTimeline
+                payment={currentPayment}
+                auditLogs={auditLogs}
+                auditPagination={auditPagination}
+                getAuditPageHref={getAuditPageHref}
+              />
             ) : (
               <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
                 No payment timeline exists yet for this resident in the selected month.

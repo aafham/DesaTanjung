@@ -1,13 +1,18 @@
 import { CheckCircle2, Clock3, UploadCloud, XCircle } from "lucide-react";
-import type { PaymentAuditLog, ResidentPaymentRecord } from "@/lib/types";
+import type { PaginationMeta, PaymentAuditLog, ResidentPaymentRecord } from "@/lib/types";
+import { ServerPaginationControls } from "@/components/ui/server-pagination-controls";
 import { formatTimestamp } from "@/lib/utils";
 
 export function PaymentTimeline({
   payment,
   auditLogs,
+  auditPagination,
+  getAuditPageHref,
 }: {
   payment: ResidentPaymentRecord;
   auditLogs: PaymentAuditLog[];
+  auditPagination?: PaginationMeta;
+  getAuditPageHref?: (page: number) => string;
 }) {
   const displayStatus = payment.display_status;
   const steps = [
@@ -74,9 +79,18 @@ export function PaymentTimeline({
       </div>
 
       <div className="rounded-3xl bg-slate-50 p-4">
-        <p className="text-sm font-bold uppercase tracking-[0.12em] text-primary">
-          Activity log
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-primary">
+              Activity log
+            </p>
+            {auditPagination ? (
+              <p className="mt-1 text-sm font-semibold text-slate-600">
+                Showing {auditLogs.length} of {auditPagination.totalItems} activity records.
+              </p>
+            ) : null}
+          </div>
+        </div>
         <div className="mt-3 space-y-3">
           {auditLogs.length === 0 ? (
             <p className="text-base font-medium text-muted">No activity yet.</p>
@@ -89,6 +103,14 @@ export function PaymentTimeline({
             ))
           )}
         </div>
+        {auditPagination && getAuditPageHref ? (
+          <div className="mt-4">
+            <ServerPaginationControls
+              pagination={auditPagination}
+              getHref={getAuditPageHref}
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -1779,7 +1779,12 @@ export async function getAdminSearchData(filterMonth?: string, rawQuery?: string
   };
 }
 
-export async function getAdminResidentDetailData(residentId: string, filterMonth?: string) {
+export async function getAdminResidentDetailData(
+  residentId: string,
+  filterMonth?: string,
+  auditPage = 1,
+  auditPageSize = 4,
+) {
   const profile = await requireUserProfile();
 
   if (profile.role !== "admin") {
@@ -1793,8 +1798,12 @@ export async function getAdminResidentDetailData(residentId: string, filterMonth
   const month = filterMonth ?? getMonthKey();
   const supabase = await createClient();
   const settings = await getAppSettings();
+  const safeAuditPage = Math.max(1, auditPage);
+  const safeAuditPageSize = Math.min(Math.max(1, auditPageSize), 12);
+  const auditFrom = (safeAuditPage - 1) * safeAuditPageSize;
+  const auditTo = auditFrom + safeAuditPageSize - 1;
 
-  const [{ data: resident }, { data: history }, { data: payment }, { data: auditLogs }] =
+  let [{ data: resident }, { data: history }, { data: payment }, auditLogPage] =
     await Promise.all([
       supabase
         .from("users")
@@ -1818,12 +1827,37 @@ export async function getAdminResidentDetailData(residentId: string, filterMonth
         .maybeSingle(),
       supabase
         .from("payment_audit_logs")
-        .select("id, payment_id, user_id, actor_id, action, message, created_at")
+        .select("id, payment_id, user_id, actor_id, action, message, created_at", { count: "exact" })
         .eq("user_id", residentId)
         .order("created_at", { ascending: false })
-        .limit(16),
+        .range(auditFrom, auditTo),
     ]);
   const warnings: string[] = [];
+  let resolvedAuditPage = safeAuditPage;
+  let auditLogs = auditLogPage.data;
+  let auditError = auditLogPage.error;
+  let auditCount = auditLogPage.count;
+  const auditTotalPages = Math.max(1, Math.ceil((auditCount ?? 0) / safeAuditPageSize));
+
+  if (!auditError && (auditCount ?? 0) > 0 && safeAuditPage > auditTotalPages) {
+    resolvedAuditPage = auditTotalPages;
+    const correctedFrom = (resolvedAuditPage - 1) * safeAuditPageSize;
+    const correctedTo = correctedFrom + safeAuditPageSize - 1;
+    auditLogPage = await supabase
+      .from("payment_audit_logs")
+      .select("id, payment_id, user_id, actor_id, action, message, created_at", { count: "exact" })
+      .eq("user_id", residentId)
+      .order("created_at", { ascending: false })
+      .range(correctedFrom, correctedTo);
+
+    auditLogs = auditLogPage.data;
+    auditError = auditLogPage.error;
+    auditCount = auditLogPage.count;
+  }
+
+  if (auditError) {
+    warnings.push(createWarningMessage("Resident payment activity", auditError.message));
+  }
 
   if (!resident) {
     redirect("/admin/residents");
@@ -1851,6 +1885,7 @@ export async function getAdminResidentDetailData(residentId: string, filterMonth
       }))),
     ),
     auditLogs: (auditLogs as PaymentAuditLog[] | null) ?? [],
+    auditPagination: createPaginationMeta(resolvedAuditPage, safeAuditPageSize, auditCount ?? 0),
     settings,
     warnings,
   };
