@@ -396,58 +396,102 @@ export function AdminResidentsTable({
         </div>
       </form>
 
-      <div id="resident-results-list" className="grid gap-4 p-4 md:hidden">
+      <div id="resident-results-list" className="grid gap-3 bg-slate-50 p-3 md:hidden">
         {residents.map((resident) => (
-          <details key={resident.id} className="rounded-3xl border border-line bg-white p-4">
-            <summary className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">
-              <div>
-                <p className="text-2xl font-bold text-slate-950">{resident.house_number}</p>
-                <p className="text-base text-muted">{resident.name}</p>
-                <span className="sr-only">Press Enter or Space to expand resident details.</span>
-              </div>
+          <article key={resident.id} className="rounded-3xl border border-line bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <label className="flex min-w-0 items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedResidentIds.includes(resident.id)}
+                  onChange={() => toggleResident(resident.id)}
+                  disabled={getStatus(resident) === "paid"}
+                  className="mt-2 h-5 w-5 rounded border-line"
+                  aria-label={`Select ${resident.house_number}`}
+                />
+                <span className="min-w-0">
+                  <span className="inline-flex min-h-10 items-center rounded-2xl bg-slate-50 px-3 text-xl font-bold text-slate-950">
+                    {resident.house_number}
+                  </span>
+                  <span className="mt-2 block truncate text-base font-bold text-slate-950">
+                    {resident.name}
+                  </span>
+                  <span className="mt-1 block text-sm text-muted">{resident.address}</span>
+                </span>
+              </label>
               <StatusBadge status={getDisplayStatus(resident)} />
-            </summary>
+            </div>
 
-            <div className="mt-4 space-y-3 border-t border-line pt-4">
-              <p className="text-base text-slate-800">{resident.address}</p>
-              <p className="text-sm font-medium text-muted">
-                {resident.phone_number
-                  ? formatMalaysianPhoneNumber(resident.phone_number)
-                  : "No phone number saved yet"}
+            <div className="mt-4 grid grid-cols-2 gap-2 rounded-3xl bg-slate-50 p-3 text-sm">
+              <div>
+                <p className="font-bold uppercase tracking-[0.12em] text-slate-500">Phone</p>
+                <p className="mt-1 font-semibold text-slate-950">
+                  {resident.phone_number
+                    ? formatMalaysianPhoneNumber(resident.phone_number)
+                    : "No phone"}
+                </p>
+              </div>
+              <div>
+                <p className="font-bold uppercase tracking-[0.12em] text-slate-500">Updated</p>
+                <p className="mt-1 font-semibold text-slate-950">
+                  {resident.currentPayment
+                    ? formatTimestamp(resident.currentPayment.updated_at)
+                    : "No record"}
+                </p>
+              </div>
+            </div>
+
+            {resident.currentPayment?.reject_reason ? (
+              <p className="mt-3 rounded-2xl bg-rose-50 px-3 py-2 text-sm font-bold text-rose-900">
+                Reject reason: {resident.currentPayment.reject_reason}
               </p>
-              <ContactActions phoneNumber={resident.phone_number} compact className="pt-1" />
+            ) : null}
+
+            {resident.currentPayment?.notes ? (
+              <p className="mt-3 rounded-2xl bg-slate-50 px-3 py-2 text-sm text-slate-800">
+                Admin note: {resident.currentPayment.notes}
+              </p>
+            ) : null}
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
               <Link
                 href={`/admin/residents/${resident.id}?month=${currentMonth}`}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-white"
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-slate-950 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-white"
               >
-                Open resident detail
+                View detail
               </Link>
-              <p className="text-sm font-medium text-muted">
-                Updated:{" "}
-                {resident.currentPayment
-                  ? formatTimestamp(resident.currentPayment.updated_at)
-                  : "No record yet"}
-              </p>
-              {resident.currentPayment?.reject_reason ? (
-                <p className="rounded-2xl bg-rose-50 px-3 py-2 text-base font-bold text-rose-900">
-                  Reject reason: {resident.currentPayment.reject_reason}
-                </p>
-              ) : null}
-              {resident.currentPayment?.notes ? (
-                <p className="rounded-2xl bg-slate-50 px-3 py-2 text-base text-slate-800">
-                  Admin note: {resident.currentPayment.notes}
-                </p>
-              ) : null}
+              {getStatus(resident) !== "paid" ? (
+                <form action={markCashPaymentAction}>
+                  <input type="hidden" name="resident_id" value={resident.id} />
+                  <input type="hidden" name="month" value={currentMonth} />
+                  <ConfirmSubmitButton
+                    data-testid={`mobile-mark-cash-${resident.house_number}`}
+                    confirmMessage={`Mark ${resident.house_number} as paid by cash for ${currentMonthLabel}?`}
+                    confirmTitle="Confirm cash payment"
+                    className="min-h-11 w-full rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+                  >
+                    Mark cash
+                  </ConfirmSubmitButton>
+                </form>
+              ) : (
+                <span className="inline-flex min-h-11 items-center justify-center rounded-full bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-900">
+                  Settled
+                </span>
+              )}
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => copyReminder(resident)}
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-center text-sm font-bold leading-tight whitespace-nowrap text-teal-950"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-sm font-bold text-teal-950"
               >
                 <Copy className="h-4 w-4" />
-                {copiedResidentId === resident.id ? "Copied reminder" : "Copy reminder"}
+                {copiedResidentId === resident.id ? "Copied" : "Reminder"}
               </button>
+              <ContactActions phoneNumber={resident.phone_number} compact />
             </div>
-          </details>
+          </article>
         ))}
       </div>
 

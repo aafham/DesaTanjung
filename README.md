@@ -405,6 +405,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Approvals page dipolish semula
 - [x] Residents page dipolish semula
 - [x] Residents page toolbar, row action, phone warning, dan payment notes dikemaskan supaya lebih compact
+- [x] Residents mobile/tablet cards diperkemas supaya action utama terus nampak tanpa perlu expand
 - [x] Resident detail page dipolish semula
 - [x] Users page dipolish semula
 - [x] Search page dipolish semula sebagai compact global finder
