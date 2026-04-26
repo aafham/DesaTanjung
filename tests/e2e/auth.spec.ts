@@ -49,7 +49,7 @@ test.describe("authentication", () => {
     await expect(page).toHaveURL(/\/change-password$/, { timeout: 15_000 });
     await expect(page.getByRole("heading", { name: "Change your password" })).toBeVisible();
 
-    await page.getByLabel("New password").fill(env.firstLoginNewPassword!);
+    await page.getByLabel("New password", { exact: true }).fill(env.firstLoginNewPassword!);
     await page.getByLabel("Confirm new password").fill(env.firstLoginNewPassword!);
     await page.getByRole("button", { name: "Save new password" }).click();
 

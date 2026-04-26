@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { getAuthEnv, loginWithCredentials } from "./helpers/auth";
 import { createTinyPng } from "./helpers/files";
+import { resetCurrentMonthPaymentForHouse } from "./helpers/supabase-admin";
 
 const env = getAuthEnv();
 
@@ -120,6 +121,8 @@ test.describe.serial("resident payment and admin review flows", () => {
       !env.adminIdentifier || !env.adminPassword || !env.cashResidentHouseNumber,
       "Set E2E_ADMIN_* and E2E_CASH_RESIDENT_HOUSE_NUMBER in .env.e2e.local",
     );
+
+    await resetCurrentMonthPaymentForHouse(env.cashResidentHouseNumber!);
 
     await loginWithCredentials(page, env.adminIdentifier!, env.adminPassword!);
     await expect(page).toHaveURL(/\/admin$/, { timeout: 15_000 });

@@ -34,9 +34,11 @@ Nota penting:
 
 - Flow `upload`, `approve/reject`, `cash paid`, dan `settings` akan mengubah data sebenar.
 - Gunakan account atau environment disposable untuk mutation tests.
-- Wiring suite telah disemak semula dan `npx playwright test --list` mengesan semua `10` test dengan betul.
-- Suite disposable terkini berjaya dengan `9 passed, 1 skipped`; skip yang tinggal ialah `first-login resident` kerana env `E2E_FIRST_LOGIN_*` belum diisi.
+- Wiring suite telah disemak semula dan Playwright mengesan semua `12` test dengan betul.
+- Suite disposable terkini berjaya dengan `10 passed, 2 skipped`; skip yang tinggal ialah first-login tetap tanpa env disposable kekal dan settings mutation bila `E2E_ALLOW_SETTINGS_MUTATION` tidak dihidupkan.
+- First-login resident telah disahkan dengan akaun disposable sementara: `1 passed`.
 - Flow admin mutation yang telah disahkan secara E2E: `approve`, `reject`, `cash paid`, `settings update`, dan `QR upload`.
+- Flow user yang telah disahkan secara E2E: resident login, first-login change password, upload resit, profile update, dan notification selepas approve.
 - Playwright config kini dijalankan secara serial untuk kurangkan flaky login pada environment Supabase remote.
 
 1. Salin `.env.e2e.example` ke `.env.e2e.local`
@@ -199,17 +201,20 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] login page render
   - [x] invalid login error
   - [x] resident login smoke test
+- [x] Suite E2E user pada disposable/test account:
+  - [x] first-login resident dengan akaun disposable sementara
+  - [x] upload resit user
+  - [x] notification selepas approve
+  - [x] profile update
 - [x] Scalability user bila history makin panjang:
   - [x] payment history user guna `range` + `count` dari database
   - [x] notification inbox penuh guna `range` + `count` dari database
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] Jalankan suite penuh E2E user pada disposable environment sebenar:
-  - [ ] first-login resident dengan `E2E_FIRST_LOGIN_*`
-  - [ ] upload resit user
-  - [ ] notification selepas approve / reject
-  - [ ] profile update
+- [ ] E2E user fasa seterusnya:
+  - [ ] tambah assertion notification selepas reject
+  - [ ] kekalkan akaun `E2E_FIRST_LOGIN_*` disposable tetap jika mahu run full suite tanpa cipta akaun sementara
 - [ ] Tambah assertion visual / accessibility pada flow user yang paling penting:
   - [ ] upload resit
   - [ ] receipt preview modal
@@ -290,6 +295,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] missing phone export
   - [x] quick action links ke page berkaitan
   - [x] environment security reminder untuk Vercel dan Supabase secret
+  - [x] production error monitor untuk server action kritikal
 - [x] Admin activity page
 - [x] Admin activity dihadkan kepada log terbaru 14 hari untuk view global yang lebih ringan
 - [x] Activity pagination dipadatkan dengan ellipsis supaya nombor page tidak serabut bila log banyak
@@ -327,6 +333,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Performance / scalability admin yang sudah dibuat:
   - [x] server-side narrowing untuk global search
   - [x] semakan index database untuk query admin yang kerap
+  - [x] query-plan checklist SQL disediakan di `supabase/query-plan-checklist.sql`
   - [x] pagination berpandukan server / URL untuk users, residents, dan activity
   - [x] query database diperketat lagi untuk users, activity, default residents list, dan residents payment filter
   - [x] activity retention / prune function disediakan dalam schema
@@ -344,6 +351,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Error handling yang sudah dirapikan:
   - [x] mesej error yang lebih konsisten pada server action utama
   - [x] fail-safe yang lebih mesra pada flow kritikal admin
+  - [x] server action error kritikal dilog ke `server_action_errors`
 - [x] Polisi operasi live admin yang sudah disediakan:
   - [x] elakkan kongsi satu akaun admin untuk ramai AJK
   - [x] sediakan akaun admin berasingan untuk audit yang lebih jelas
@@ -368,15 +376,16 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 #### Masih perlu dibuat / boleh dipertingkatkan
 
 - [ ] Performance / scalability admin fasa seterusnya:
-  - [ ] semak query plan Supabase selepas data sebenar sudah banyak
+  - [ ] run `supabase/query-plan-checklist.sql` di Supabase SQL Editor selepas data sebenar sudah banyak
+  - [ ] enable PostgREST/Supabase explain plan jika mahu semak plan terus dari client
 - [ ] Operational readiness admin:
   - [ ] panduan rotate admin bila jawatankuasa bertukar
 - [ ] Security / permission refinement:
   - [ ] pecahkan role admin jika perlu, contoh `treasurer`, `viewer`, `super_admin`
   - [ ] hadkan action berisiko seperti delete user kepada admin tertentu
-- [ ] Monitoring production:
-  - [ ] log error server action kritikal ke tempat yang senang disemak
+- [ ] Monitoring production fasa seterusnya:
   - [ ] semak warning deployment / runtime selepas live digunakan komuniti sebenar
+  - [ ] pertimbangkan external alerting jika mahu notifikasi WhatsApp/email untuk error kritikal
 
 ### Checklist UI interface
 
@@ -604,6 +613,7 @@ Nota:
 |   |-- seed-users.json.example
 |   `-- seed-users.mjs
 |-- supabase
+|   |-- query-plan-checklist.sql
 |   `-- schema.sql
 `-- tests
     `-- e2e
@@ -650,6 +660,7 @@ Schema ini akan cipta dan kemas kini:
 - `public.notifications`
 - `public.payment_audit_logs`
 - `public.user_activity_logs`
+- `public.server_action_errors`
 - `public.app_settings`
 - `public.announcements`
 - RLS policies
@@ -660,6 +671,7 @@ Schema ini akan cipta dan kemas kini:
 Penting:
 
 - setiap kali schema berubah, run semula fail ini di Supabase
+- selepas data sebenar makin banyak, run [supabase/query-plan-checklist.sql](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\supabase\query-plan-checklist.sql) untuk semak plan query penting
 
 ### 2. Seed user demo
 
@@ -830,10 +842,10 @@ Semakan semula codebase terkini menunjukkan sistem sudah kuat untuk flow asas ad
 Keutamaan seterusnya:
 
 - jadualkan rutin `prune_user_activity_logs(90)` selepas portal live
-- semak query plan Supabase selepas data sebenar sudah banyak
+- run `supabase/query-plan-checklist.sql` di Supabase SQL Editor selepas data sebenar sudah banyak
 - `mobile UI audit` untuk user dan admin
-- `user E2E lengkap` termasuk first-login, upload, notification, dan profile update
-- monitoring production untuk server action error yang kritikal
+- tambah E2E notification reject dan mobile assertions
+- pantau Production error monitor di Health selepas portal digunakan komuniti sebenar
 
 ## Scripts yang tersedia
 

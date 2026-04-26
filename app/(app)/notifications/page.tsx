@@ -30,7 +30,7 @@ export default async function ResidentNotificationsPage({
       <ResidentNotificationList
         notifications={notifications}
         pagination={notificationPagination}
-        getPageHref={(nextPage) => (nextPage <= 1 ? "/notifications" : `/notifications?page=${nextPage}`)}
+        paginationBasePath="/notifications"
       />
 
       <AnnouncementFeed

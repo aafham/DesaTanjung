@@ -94,6 +94,17 @@ export type HealthCheckItem = {
   action?: string;
 };
 
+export type ServerActionErrorLog = {
+  id: string;
+  actor_id: string | null;
+  action: string;
+  route: string;
+  message: string;
+  error_message: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+};
+
 export type DuplicatePaymentGroup = {
   user_id: string;
   house_number: string;

@@ -75,13 +75,13 @@ export function ResidentNotificationList({
   notifications,
   compact = false,
   pagination,
-  getPageHref,
+  paginationBasePath = "/notifications",
   redirectPath = "/notifications",
 }: {
   notifications: NotificationRecord[];
   compact?: boolean;
   pagination?: PaginationMeta;
-  getPageHref?: (page: number) => string;
+  paginationBasePath?: string;
   redirectPath?: string;
 }) {
   const PAGE_SIZE = 5;
@@ -300,9 +300,12 @@ export function ResidentNotificationList({
         </div>
       ) : null}
 
-      {!compact && pagination && getPageHref ? (
+      {!compact && pagination ? (
         <div className="mt-4">
-          <ServerPaginationControls pagination={pagination} getHref={getPageHref} />
+          <ServerPaginationControls
+            pagination={pagination}
+            getHref={(page) => (page <= 1 ? paginationBasePath : `${paginationBasePath}?page=${page}`)}
+          />
         </div>
       ) : null}
     </Card>

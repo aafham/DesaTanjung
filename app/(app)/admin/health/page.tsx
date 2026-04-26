@@ -7,7 +7,7 @@ import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { pruneActivityLogsAction } from "@/lib/actions";
 import { getAdminHealthData } from "@/lib/data";
-import { formatMonthLabel } from "@/lib/utils";
+import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
 
 const statusPresentation = {
   healthy: {
@@ -85,7 +85,14 @@ export default async function AdminHealthPage({
   searchParams: Promise<{ message?: string; error?: string }>;
 }) {
   const params = await searchParams;
-  const { checks, duplicateGroups, missingPhoneResidents, warnings } = await getAdminHealthData();
+  const {
+    checks,
+    duplicateGroups,
+    missingPhoneResidents,
+    recentServerActionErrors,
+    serverActionErrorCount,
+    warnings,
+  } = await getAdminHealthData();
   const healthyCount = checks.filter((check) => check.status === "healthy").length;
   const warningCount = checks.filter((check) => check.status === "warning").length;
   const errorCount = checks.filter((check) => check.status === "error").length;
@@ -401,6 +408,47 @@ where id in (
           );
         })}
       </section>
+
+      <Card className={serverActionErrorCount > 0 ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}>
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Production error monitor</p>
+        <h3 className="mt-2 text-2xl font-bold text-slate-950">
+          Critical server action errors
+        </h3>
+        <p className="mt-2 text-base leading-7 text-slate-700">
+          This catches failed approval, reject, upload, cash payment, settings, user management, announcement, and maintenance actions so admins have a place to check production problems.
+        </p>
+        <div className="mt-5 rounded-3xl bg-white/80 px-4 py-4">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-muted">Last 7 days</p>
+          <p className="mt-2 text-4xl font-bold text-slate-950">{serverActionErrorCount}</p>
+        </div>
+        <div className="mt-5 space-y-3">
+          {recentServerActionErrors.length === 0 ? (
+            <div className="rounded-3xl bg-white/80 px-4 py-4 text-base font-semibold text-emerald-900">
+              No critical server action errors have been logged recently.
+            </div>
+          ) : (
+            recentServerActionErrors.map((errorLog) => (
+              <div key={errorLog.id} className="rounded-3xl bg-white px-4 py-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-base font-bold text-slate-950">{errorLog.action}</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-600">{errorLog.route}</p>
+                  </div>
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-amber-900">
+                    {formatTimestamp(errorLog.created_at)}
+                  </span>
+                </div>
+                <p className="mt-3 text-base text-slate-800">{errorLog.message}</p>
+                {errorLog.error_message ? (
+                  <p className="mt-2 rounded-2xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-900">
+                    {errorLog.error_message}
+                  </p>
+                ) : null}
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
 
       <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-teal-200 bg-teal-50">

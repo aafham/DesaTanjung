@@ -92,6 +92,17 @@ create table if not exists public.user_activity_logs (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.server_action_errors (
+  id uuid primary key default gen_random_uuid(),
+  actor_id uuid references public.users (id) on delete set null,
+  action text not null,
+  route text not null,
+  message text not null,
+  error_message text,
+  metadata jsonb,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
 create table if not exists public.app_settings (
   id boolean primary key default true,
   community_name text not null default 'Desa Tanjung',
@@ -152,6 +163,12 @@ on public.user_activity_logs (user_id, created_at desc);
 
 create index if not exists user_activity_logs_created_idx
 on public.user_activity_logs (created_at desc);
+
+create index if not exists server_action_errors_created_idx
+on public.server_action_errors (created_at desc);
+
+create index if not exists server_action_errors_action_created_idx
+on public.server_action_errors (action, created_at desc);
 
 create index if not exists announcements_audience_pinned_published_idx
 on public.announcements (audience, is_pinned desc, published_at desc);
@@ -476,6 +493,7 @@ alter table public.payments enable row level security;
 alter table public.notifications enable row level security;
 alter table public.payment_audit_logs enable row level security;
 alter table public.user_activity_logs enable row level security;
+alter table public.server_action_errors enable row level security;
 alter table public.app_settings enable row level security;
 alter table public.announcements enable row level security;
 
@@ -580,6 +598,20 @@ on public.user_activity_logs
 for insert
 to authenticated
 with check (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists "Admins can view server action errors" on public.server_action_errors;
+create policy "Admins can view server action errors"
+on public.server_action_errors
+for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "Authenticated users can log server action errors" on public.server_action_errors;
+create policy "Authenticated users can log server action errors"
+on public.server_action_errors
+for insert
+to authenticated
+with check (actor_id is null or actor_id = auth.uid() or public.is_admin());
 
 drop policy if exists "Authenticated users can view app settings" on public.app_settings;
 create policy "Authenticated users can view app settings"

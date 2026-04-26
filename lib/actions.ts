@@ -64,12 +64,73 @@ function getActionErrorMessage(
   return fallback;
 }
 
+function getLoggedErrorMessage(error?: ActionErrorLike | null) {
+  return error?.message?.trim() || null;
+}
+
+async function logServerActionError({
+  actorId,
+  action,
+  route,
+  message,
+  error,
+  metadata,
+}: {
+  actorId?: string | null;
+  action: string;
+  route: string;
+  message: string;
+  error?: ActionErrorLike | null;
+  metadata?: Record<string, string | number | boolean | null>;
+}) {
+  try {
+    const supabase = await createClient();
+    await supabase.from("server_action_errors").insert({
+      actor_id: actorId ?? null,
+      action,
+      route,
+      message,
+      error_message: getLoggedErrorMessage(error),
+      metadata: metadata ?? null,
+    });
+  } catch {
+    // Monitoring must never block the user action fallback path.
+  }
+}
+
 function redirectWithActionError(
   path: string,
   fallback: string,
   error?: ActionErrorLike | null,
 ) {
   redirectWithError(path, getActionErrorMessage(fallback, error));
+}
+
+async function redirectWithLoggedActionError({
+  path,
+  fallback,
+  error,
+  actorId,
+  action,
+  metadata,
+}: {
+  path: string;
+  fallback: string;
+  error?: ActionErrorLike | null;
+  actorId?: string | null;
+  action: string;
+  metadata?: Record<string, string | number | boolean | null>;
+}) {
+  const message = getActionErrorMessage(fallback, error);
+  await logServerActionError({
+    actorId,
+    action,
+    route: path,
+    message,
+    error,
+    metadata,
+  });
+  redirectWithError(path, message);
 }
 
 function getRelatedHouseNumber(
@@ -285,11 +346,14 @@ export async function approvePaymentAction(formData: FormData) {
     .maybeSingle();
 
   if (paymentError || !payment) {
-    redirectWithActionError(
-      `/admin/approvals?month=${month}`,
-      "Unable to find the selected payment proof.",
-      paymentError,
-    );
+    await redirectWithLoggedActionError({
+      path: `/admin/approvals?month=${month}`,
+      fallback: "Unable to find the selected payment proof.",
+      error: paymentError,
+      actorId: profile.id,
+      action: "approve_payment_lookup_failed",
+      metadata: { paymentId, month },
+    });
   }
 
   const { error: reviewError } = await supabase.rpc("admin_review_payment", {
@@ -299,11 +363,14 @@ export async function approvePaymentAction(formData: FormData) {
   });
 
   if (reviewError) {
-    redirectWithActionError(
-      `/admin/approvals?month=${month}`,
-      "Unable to approve the payment right now. Please try again.",
-      reviewError,
-    );
+    await redirectWithLoggedActionError({
+      path: `/admin/approvals?month=${month}`,
+      fallback: "Unable to approve the payment right now. Please try again.",
+      error: reviewError,
+      actorId: profile.id,
+      action: "approve_payment_failed",
+      metadata: { paymentId, month },
+    });
   }
 
   await supabase.from("notifications").update({ is_read: true }).eq("payment_id", paymentId).eq("scope", "admin");
@@ -352,11 +419,14 @@ export async function rejectPaymentAction(formData: FormData) {
     .maybeSingle();
 
   if (paymentError || !payment) {
-    redirectWithActionError(
-      `/admin/approvals?month=${month}`,
-      "Unable to find the selected payment proof.",
-      paymentError,
-    );
+    await redirectWithLoggedActionError({
+      path: `/admin/approvals?month=${month}`,
+      fallback: "Unable to find the selected payment proof.",
+      error: paymentError,
+      actorId: profile.id,
+      action: "reject_payment_lookup_failed",
+      metadata: { paymentId, month },
+    });
   }
 
   const { error: reviewError } = await supabase.rpc("admin_review_payment", {
@@ -367,11 +437,14 @@ export async function rejectPaymentAction(formData: FormData) {
   });
 
   if (reviewError) {
-    redirectWithActionError(
-      `/admin/approvals?month=${month}`,
-      "Unable to reject the payment proof right now. Please try again.",
-      reviewError,
-    );
+    await redirectWithLoggedActionError({
+      path: `/admin/approvals?month=${month}`,
+      fallback: "Unable to reject the payment proof right now. Please try again.",
+      error: reviewError,
+      actorId: profile.id,
+      action: "reject_payment_failed",
+      metadata: { paymentId, month },
+    });
   }
 
   if (payment?.user_id) {
@@ -481,11 +554,14 @@ export async function markCashPaymentAction(formData: FormData) {
   });
 
   if (error) {
-    redirectWithActionError(
-      `/admin/residents?month=${month}`,
-      "Unable to mark the cash payment right now. Please try again.",
+    await redirectWithLoggedActionError({
+      path: `/admin/residents?month=${month}`,
+      fallback: "Unable to mark the cash payment right now. Please try again.",
       error,
-    );
+      actorId: profile.id,
+      action: "mark_cash_payment_failed",
+      metadata: { residentId, month },
+    });
   }
   await createNotification({
     userId: residentId,
@@ -525,11 +601,14 @@ export async function bulkMarkCashPaymentAction(formData: FormData) {
     });
 
     if (error) {
-      redirectWithActionError(
-        `/admin/residents?month=${month}`,
-        "Unable to mark one or more cash payments right now. Please try again.",
+      await redirectWithLoggedActionError({
+        path: `/admin/residents?month=${month}`,
+        fallback: "Unable to mark one or more cash payments right now. Please try again.",
         error,
-      );
+        actorId: profile.id,
+        action: "bulk_mark_cash_payment_failed",
+        metadata: { residentId, month, selectedCount: residentIds.length },
+      });
     }
 
     await createNotification({
@@ -570,11 +649,14 @@ export async function updatePaymentNotesAction(formData: FormData) {
   const { error } = await supabase.from("payments").update({ notes }).eq("id", paymentId);
 
   if (error) {
-    redirectWithActionError(
-      "/admin/residents",
-      "Unable to update the payment note right now. Please try again.",
+    await redirectWithLoggedActionError({
+      path: "/admin/residents",
+      fallback: "Unable to update the payment note right now. Please try again.",
       error,
-    );
+      actorId: profile.id,
+      action: "payment_note_update_failed",
+      metadata: { paymentId },
+    });
   }
 
   await supabase.from("payment_audit_logs").insert({
@@ -645,11 +727,14 @@ export async function updateAppSettingsAction(formData: FormData) {
       });
 
     if (uploadError) {
-      redirectWithActionError(
-        "/admin/settings",
-        "Unable to upload the QR image right now. Please try again.",
-        uploadError,
-      );
+      await redirectWithLoggedActionError({
+        path: "/admin/settings",
+        fallback: "Unable to upload the QR image right now. Please try again.",
+        error: uploadError,
+        actorId: profile.id,
+        action: "settings_qr_upload_failed",
+        metadata: { fileType: qrImage.type, fileSize: qrImage.size },
+      });
     }
 
     const { data: publicUrlData } = adminClient.storage.from("app-assets").getPublicUrl(path);
@@ -673,11 +758,14 @@ export async function updateAppSettingsAction(formData: FormData) {
   });
 
   if (error) {
-    redirectWithActionError(
-      "/admin/settings",
-      "Unable to save the payment settings right now. Please try again.",
+    await redirectWithLoggedActionError({
+      path: "/admin/settings",
+      fallback: "Unable to save the payment settings right now. Please try again.",
       error,
-    );
+      actorId: profile.id,
+      action: "settings_save_failed",
+      metadata: { qrUploaded, dueDay, hasMonthlyFee: monthlyFee !== null },
+    });
   }
   await logAdminAudit(
     profile.id,
@@ -717,11 +805,14 @@ export async function createAnnouncementAction(formData: FormData) {
   });
 
   if (error) {
-    redirectWithActionError(
-      "/admin/announcements",
-      "Unable to publish the announcement right now. Please try again.",
+    await redirectWithLoggedActionError({
+      path: "/admin/announcements",
+      fallback: "Unable to publish the announcement right now. Please try again.",
       error,
-    );
+      actorId: profile.id,
+      action: "announcement_publish_failed",
+      metadata: { audience, isPinned },
+    });
   }
   await logAdminAudit(
     profile.id,
@@ -749,11 +840,14 @@ export async function deleteAnnouncementAction(formData: FormData) {
   const { error } = await supabase.from("announcements").delete().eq("id", announcementId);
 
   if (error) {
-    redirectWithActionError(
-      "/admin/announcements",
-      "Unable to remove the announcement right now. Please try again.",
+    await redirectWithLoggedActionError({
+      path: "/admin/announcements",
+      fallback: "Unable to remove the announcement right now. Please try again.",
       error,
-    );
+      actorId: profile.id,
+      action: "announcement_delete_failed",
+      metadata: { announcementId },
+    });
   }
   await logAdminAudit(
     profile.id,
@@ -781,6 +875,17 @@ export async function submitPaymentProofAction(
   });
 
   if (error || !paymentId) {
+    await logServerActionError({
+      actorId: profile.id,
+      action: "submit_payment_proof_failed",
+      route: "/payments",
+      message: getActionErrorMessage(
+        "Unable to save the payment proof right now. Please try again.",
+        error,
+      ),
+      error,
+      metadata: { houseNumber, month },
+    });
     throw new Error(
       getActionErrorMessage(
         "Unable to save the payment proof right now. Please try again.",
@@ -853,11 +958,14 @@ export async function createManagedUserAction(formData: FormData) {
   });
 
   if (error || !data.user) {
-    redirectWithActionError(
-      "/admin/users",
-      "Unable to create the user right now. Please check the details and try again.",
+    await redirectWithLoggedActionError({
+      path: "/admin/users",
+      fallback: "Unable to create the user right now. Please check the details and try again.",
       error,
-    );
+      actorId: profile.id,
+      action: "create_user_auth_failed",
+      metadata: { houseNumber, role },
+    });
   }
 
   const createdUser = data.user!;
@@ -875,11 +983,14 @@ export async function createManagedUserAction(formData: FormData) {
 
   if (upsertError) {
     await adminClient.auth.admin.deleteUser(createdUser.id);
-    redirectWithActionError(
-      "/admin/users",
-      "User login was created, but the resident record could not be saved. Please try again.",
-      upsertError,
-    );
+    await redirectWithLoggedActionError({
+      path: "/admin/users",
+      fallback: "User login was created, but the resident record could not be saved. Please try again.",
+      error: upsertError,
+      actorId: profile.id,
+      action: "create_user_profile_failed",
+      metadata: { houseNumber, role },
+    });
   }
   await logAdminAudit(
     profile.id,
@@ -932,11 +1043,14 @@ export async function updateManagedUserAction(formData: FormData) {
   });
 
   if (authError) {
-    redirectWithActionError(
-      "/admin/users",
-      "Unable to update the user login details right now. Please try again.",
-      authError,
-    );
+    await redirectWithLoggedActionError({
+      path: "/admin/users",
+      fallback: "Unable to update the user login details right now. Please try again.",
+      error: authError,
+      actorId: profile.id,
+      action: "update_user_auth_failed",
+      metadata: { userId, houseNumber, role },
+    });
   }
 
   const { error: profileError } = await adminClient
@@ -952,11 +1066,14 @@ export async function updateManagedUserAction(formData: FormData) {
     .eq("id", userId);
 
   if (profileError) {
-    redirectWithActionError(
-      "/admin/users",
-      "Unable to update the resident profile right now. Please try again.",
-      profileError,
-    );
+    await redirectWithLoggedActionError({
+      path: "/admin/users",
+      fallback: "Unable to update the resident profile right now. Please try again.",
+      error: profileError,
+      actorId: profile.id,
+      action: "update_user_profile_failed",
+      metadata: { userId, houseNumber, role },
+    });
   }
   await logAdminAudit(
     profile.id,
@@ -997,11 +1114,14 @@ export async function resetManagedUserPasswordAction(formData: FormData) {
   });
 
   if (resetError) {
-    redirectWithActionError(
-      "/admin/users",
-      "Unable to reset the password right now. Please try again.",
-      resetError,
-    );
+    await redirectWithLoggedActionError({
+      path: "/admin/users",
+      fallback: "Unable to reset the password right now. Please try again.",
+      error: resetError,
+      actorId: profile.id,
+      action: "reset_user_password_failed",
+      metadata: { userId, houseNumber, role },
+    });
   }
 
   const { error: profileError } = await adminClient
@@ -1010,11 +1130,14 @@ export async function resetManagedUserPasswordAction(formData: FormData) {
     .eq("id", userId);
 
   if (profileError) {
-    redirectWithActionError(
-      "/admin/users",
-      "Password was reset, but the reset flag could not be updated. Please try again.",
-      profileError,
-    );
+    await redirectWithLoggedActionError({
+      path: "/admin/users",
+      fallback: "Password was reset, but the reset flag could not be updated. Please try again.",
+      error: profileError,
+      actorId: profile.id,
+      action: "reset_user_flag_failed",
+      metadata: { userId, houseNumber, role },
+    });
   }
   await logAdminAudit(
     profile.id,
@@ -1060,11 +1183,14 @@ export async function deleteManagedUserAction(formData: FormData) {
     .single();
 
   if (targetUserError || !targetUser) {
-    redirectWithActionError(
-      "/admin/users",
-      "Unable to confirm this user before deletion. Please refresh and try again.",
-      targetUserError,
-    );
+    await redirectWithLoggedActionError({
+      path: "/admin/users",
+      fallback: "Unable to confirm this user before deletion. Please refresh and try again.",
+      error: targetUserError,
+      actorId: profile.id,
+      action: "delete_user_lookup_failed",
+      metadata: { userId, houseNumber },
+    });
   }
 
   const targetRole = targetUser?.role;
@@ -1080,11 +1206,14 @@ export async function deleteManagedUserAction(formData: FormData) {
       .eq("role", "admin");
 
     if (adminCountError) {
-      redirectWithActionError(
-        "/admin/users",
-        "Unable to confirm admin account coverage before deletion. Please try again.",
-        adminCountError,
-      );
+      await redirectWithLoggedActionError({
+        path: "/admin/users",
+        fallback: "Unable to confirm admin account coverage before deletion. Please try again.",
+        error: adminCountError,
+        actorId: profile.id,
+        action: "delete_user_admin_count_failed",
+        metadata: { userId, houseNumber },
+      });
     }
 
     if ((adminCount ?? 0) <= 1) {
@@ -1098,11 +1227,14 @@ export async function deleteManagedUserAction(formData: FormData) {
   const { error } = await adminClient.auth.admin.deleteUser(userId);
 
   if (error) {
-    redirectWithActionError(
-      "/admin/users",
-      "Unable to delete the user right now. Please try again.",
+    await redirectWithLoggedActionError({
+      path: "/admin/users",
+      fallback: "Unable to delete the user right now. Please try again.",
       error,
-    );
+      actorId: profile.id,
+      action: "delete_user_failed",
+      metadata: { userId, houseNumber },
+    });
   }
   await logAdminAudit(
     profile.id,
@@ -1125,11 +1257,14 @@ export async function pruneActivityLogsAction() {
   });
 
   if (error) {
-    redirectWithActionError(
-      "/admin/health",
-      "Unable to prune old activity logs right now. Please confirm the latest Supabase schema has been applied.",
+    await redirectWithLoggedActionError({
+      path: "/admin/health",
+      fallback: "Unable to prune old activity logs right now. Please confirm the latest Supabase schema has been applied.",
       error,
-    );
+      actorId: profile.id,
+      action: "prune_activity_logs_failed",
+      metadata: { keepDays: 90 },
+    });
   }
 
   await logAdminAudit(

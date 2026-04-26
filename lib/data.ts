@@ -18,6 +18,7 @@ import type {
   PaymentStatus,
   ResidentPaymentRecord,
   ResidentWithPayment,
+  ServerActionErrorLog,
   UserActivityWithUser,
   UserActivityLog,
   UserProfile,
@@ -1385,6 +1386,7 @@ export async function getAdminHealthData() {
     { error: settingsError },
     { data: payments, error: paymentsError },
     { data: buckets, error: bucketsError },
+    { data: serverActionErrors, error: serverActionErrorsError, count: serverActionErrorCount },
   ] = await Promise.all([
     supabase
       .from("users")
@@ -1400,6 +1402,12 @@ export async function getAdminHealthData() {
       .select("id, user_id, month, proof_url, status, updated_at")
       .order("updated_at", { ascending: false }),
     adminClient.storage.listBuckets(),
+    supabase
+      .from("server_action_errors")
+      .select("id, actor_id, action, route, message, error_message, metadata, created_at", { count: "exact" })
+      .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
 
   const duplicatePayments = new Map<string, number>();
@@ -1439,6 +1447,7 @@ export async function getAdminHealthData() {
   const unresolvedProofCount = ((payments as PaymentRecord[] | null) ?? []).filter(
     (payment) => !!payment.proof_url && payment.status === "pending",
   ).length;
+  const recentServerActionErrors = (serverActionErrors as ServerActionErrorLog[] | null) ?? [];
   const queryErrors = [residentsError, settingsError, paymentsError, bucketsError].filter(Boolean);
 
   const checks: HealthCheckItem[] = [
@@ -1549,6 +1558,20 @@ export async function getAdminHealthData() {
           : `${unresolvedProofCount} uploaded proof(s) are waiting for committee review.`,
       action: "Open Approvals and review the latest resident uploads.",
     },
+    {
+      id: "server-action-errors",
+      label: "Server action error monitor",
+      status: serverActionErrorsError ? "warning" : (serverActionErrorCount ?? 0) === 0 ? "healthy" : "warning",
+      detail: serverActionErrorsError
+        ? "Could not read server action error logs. Confirm the latest schema includes server_action_errors."
+        : (serverActionErrorCount ?? 0) === 0
+          ? "No critical server action errors were logged in the last 7 days."
+          : `${serverActionErrorCount} critical server action error(s) were logged in the last 7 days.`,
+      action:
+        (serverActionErrorCount ?? 0) === 0 && !serverActionErrorsError
+          ? "No action needed."
+          : "Review the Production error monitor section below and fix the failing action before heavy live use.",
+    },
   ];
 
   const queryWarnings = [
@@ -1556,6 +1579,7 @@ export async function getAdminHealthData() {
     ...(settingsError ? [createWarningMessage("QR settings", settingsError.message)] : []),
     ...(paymentsError ? [createWarningMessage("Payment scan", paymentsError.message)] : []),
     ...(bucketsError ? [createWarningMessage("Storage buckets", bucketsError.message)] : []),
+    ...(serverActionErrorsError ? [createWarningMessage("Server action monitor", serverActionErrorsError.message)] : []),
   ];
 
   return {
@@ -1563,6 +1587,8 @@ export async function getAdminHealthData() {
     checks,
     duplicateGroups,
     missingPhoneResidents,
+    recentServerActionErrors,
+    serverActionErrorCount: serverActionErrorCount ?? 0,
     warnings: [...warnings, ...queryWarnings],
   };
 }
