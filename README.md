@@ -193,19 +193,37 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] dialog focus trap
   - [x] live region untuk toast
   - [x] auth form error state lebih jelas
+- [x] Test automation user asas:
+  - [x] login page render
+  - [x] invalid login error
+  - [x] resident login smoke test
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] Contrast audit kecil yang masih berbaki pada page user tertentu
-- [ ] Keyboard flow audit penuh untuk login, payments upload, notifications, dan profile
-- [ ] Jalankan suite penuh E2E pada disposable environment sebenar untuk flow user
-- [ ] Tambah assertion visual / accessibility pada test flow user yang penting
-- [ ] Mobile UI audit penuh untuk:
+- [ ] Jalankan suite penuh E2E user pada disposable environment sebenar:
+  - [ ] first-login resident dengan `E2E_FIRST_LOGIN_*`
+  - [ ] upload resit user
+  - [ ] notification selepas approve / reject
+  - [ ] profile update
+- [ ] Tambah assertion visual / accessibility pada flow user yang paling penting:
+  - [ ] upload resit
+  - [ ] receipt preview modal
+  - [ ] notification inbox
+  - [ ] profile form
+- [ ] Contrast + keyboard audit kecil yang masih berbaki pada page user:
+  - [ ] login
+  - [ ] payments upload
+  - [ ] notifications
+  - [ ] profile
+- [ ] Mobile UI audit penuh untuk user:
   - [ ] `/login`
   - [ ] `/dashboard`
   - [ ] `/payments`
   - [ ] `/notifications`
   - [ ] `/profile`
+- [ ] Scalability user bila history makin panjang:
+  - [ ] pagination / limit untuk payment history jika rekod bertahun-tahun
+  - [ ] pagination server-side untuk notification inbox jika notifikasi makin banyak
 
 ### Checklist admin
 
@@ -290,6 +308,11 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] users guna filter + count + range terus dari database
   - [x] activity guna filter + count + range terus dari database
   - [x] residents default list dipage terus dari database bila tiada payment filter tambahan
+- [x] Performance / scalability admin yang sudah dibuat:
+  - [x] server-side narrowing untuk global search
+  - [x] semakan index database untuk query admin yang kerap
+  - [x] pagination berpandukan server / URL untuk users, residents, dan activity
+  - [x] query database diperketat lagi untuk users, activity, dan default residents list
 - [x] Test automation tersedia untuk flow admin utama:
   - [x] admin login
   - [x] resident upload -> admin approve / reject
@@ -300,27 +323,34 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Error handling yang sudah dirapikan:
   - [x] mesej error yang lebih konsisten pada server action utama
   - [x] fail-safe yang lebih mesra pada flow kritikal admin
+- [x] Polisi operasi live admin yang sudah disediakan:
+  - [x] elakkan kongsi satu akaun admin untuk ramai AJK
+  - [x] sediakan akaun admin berasingan untuk audit yang lebih jelas
+- [x] Full admin E2E mutation flow sudah dijalankan pada disposable environment:
+  - [x] approve
+  - [x] reject
+  - [x] cash paid
+  - [x] settings update
+  - [x] QR upload
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
-- [x] Jalankan suite penuh E2E pada disposable environment sebenar untuk mutation flow admin
-- [x] Tambah assertion visual / accessibility pada flow admin yang paling penting
-- [x] Contrast audit kecil yang masih berbaki pada komponen admin tertentu
-- [x] Keyboard flow audit penuh untuk page admin utama
-- [ ] Performance / scalability bila data makin besar:
-  - [x] server-side narrowing untuk global search
-  - [x] semakan index database untuk query admin yang kerap
-  - [x] pagination berpandukan server / URL untuk users, residents, dan activity
-  - [x] query database diperketat lagi untuk users, activity, dan default residents list
-- [ ] UI audit dan final polish untuk page admin yang belum disemak penuh:
-  - [x] activity
-  - [x] reports
-  - [x] announcements
-  - [x] settings
-  - [x] health
-- [ ] Polisi operasi live:
-  - [x] elakkan kongsi satu akaun admin untuk ramai AJK
-  - [x] sediakan akaun admin berasingan untuk audit yang lebih jelas
+- [ ] Performance / scalability admin fasa seterusnya:
+  - [ ] DB-level query penuh untuk residents bila guna `status` / `payment method` filter
+  - [ ] export CSV penuh ikut filter untuk residents dan activity, bukan current page sahaja
+  - [ ] activity retention / archive policy supaya table log tidak membesar tanpa had
+  - [ ] semak query plan Supabase selepas data sebenar sudah banyak
+- [ ] Operational readiness admin:
+  - [ ] SOP bulanan AJK untuk review payment, export report, dan backup data
+  - [ ] panduan rotate admin bila jawatankuasa bertukar
+  - [ ] checklist restore data / emergency jika tersilap delete user atau payment
+- [ ] Security / permission refinement:
+  - [ ] pecahkan role admin jika perlu, contoh `treasurer`, `viewer`, `super_admin`
+  - [ ] hadkan action berisiko seperti delete user kepada admin tertentu
+  - [ ] tambah confirmation copy yang lebih kuat untuk delete user dan reset password
+- [ ] Monitoring production:
+  - [ ] log error server action kritikal ke tempat yang senang disemak
+  - [ ] semak warning deployment / runtime selepas live digunakan komuniti sebenar
 
 ### Checklist UI interface
 
@@ -354,6 +384,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Contrast audit kecil pada komponen user yang masih berbaki
 - [ ] Semakan visual untuk empty state, error state, dan loading state pada page user
 - [ ] Screenshot audit UI untuk page user utama
+- [ ] Semak copy Bahasa Melayu / English supaya arahan user lebih konsisten dan mudah faham
 
 #### UI interface admin
 
@@ -381,13 +412,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 
 ##### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] Audit UI penuh untuk page admin yang belum disemak habis:
-  - [ ] `/admin/activity`
-  - [ ] `/admin/reports`
-  - [ ] `/admin/announcements`
-  - [ ] `/admin/settings`
-  - [ ] `/admin/health`
-- [ ] Audit mobile UI untuk:
+- [ ] Audit mobile UI admin penuh untuk:
   - [ ] `/admin`
   - [ ] `/admin/approvals`
   - [ ] `/admin/residents`
@@ -395,15 +420,21 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [ ] `/admin/search`
   - [ ] `/admin/settings`
   - [ ] `/admin/reports`
-- [ ] Contrast audit kecil pada komponen admin yang masih berbaki
-- [ ] Semakan visual untuk empty state, success state, error state, dan loading state pada page admin
-- [ ] Screenshot audit UI untuk page admin utama yang belum cukup
+- [ ] Semakan visual state admin:
+  - [ ] empty state
+  - [ ] success state
+  - [ ] error state
+  - [ ] loading state
+- [ ] Screenshot audit akhir untuk desktop dan mobile selepas data sebenar dimasukkan
+- [ ] Semak semula sama ada `Search` masih perlu kekal di sidebar selepas admin sebenar guna sistem beberapa minggu
 
 ### Housekeeping kod
 
 #### Sudah dibuat
 
 - [x] `components/auth-panel.tsx` dibuang kerana tidak lagi digunakan
+- [x] helper `getWhatsAppResidents` dibuang kerana tidak lagi digunakan
+- [x] server action `createCurrentMonthRecordAction` dibuang kerana tiada caller aktif
 - [x] README disusun semula ikut fungsi sebenar `User` dan `Admin`
 - [x] Checklist lama yang bercampur-campur diringkaskan supaya senang audit progress
 
@@ -411,6 +442,13 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 
 - [ ] Semakan berkala untuk dead code bila feature lama diubah atau dibuang
 - [ ] Semakan semula struktur test/helper jika suite E2E terus bertambah
+- [ ] Pecahkan `lib/data.ts` kepada modul lebih kecil jika data layer terus membesar:
+  - [ ] user data
+  - [ ] admin dashboard data
+  - [ ] reports data
+  - [ ] health data
+  - [ ] search data
+- [ ] Kuatkan typing untuk query builder helper supaya tidak bergantung pada `any`
 
 ### Checklist go-live / live environment
 
@@ -714,6 +752,19 @@ Project sekarang ada loading state pada action penting:
 - update user
 - publish announcement
 - upload receipt
+
+## Review terkini
+
+Semakan semula codebase terkini menunjukkan sistem sudah kuat untuk flow asas admin dan user. Fokus penambahbaikan selepas ini patut bergerak kepada operasi live, data yang semakin besar, dan pengalaman mobile sebenar.
+
+Keutamaan seterusnya:
+
+- `activity retention / archive policy` supaya table log tidak membesar tanpa had
+- `DB-level residents filter` untuk status dan payment method bila jumlah penduduk meningkat
+- `full filtered CSV export` untuk residents dan activity
+- `mobile UI audit` untuk user dan admin
+- `user E2E lengkap` termasuk first-login, upload, notification, dan profile update
+- `operational SOP` untuk AJK bila portal sudah digunakan komuniti sebenar
 
 ## Scripts yang tersedia
 

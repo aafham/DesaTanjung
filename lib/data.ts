@@ -72,10 +72,6 @@ function getSystemHealthWarnings(settings: AppSettings) {
   return warnings;
 }
 
-function getWhatsAppResidents(residents: ResidentWithPayment[]) {
-  return residents.filter((resident) => !!resident.phone_number);
-}
-
 function getDisplayStatus(
   status: PaymentRecord["status"] | null | undefined,
   month: string,

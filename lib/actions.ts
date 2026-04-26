@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { ensureCurrentMonthPayment, requireUserProfile } from "@/lib/data";
+import { requireUserProfile } from "@/lib/data";
 import {
   formatMonthLabel,
   getMonthKey,
@@ -765,13 +765,6 @@ export async function deleteAnnouncementAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/admin/announcements");
   redirectWithMessage("/admin/announcements", "Announcement removed.");
-}
-
-export async function createCurrentMonthRecordAction() {
-  const profile = await requireUserProfile();
-  await ensureCurrentMonthPayment(profile.id);
-  revalidatePath("/dashboard");
-  revalidatePath("/payments");
 }
 
 export async function submitPaymentProofAction(
