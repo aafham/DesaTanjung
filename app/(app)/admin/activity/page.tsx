@@ -21,6 +21,7 @@ export default async function AdminActivityPage({
   const { activityLogs, warnings, filters, pagination, summary } =
     await getAdminActivityLogData({
       page: Number(params.page ?? "1"),
+      pageSize: 10,
       query: params.q ?? "",
       actionFilter: params.action ?? "all",
       roleFilter: params.role ?? "all",

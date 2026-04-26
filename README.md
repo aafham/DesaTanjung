@@ -284,6 +284,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] quick action links ke page berkaitan
 - [x] Admin activity page
 - [x] Admin activity dihadkan kepada log terbaru 14 hari untuk view global yang lebih ringan
+- [x] Activity pagination dipadatkan dengan ellipsis supaya nombor page tidak serabut bila log banyak
 - [x] Audit log untuk action kritikal admin:
   - [x] approve / reject payment
   - [x] cash paid / bulk cash paid
@@ -304,6 +305,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] activity
   - [x] users
   - [x] residents
+- [x] Pagination UI dipadatkan supaya hanya page penting, page semasa, ellipsis, previous, dan next dipaparkan
 - [x] Query admin diperkemas lagi pada data layer:
   - [x] users guna filter + count + range terus dari database
   - [x] activity guna filter + count + range terus dari database
@@ -414,6 +416,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Expandable admin cards ada focus hint dan keyboard style yang lebih baik
 - [x] Contact actions, timeline, history, dan metadata admin diperkemas dari segi contrast
 - [x] Activity page diperkemas dari segi summary filter, clear filters, dan hierarchy
+- [x] Activity page pagination diperkemas supaya tidak memaparkan semua nombor page sekaligus
 
 ##### Masih perlu dibuat / boleh dipertingkatkan
 
