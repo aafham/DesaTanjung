@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Download } from "lucide-react";
 import type { PaginationMeta, UserActivityWithUser } from "@/lib/types";
@@ -40,10 +40,6 @@ const DATE_OPTIONS = [
   { value: "7d", label: "Last 7 days" },
   { value: "14d", label: "Last 14 days" },
 ] as const;
-
-function escapeCsv(value: string) {
-  return `"${value.replaceAll('"', '""')}"`;
-}
 
 export function AdminActivityLog({
   activityLogs,
@@ -157,23 +153,6 @@ export function AdminActivityLog({
     return () => window.clearTimeout(timer);
   }, [deferredQuery, filters.query, updateUrl]);
 
-  const csvHref = useMemo(() => {
-    const rows = [
-      ["Date", "House", "Resident", "Role", "Action", "Message"],
-      ...activityLogs.map((activity) => [
-        formatTimestamp(activity.created_at),
-        activity.users?.house_number ?? "",
-        activity.users?.name ?? "",
-        activity.users?.role ?? "",
-        activity.action,
-        activity.message,
-      ]),
-    ];
-    const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
-
-    return `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`;
-  }, [activityLogs]);
-
   const startItem =
     pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.pageSize + 1;
   const endItem = Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems);
@@ -196,6 +175,28 @@ export function AdminActivityLog({
       page: 1,
     });
   }
+
+  const exportParams = new URLSearchParams();
+
+  if (deferredQuery.trim()) {
+    exportParams.set("q", deferredQuery.trim());
+  }
+
+  if (actionFilter !== "all") {
+    exportParams.set("action", actionFilter);
+  }
+
+  if (roleFilter !== "all") {
+    exportParams.set("role", roleFilter);
+  }
+
+  if (dateFilter !== "14d") {
+    exportParams.set("date", dateFilter);
+  }
+
+  const exportHref = exportParams.toString()
+    ? `/admin/activity/export?${exportParams.toString()}`
+    : "/admin/activity/export";
 
   return (
     <section className="space-y-4" aria-labelledby="activity-log-heading">
@@ -354,12 +355,11 @@ export function AdminActivityLog({
             </button>
           ) : null}
           <a
-            href={csvHref}
-            download={`resident-activity-log-page-${pagination.currentPage}.csv`}
+            href={exportHref}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-sm font-bold whitespace-nowrap text-white"
           >
             <Download className="h-4 w-4" />
-            Export CSV
+            Export filtered CSV
           </a>
         </div>
       </div>
