@@ -60,7 +60,7 @@ export function ServerPaginationControls({
       aria-label="Pagination"
     >
       <p className="text-sm font-bold text-muted">
-        Page <span className="text-slate-950">{pagination.currentPage}</span> of{" "}
+        Halaman <span className="text-slate-950">{pagination.currentPage}</span> daripada{" "}
         <span className="text-slate-950">{pagination.totalPages}</span>
       </p>
       <div className="flex flex-wrap items-center justify-end gap-2">
@@ -68,10 +68,10 @@ export function ServerPaginationControls({
           <Link
             href={getHref(pagination.currentPage - 1)}
             className={`${pageLinkClass} bg-slate-100 text-slate-950 hover:bg-slate-200`}
-            aria-label="Previous page"
+            aria-label="Halaman sebelumnya"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Previous</span>
+            <span className="sr-only">Sebelumnya</span>
           </Link>
         ) : (
           <span
@@ -111,10 +111,10 @@ export function ServerPaginationControls({
           <Link
             href={getHref(pagination.currentPage + 1)}
             className={`${pageLinkClass} bg-slate-100 text-slate-950 hover:bg-slate-200`}
-            aria-label="Next page"
+            aria-label="Halaman seterusnya"
           >
             <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Next</span>
+            <span className="sr-only">Seterusnya</span>
           </Link>
         ) : (
           <span

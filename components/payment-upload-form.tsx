@@ -61,11 +61,11 @@ export function PaymentUploadForm({
 
   function validateReceiptFile(selected: File) {
     if (!["image/png", "image/jpeg", "image/jpg"].includes(selected.type)) {
-      return "Only PNG and JPG receipt images are allowed.";
+      return "Hanya gambar resit PNG atau JPG dibenarkan.";
     }
 
     if (selected.size > 10 * 1024 * 1024) {
-      return "Receipt image must be 10MB or smaller.";
+      return "Saiz gambar resit mesti 10MB atau lebih kecil.";
     }
 
     return null;
@@ -78,7 +78,7 @@ export function PaymentUploadForm({
       const image = await new Promise<HTMLImageElement>((resolve, reject) => {
         const element = new window.Image();
         element.onload = () => resolve(element);
-        element.onerror = () => reject(new Error("Unable to read the selected image."));
+        element.onerror = () => reject(new Error("Gambar yang dipilih tidak dapat dibaca."));
         element.src = objectUrl;
       });
 
@@ -192,20 +192,20 @@ export function PaymentUploadForm({
       setError(
         preparationError instanceof Error
           ? preparationError.message
-          : "Unable to prepare the selected image.",
+          : "Gambar yang dipilih tidak dapat disediakan.",
       );
     }
   }
 
   async function handleUpload() {
     if (!file) {
-      setError("Please choose an image file first.");
+      setError("Sila pilih gambar resit dahulu.");
       setMessage(null);
       return;
     }
 
     if (uploadStage === "preparing") {
-      setError("Please wait until the image preparation finishes.");
+      setError("Sila tunggu sehingga gambar selesai disediakan.");
       setMessage(null);
       return;
     }
@@ -238,10 +238,10 @@ export function PaymentUploadForm({
       const { error: cleanupError } = await supabase.storage.from(PAYMENT_BUCKET).remove([path]);
       setError(
         cleanupError
-          ? "Receipt upload could not be completed. The image was uploaded but automatic cleanup failed, so please contact the committee before retrying."
+          ? "Resit tidak berjaya dihantar. Gambar sudah dimuat naik tetapi sistem gagal membersihkan fail sementara. Sila hubungi jawatankuasa sebelum cuba semula."
           : submissionError instanceof Error
-            ? `${submissionError.message} The uploaded image has been removed, so you can safely try again.`
-            : "Unable to save the payment record. The uploaded image has been removed, so you can safely try again.",
+            ? `${submissionError.message} Gambar yang dimuat naik sudah dibuang, jadi anda boleh cuba semula.`
+            : "Rekod bayaran tidak berjaya disimpan. Gambar yang dimuat naik sudah dibuang, jadi anda boleh cuba semula.",
       );
       setUploadStage("idle");
       setIsUploading(false);
@@ -253,7 +253,7 @@ export function PaymentUploadForm({
       router.refresh();
     });
 
-    setMessage("Payment proof uploaded successfully. It is now waiting for approval.");
+    setMessage("Resit bayaran berjaya dihantar dan sedang menunggu semakan jawatankuasa.");
     resetSelection();
     setIsUploading(false);
   }
@@ -263,11 +263,11 @@ export function PaymentUploadForm({
       <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-4xl border-2 border-dashed border-line bg-slate-50 px-4 py-10 text-center transition hover:border-primary">
         <UploadCloud className="h-9 w-9 text-primary" />
         <div>
-          <p className="text-xl font-bold text-slate-950">Tap here to choose receipt</p>
-          <p className="mt-1 text-base text-muted">PNG or JPG up to 10MB. Large images are optimized automatically before upload.</p>
+          <p className="text-xl font-bold text-slate-950">Tekan di sini untuk pilih resit</p>
+          <p className="mt-1 text-base text-muted">PNG atau JPG sehingga 10MB. Gambar besar akan dikecilkan secara automatik sebelum dimuat naik.</p>
           {file ? (
             <p className="mt-2 rounded-full bg-teal-100 px-3 py-1 text-sm font-bold text-teal-900">
-              Selected: {file.name}
+              Dipilih: {file.name}
             </p>
           ) : null}
         </div>
@@ -286,7 +286,7 @@ export function PaymentUploadForm({
       {fileSummary ? (
         <div className="rounded-3xl border border-line bg-slate-50 px-4 py-4 text-sm text-slate-700">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="font-bold text-slate-950">Receipt image summary</p>
+            <p className="font-bold text-slate-950">Ringkasan gambar resit</p>
             <span
               className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${
                 fileSummary.optimized
@@ -294,13 +294,13 @@ export function PaymentUploadForm({
                   : "bg-slate-200 text-slate-700"
               }`}
             >
-              {fileSummary.optimized ? "Optimized before upload" : "Ready to upload"}
+              {fileSummary.optimized ? "Dikecilkan sebelum muat naik" : "Sedia untuk dimuat naik"}
             </span>
           </div>
           <p className="mt-2">
-            Original size: <span className="font-bold text-slate-950">{fileSummary.originalSizeLabel}</span>
+            Saiz asal: <span className="font-bold text-slate-950">{fileSummary.originalSizeLabel}</span>
             {" | "}
-            Upload size: <span className="font-bold text-slate-950">{fileSummary.finalSizeLabel}</span>
+            Saiz muat naik: <span className="font-bold text-slate-950">{fileSummary.finalSizeLabel}</span>
           </p>
         </div>
       ) : null}
@@ -309,7 +309,7 @@ export function PaymentUploadForm({
         <div className="overflow-hidden rounded-4xl border border-line">
           <Image
             src={preview}
-            alt="Receipt preview"
+            alt="Pratonton resit"
             width={900}
             height={900}
             className="h-auto w-full object-cover"
@@ -317,7 +317,7 @@ export function PaymentUploadForm({
           />
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-white px-4 py-3">
             <p className="text-sm font-semibold text-slate-700">
-              Preview your receipt carefully before submitting.
+              Semak resit ini dengan teliti sebelum dihantar.
             </p>
             <button
               type="button"
@@ -325,7 +325,7 @@ export function PaymentUploadForm({
               disabled={isUploading || isPending}
               className="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-slate-200"
             >
-              Remove image
+              Buang gambar
             </button>
           </div>
         </div>
@@ -335,7 +335,7 @@ export function PaymentUploadForm({
         <div className="rounded-3xl border border-teal-200 bg-teal-50 px-4 py-4">
           <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-[0.12em] text-teal-900">
             <LoaderCircle className="h-4 w-4 animate-spin" />
-            Upload progress
+            Proses muat naik
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-teal-100">
             <div
@@ -356,10 +356,10 @@ export function PaymentUploadForm({
           <p className="mt-3 text-sm font-semibold text-teal-950">
             {
               {
-                preparing: "Preparing and optimizing the image for faster upload.",
-                uploading: "Uploading the receipt image to secure storage.",
-                saving: "Saving the payment record and sending the update to the committee.",
-                refreshing: "Refreshing the page with the latest status.",
+                preparing: "Menyediakan gambar supaya muat naik lebih cepat.",
+                uploading: "Memuat naik gambar resit ke simpanan selamat.",
+                saving: "Menyimpan rekod bayaran dan menghantar kemas kini kepada jawatankuasa.",
+                refreshing: "Memuat semula status terkini.",
                 idle: "",
               }[uploadStage]
             }
@@ -382,14 +382,14 @@ export function PaymentUploadForm({
                 }}
                 className="rounded-full bg-rose-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-rose-800"
               >
-                Try upload again
+                Cuba muat naik semula
               </button>
               <button
                 type="button"
                 onClick={resetSelection}
                 className="rounded-full bg-white px-4 py-2 text-sm font-bold text-rose-800 transition hover:bg-rose-100"
               >
-                Choose another image
+                Pilih gambar lain
               </button>
             </div>
           ) : null}
@@ -415,18 +415,18 @@ export function PaymentUploadForm({
           <>
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
             {uploadStage === "saving"
-              ? "Saving payment record..."
+              ? "Menyimpan rekod bayaran..."
               : uploadStage === "refreshing"
-                ? "Refreshing status..."
-                : "Uploading receipt..."}
+                ? "Memuat semula status..."
+                : "Memuat naik resit..."}
           </>
         ) : uploadStage === "preparing" ? (
           <>
             <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-            Preparing image...
+            Menyediakan gambar...
           </>
         ) : (
-          "Submit receipt for approval"
+          "Hantar resit untuk semakan"
         )}
       </Button>
     </div>

@@ -34,8 +34,8 @@ test.describe("authentication", () => {
     await loginWithCredentials(page, env.residentIdentifier!, env.residentPassword!);
 
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
-    await expect(page.getByText("Current month")).toBeVisible();
-    await expect(page.getByText("Latest payment activity")).toBeVisible();
+    await expect(page.getByText("Bulan semasa")).toBeVisible();
+    await expect(page.getByText("Aktiviti bayaran terkini")).toBeVisible();
   });
 
   test("forces a first-login resident to change the password", async ({ page }) => {
@@ -47,20 +47,20 @@ test.describe("authentication", () => {
     await loginWithCredentials(page, env.firstLoginIdentifier!, env.firstLoginPassword!);
 
     await expect(page).toHaveURL(/\/change-password$/, { timeout: 15_000 });
-    await expect(page.getByRole("heading", { name: "Change your password" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Tukar kata laluan" })).toBeVisible();
 
-    await page.getByLabel("New password", { exact: true }).fill(env.firstLoginNewPassword!);
-    await page.getByLabel("Confirm new password").fill(env.firstLoginNewPassword!);
-    await page.getByRole("button", { name: "Save new password" }).click();
+    await page.getByLabel("Kata laluan baharu", { exact: true }).fill(env.firstLoginNewPassword!);
+    await page.getByLabel("Sahkan kata laluan baharu").fill(env.firstLoginNewPassword!);
+    await page.getByRole("button", { name: "Simpan kata laluan baharu" }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
-    await expect(page.getByText("Current month")).toBeVisible();
+    await expect(page.getByText("Bulan semasa")).toBeVisible();
   });
 
   test("shows an error for invalid credentials", async ({ page }) => {
     await loginWithCredentials(page, "unknown-user", "wrong-password");
 
     await expect(page).toHaveURL(/\/login\?error=/);
-    await expect(page.getByText("Invalid username or password.")).toBeVisible();
+    await expect(page.getByText("Username atau kata laluan tidak betul.")).toBeVisible();
   });
 });

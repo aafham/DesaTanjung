@@ -199,7 +199,7 @@ export async function loginAction(formData: FormData) {
   });
 
   if (error) {
-    redirectWithError("/login", "Invalid username or password.");
+    redirectWithError("/login", "Username atau kata laluan tidak betul.");
   }
 
   const profile = await requireUserProfile();
@@ -228,11 +228,11 @@ export async function changePasswordAction(formData: FormData) {
   const confirmPassword = String(formData.get("confirm_password") ?? "");
 
   if (password.length < 8) {
-    redirectWithError("/change-password", "Password must be at least 8 characters.");
+    redirectWithError("/change-password", "Kata laluan mesti sekurang-kurangnya 8 aksara.");
   }
 
   if (password !== confirmPassword) {
-    redirectWithError("/change-password", "New password and confirm password must match.");
+    redirectWithError("/change-password", "Kata laluan baharu dan pengesahan mesti sama.");
   }
 
   const supabase = await createClient();
@@ -241,7 +241,7 @@ export async function changePasswordAction(formData: FormData) {
   if (error) {
     redirectWithActionError(
       "/change-password",
-      "Unable to update the password right now. Please try again.",
+      "Kata laluan tidak dapat dikemas kini sekarang. Sila cuba lagi.",
       error,
     );
   }
@@ -264,11 +264,11 @@ export async function updateProfileAction(formData: FormData) {
   const phoneNumber = normalizeMalaysianPhoneNumber(phoneNumberInput);
 
   if (!name || !address || !phoneNumberInput) {
-    redirectWithError("/profile", "Please complete your name, address, and phone number.");
+    redirectWithError("/profile", "Sila lengkapkan nama, alamat, dan nombor telefon.");
   }
 
   if (!phoneNumber) {
-    redirectWithError("/profile", "Please enter a valid Malaysian mobile number.");
+    redirectWithError("/profile", "Sila masukkan nombor telefon Malaysia yang sah.");
   }
 
   const supabase = await createClient();
@@ -306,7 +306,7 @@ export async function updateProfileAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/payments");
   revalidatePath("/profile");
-  redirectWithMessage("/profile", "Profile updated successfully.");
+  redirectWithMessage("/profile", "Profil berjaya dikemas kini.");
 }
 
 export async function signOutAction() {
@@ -379,7 +379,7 @@ export async function approvePaymentAction(formData: FormData) {
       userId: payment.user_id,
       paymentId,
       scope: "resident",
-      message: `Payment for ${formatMonthLabel(payment.month)} has been approved by the committee.`,
+      message: `Bayaran untuk ${formatMonthLabel(payment.month)} sudah disahkan oleh jawatankuasa.`,
     });
   }
   await logAdminAudit(
@@ -452,8 +452,8 @@ export async function rejectPaymentAction(formData: FormData) {
       userId: payment.user_id,
       paymentId,
       scope: "resident",
-      message: `Payment proof for ${formatMonthLabel(payment.month)} was rejected. Reason: ${
-        rejectReason || "Payment proof needs correction."
+      message: `Resit bayaran untuk ${formatMonthLabel(payment.month)} ditolak. Sebab: ${
+        rejectReason || "Resit bayaran perlu dibetulkan."
       }`,
     });
   }
@@ -501,7 +501,7 @@ export async function markResidentNotificationsReadAction() {
   revalidatePath("/payments");
   revalidatePath("/notifications");
   revalidatePath("/profile");
-  redirectWithMessage("/dashboard", "Notifications marked as read.");
+  redirectWithMessage("/dashboard", "Notifikasi ditanda sebagai dibaca.");
 }
 
 export async function markSingleResidentNotificationReadAction(formData: FormData) {
@@ -510,7 +510,7 @@ export async function markSingleResidentNotificationReadAction(formData: FormDat
   const redirectPath = String(formData.get("redirect_path") ?? "/notifications").trim() || "/notifications";
 
   if (!notificationId) {
-    redirectWithError(redirectPath, "Invalid notification selected.");
+    redirectWithError(redirectPath, "Notifikasi yang dipilih tidak sah.");
   }
 
   const supabase = await createClient();
@@ -566,7 +566,7 @@ export async function markCashPaymentAction(formData: FormData) {
   await createNotification({
     userId: residentId,
     scope: "resident",
-    message: `Payment for ${formatMonthLabel(month)} was marked as paid by cash.`,
+    message: `Bayaran untuk ${formatMonthLabel(month)} ditanda selesai secara tunai.`,
   });
   await logAdminAudit(
     profile.id,
@@ -614,7 +614,7 @@ export async function bulkMarkCashPaymentAction(formData: FormData) {
     await createNotification({
       userId: residentId,
       scope: "resident",
-      message: `Payment for ${formatMonthLabel(month)} was marked as paid by cash.`,
+      message: `Bayaran untuk ${formatMonthLabel(month)} ditanda selesai secara tunai.`,
     });
   }
   await logAdminAudit(
@@ -904,7 +904,7 @@ export async function submitPaymentProofAction(
     userId: profile.id,
     paymentId,
     scope: "resident",
-    message: `Payment proof for ${formatMonthLabel(month)} has been submitted and is waiting for committee review.`,
+    message: `Resit bayaran untuk ${formatMonthLabel(month)} sudah dihantar dan sedang menunggu semakan jawatankuasa.`,
   });
   await logUserActivity(
     profile.id,

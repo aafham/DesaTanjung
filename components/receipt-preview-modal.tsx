@@ -7,7 +7,7 @@ import { Expand, X } from "lucide-react";
 export function ReceiptPreviewModal({
   src,
   alt,
-  triggerLabel = "View larger",
+  triggerLabel = "Lihat lebih besar",
   inline = false,
 }: {
   src: string;
@@ -103,7 +103,7 @@ export function ReceiptPreviewModal({
             onClick={(event) => event.stopPropagation()}
           >
             <p className="sr-only" id={`${modalTitleId}-description`}>
-              Enlarged receipt preview. Press Escape to close this dialog.
+              Pratonton resit yang dibesarkan. Tekan Escape untuk tutup dialog ini.
             </p>
             <button
               ref={closeButtonRef}
@@ -114,11 +114,11 @@ export function ReceiptPreviewModal({
             >
               <span className="flex items-center gap-2">
                 <X className="h-4 w-4" />
-                Close
+                Tutup
               </span>
             </button>
             <div className="max-h-[85vh] overflow-auto p-3 sm:p-4">
-              <h2 className="sr-only">Receipt preview</h2>
+              <h2 className="sr-only">Pratonton resit</h2>
               <Image
                 src={src}
                 alt={alt}

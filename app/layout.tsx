@@ -9,8 +9,8 @@ const atkinson = Atkinson_Hyperlegible({
 });
 
 export const metadata: Metadata = {
-  title: "Desa Tanjung Payments",
-  description: "Monthly payment management for residential communities.",
+  title: "Portal Bayaran Desa Tanjung",
+  description: "Pengurusan bayaran bulanan untuk komuniti penduduk.",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ms">
       <body className={`${atkinson.variable} font-sans`}>
         {children}
       </body>

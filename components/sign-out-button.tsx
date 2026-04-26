@@ -4,8 +4,8 @@ import { FormSubmitButton } from "@/components/form-submit-button";
 export function SignOutButton() {
   return (
     <form action={signOutAction}>
-      <FormSubmitButton variant="ghost" className="w-full sm:w-auto" pendingLabel="Signing out...">
-        Sign out
+      <FormSubmitButton variant="ghost" className="w-full sm:w-auto" pendingLabel="Sedang log keluar...">
+        Log keluar
       </FormSubmitButton>
     </form>
   );

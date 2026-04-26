@@ -18,12 +18,12 @@ export default async function ResidentNotificationsPage({
       <DataWarning warnings={warnings} />
 
       <section>
-        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Notifications</p>
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Notifikasi</p>
         <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
-          Resident inbox and updates
+          Inbox penduduk dan makluman
         </h2>
         <p className="mt-3 max-w-2xl text-base text-muted">
-          Check approval updates, rejected payments, cash payment confirmations, and other important reminders here.
+          Semak status resit, bayaran yang ditolak, bayaran tunai, dan makluman penting di sini.
         </p>
       </section>
 
@@ -35,7 +35,7 @@ export default async function ResidentNotificationsPage({
 
       <AnnouncementFeed
         announcements={announcements}
-        emptyMessage="No resident announcements have been posted yet."
+        emptyMessage="Belum ada pengumuman untuk penduduk."
       />
     </div>
   );

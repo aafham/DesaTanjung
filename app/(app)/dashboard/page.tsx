@@ -33,19 +33,19 @@ export default async function DashboardPage({
   } =
     await getUserDashboardData(historyPage, 6);
   const statusMessage = {
-    paid: "Payment approved. Thank you for keeping your account up to date.",
-    pending: "Receipt uploaded. Please wait for committee approval.",
-    unpaid: "No payment recorded yet. Tap Pay Now to upload your receipt.",
-    rejected: "Receipt was rejected. Please upload a clearer or correct proof.",
-    overdue: "This month's payment is overdue. Please settle it as soon as possible.",
+    paid: "Bayaran sudah disahkan. Terima kasih kerana menjelaskan bayaran bulan ini.",
+    pending: "Resit sudah dimuat naik. Sila tunggu semakan jawatankuasa.",
+    unpaid: "Belum ada rekod bayaran. Tekan Bayar Sekarang untuk muat naik resit.",
+    rejected: "Resit ditolak. Sila muat naik resit yang lebih jelas atau betul.",
+    overdue: "Bayaran bulan ini sudah lewat. Sila jelaskan secepat mungkin.",
   }[currentPayment.display_status];
 
   const statusTitle = {
-    paid: "Paid",
-    pending: "Pending review",
-    unpaid: "Awaiting payment",
-    rejected: "Rejected",
-    overdue: "Overdue",
+    paid: "Selesai",
+    pending: "Dalam semakan",
+    unpaid: "Menunggu bayaran",
+    rejected: "Ditolak",
+    overdue: "Lewat bayar",
   }[currentPayment.display_status];
 
   return (
@@ -60,12 +60,12 @@ export default async function DashboardPage({
               "linear-gradient(135deg, #07111f 0%, #0b2f2d 55%, #064e48 100%)",
           }}
         >
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">Current month</p>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">Bulan semasa</p>
           <h2 className="mt-3 font-display text-5xl font-bold leading-tight text-white">
             {currentMonthLabel}
           </h2>
           <p className="mt-4 max-w-lg text-lg text-slate-100">
-            Track this month&apos;s payment status and upload your proof as soon as you complete the transfer.
+            Semak status bayaran bulan ini dan muat naik resit selepas membuat pindahan.
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <StatusBadge
@@ -73,10 +73,10 @@ export default async function DashboardPage({
               className="border border-white/15 bg-white/10 text-white ring-0"
             />
             <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
-              House {profile.house_number}
+              Rumah {profile.house_number}
             </span>
             <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
-              Due {dueDateLabel}
+              Tarikh akhir {dueDateLabel}
             </span>
           </div>
           <div className="mt-5 flex items-start gap-3 rounded-3xl border border-white/10 bg-white/10 p-4 text-base text-white">
@@ -85,12 +85,12 @@ export default async function DashboardPage({
           </div>
           {currentPayment.reject_reason ? (
             <div className="mt-4 rounded-3xl bg-rose-100 p-4 text-base font-bold text-rose-950">
-              Reject reason: {currentPayment.reject_reason}
+              Sebab ditolak: {currentPayment.reject_reason}
             </div>
           ) : null}
           {currentPayment.notes ? (
             <div className="mt-4 rounded-3xl border border-white/10 bg-white/10 p-4 text-base text-white">
-              Committee note: {currentPayment.notes}
+              Nota jawatankuasa: {currentPayment.notes}
             </div>
           ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
@@ -98,7 +98,7 @@ export default async function DashboardPage({
               href="/payments"
               className="inline-flex min-h-14 items-center gap-2 rounded-full bg-teal-200 px-6 py-3 text-lg font-bold text-slate-950 transition hover:bg-white"
             >
-              PAY NOW
+              Bayar sekarang
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -106,7 +106,7 @@ export default async function DashboardPage({
               className="inline-flex min-h-14 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-6 py-3 text-base font-bold text-white transition hover:bg-white/15"
             >
               <BellRing className="h-4 w-4" />
-              View updates
+              Lihat notifikasi
             </Link>
           </div>
         </Card>
@@ -115,7 +115,7 @@ export default async function DashboardPage({
           <Card className="border-slate-200 bg-slate-50/80">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-base font-bold text-muted">House number</p>
+                <p className="text-base font-bold text-muted">Nombor rumah</p>
                 <p className="text-3xl font-bold text-slate-950">{profile.house_number}</p>
               </div>
               <StatusBadge status={currentPayment.display_status} />
@@ -127,7 +127,7 @@ export default async function DashboardPage({
                 <Wallet className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Owner name</p>
+                <p className="text-base font-bold text-muted">Nama pemilik</p>
                 <p className="text-xl font-bold text-slate-950">{profile.name}</p>
               </div>
             </div>
@@ -138,7 +138,7 @@ export default async function DashboardPage({
                 <Home className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Address</p>
+                <p className="text-base font-bold text-muted">Alamat</p>
                 <p className="text-xl font-bold text-slate-950">{profile.address}</p>
               </div>
             </div>
@@ -149,11 +149,11 @@ export default async function DashboardPage({
                 <Phone className="h-5 w-5 text-sky-700" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Phone number</p>
+                <p className="text-base font-bold text-muted">Nombor telefon</p>
                 <p className="text-xl font-bold text-slate-950">
                   {profile.phone_number
                     ? formatMalaysianPhoneNumber(profile.phone_number)
-                    : "Please update your profile"}
+                    : "Sila kemas kini profil"}
                 </p>
               </div>
             </div>
@@ -164,7 +164,7 @@ export default async function DashboardPage({
                 <Clock3 className="h-5 w-5 text-amber-800" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Last status</p>
+                <p className="text-base font-bold text-muted">Status terkini</p>
                 <p className="text-xl font-bold text-slate-950">{statusTitle}</p>
               </div>
             </div>
@@ -175,11 +175,11 @@ export default async function DashboardPage({
                 <Clock3 className="h-5 w-5 text-rose-700" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Due date</p>
+                <p className="text-base font-bold text-muted">Tarikh akhir</p>
                 <p className="text-xl font-bold text-slate-950">{dueDateLabel}</p>
                 {settings.monthly_fee ? (
                   <p className="mt-1 text-sm text-muted">
-                    Monthly fee RM {settings.monthly_fee.toFixed(2)}
+                    Yuran bulanan RM {settings.monthly_fee.toFixed(2)}
                   </p>
                 ) : null}
               </div>
@@ -199,7 +199,7 @@ export default async function DashboardPage({
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Timeline</p>
           <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-            Latest payment activity
+            Aktiviti bayaran terkini
           </h3>
         </div>
         <Card>
@@ -209,9 +209,9 @@ export default async function DashboardPage({
 
       <section className="space-y-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">History</p>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Sejarah</p>
           <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-            Payment history
+            Sejarah bayaran
           </h3>
         </div>
         <PaymentHistoryTable history={history} pagination={historyPagination} />

@@ -12,19 +12,19 @@ test.describe("mobile smoke coverage", () => {
 
     await loginWithCredentials(page, env.residentIdentifier!, env.residentPassword!);
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
-    await expect(page.getByText("Current month")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Payments" })).toBeVisible();
+    await expect(page.getByText("Bulan semasa")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Bayaran" })).toBeVisible();
 
     await page.goto("/payments");
-    await expect(page.getByRole("heading", { name: "Submit your receipt" })).toBeVisible();
-    await expect(page.getByText("Transfer guide")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Hantar resit bayaran" })).toBeVisible();
+    await expect(page.getByText("Panduan bayaran")).toBeVisible();
 
     await page.goto("/notifications");
-    await expect(page.getByRole("heading", { name: "Resident inbox and updates" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Inbox penduduk dan makluman" })).toBeVisible();
 
     await page.goto("/profile");
-    await expect(page.getByRole("heading", { name: "Resident details" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Save profile changes" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Maklumat penduduk" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Simpan perubahan profil" })).toBeVisible();
   });
 
   test("admin can move through key mobile pages", async ({ page }) => {
@@ -46,6 +46,6 @@ test.describe("mobile smoke coverage", () => {
     await expect(page.getByRole("heading", { name: /Track the latest portal actions/i })).toBeVisible();
 
     await page.goto("/admin/health");
-    await expect(page.getByRole("heading", { name: /Check portal readiness/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Is the portal ready/i })).toBeVisible();
   });
 });

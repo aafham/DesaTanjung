@@ -17,36 +17,41 @@ import { Card } from "@/components/ui/card";
 function getNotificationPresentation(message: string) {
   const normalized = message.toLowerCase();
 
-  if (normalized.includes("approved")) {
+  if (normalized.includes("approved") || normalized.includes("disahkan") || normalized.includes("diluluskan")) {
     return {
-      label: "Approved",
+      label: "Diluluskan",
       icon: CheckCircle2,
       tones: "border-emerald-200 bg-emerald-50 text-emerald-950",
       badge: "bg-emerald-100 text-emerald-900",
     };
   }
 
-  if (normalized.includes("rejected")) {
+  if (normalized.includes("rejected") || normalized.includes("ditolak")) {
     return {
-      label: "Needs action",
+      label: "Perlu tindakan",
       icon: ShieldAlert,
       tones: "border-rose-200 bg-rose-50 text-rose-950",
       badge: "bg-rose-100 text-rose-900",
     };
   }
 
-  if (normalized.includes("waiting for committee review") || normalized.includes("submitted")) {
+  if (
+    normalized.includes("waiting for committee review") ||
+    normalized.includes("submitted") ||
+    normalized.includes("menunggu semakan") ||
+    normalized.includes("sudah dihantar")
+  ) {
     return {
-      label: "Pending review",
+      label: "Dalam semakan",
       icon: Clock3,
       tones: "border-amber-200 bg-amber-50 text-amber-950",
       badge: "bg-amber-100 text-amber-900",
     };
   }
 
-  if (normalized.includes("cash")) {
+  if (normalized.includes("cash") || normalized.includes("tunai")) {
     return {
-      label: "Cash update",
+      label: "Bayaran tunai",
       icon: Wallet,
       tones: "border-sky-200 bg-sky-50 text-sky-950",
       badge: "bg-sky-100 text-sky-900",
@@ -54,7 +59,7 @@ function getNotificationPresentation(message: string) {
   }
 
   return {
-    label: "Update",
+    label: "Makluman",
     icon: Megaphone,
     tones: "border-line bg-slate-50 text-slate-950",
     badge: "bg-slate-100 text-slate-700",
@@ -64,10 +69,10 @@ function getNotificationPresentation(message: string) {
 function getNotificationCategory(message: string) {
   const label = getNotificationPresentation(message).label;
 
-  if (label === "Approved") return "approved";
-  if (label === "Pending review") return "pending";
-  if (label === "Needs action") return "action";
-  if (label === "Cash update") return "cash";
+  if (label === "Diluluskan") return "approved";
+  if (label === "Dalam semakan") return "pending";
+  if (label === "Perlu tindakan") return "action";
+  if (label === "Bayaran tunai") return "cash";
   return "update";
 }
 
@@ -156,15 +161,15 @@ export function ResidentNotificationList({
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Notifications</p>
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Notifikasi</p>
               {unreadCount > 0 ? (
                 <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
-                  {unreadCount} unread
+                  {unreadCount} belum dibaca
                 </span>
               ) : null}
             </div>
             <h3 className="mt-1 font-display text-3xl font-bold leading-tight text-slate-950">
-              Resident inbox
+              Inbox penduduk
             </h3>
           </div>
         </div>
@@ -172,12 +177,12 @@ export function ResidentNotificationList({
         {unreadCount > 0 ? (
           <form action={markResidentNotificationsReadAction}>
             <ConfirmSubmitButton
-              confirmTitle="Mark notifications as read?"
-              confirmMessage="This clears the unread badge for your latest resident updates."
-              confirmLabel="Mark all read"
+              confirmTitle="Tanda semua notifikasi sebagai dibaca?"
+              confirmMessage="Ini akan mengosongkan tanda belum dibaca pada notifikasi penduduk."
+              confirmLabel="Tanda semua dibaca"
               className="bg-slate-950 px-4 py-2 text-sm text-white"
             >
-              Mark all read
+              Tanda semua dibaca
             </ConfirmSubmitButton>
           </form>
         ) : null}
@@ -187,12 +192,12 @@ export function ResidentNotificationList({
         <>
           <div className="mt-5 flex flex-wrap gap-2">
             {[
-              { value: "all", label: "All" },
-              { value: "approved", label: "Approved" },
-              { value: "pending", label: "Pending review" },
-              { value: "action", label: "Needs action" },
-              { value: "cash", label: "Cash update" },
-              { value: "update", label: "Update" },
+              { value: "all", label: "Semua" },
+              { value: "approved", label: "Diluluskan" },
+              { value: "pending", label: "Dalam semakan" },
+              { value: "action", label: "Perlu tindakan" },
+              { value: "cash", label: "Bayaran tunai" },
+              { value: "update", label: "Makluman" },
             ].map((option) => (
               <button
                 key={option.value}
@@ -215,14 +220,14 @@ export function ResidentNotificationList({
           </div>
 
           <div className="mt-4 rounded-3xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-            Showing {startItem}-{endItem} of {filteredNotifications.length} notifications.
+            Memaparkan {startItem}-{endItem} daripada {filteredNotifications.length} notifikasi.
           </div>
         </>
       ) : null}
 
       {!compact && serverPaginated ? (
         <div className="mt-4 rounded-3xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-          Showing {startItem}-{endItem} of {totalItems} notifications. Older updates stay available through the next page buttons.
+          Memaparkan {startItem}-{endItem} daripada {totalItems} notifikasi. Notifikasi lama boleh dibuka melalui butang halaman seterusnya.
         </div>
       ) : null}
 
@@ -230,8 +235,8 @@ export function ResidentNotificationList({
         {filteredNotifications.length === 0 ? (
           <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
             {notifications.length === 0
-              ? "No resident notifications yet. Approval updates and payment reminders will appear here."
-              : "No notifications matched the current filter."}
+              ? "Belum ada notifikasi penduduk. Status semakan resit dan peringatan bayaran akan muncul di sini."
+              : "Tiada notifikasi sepadan dengan tapisan semasa."}
           </div>
         ) : (
           paginatedNotifications.map((notification) => {
@@ -259,7 +264,7 @@ export function ResidentNotificationList({
                         </span>
                         {!notification.is_read ? (
                           <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white">
-                            New
+                            Baharu
                           </span>
                         ) : null}
                       </div>
@@ -276,7 +281,7 @@ export function ResidentNotificationList({
                         type="submit"
                         className="rounded-full bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-700 transition hover:bg-slate-100"
                       >
-                        Mark read
+                        Baca
                       </button>
                     </form>
                   ) : null}

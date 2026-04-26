@@ -17,37 +17,37 @@ export function PaymentTimeline({
   const displayStatus = payment.display_status;
   const steps = [
     {
-      label: "Transfer record",
+      label: "Rekod bayaran",
       done: payment.status !== "unpaid",
       icon: UploadCloud,
       description:
         payment.status === "unpaid"
-          ? "No receipt uploaded yet."
-          : "Receipt has been uploaded to the system.",
+          ? "Belum ada resit dimuat naik."
+          : "Resit sudah dimuat naik ke sistem.",
     },
     {
-      label: "Under review",
+      label: "Dalam semakan",
       done: ["pending", "paid", "rejected"].includes(payment.status),
       icon: Clock3,
       description:
         payment.status === "pending"
-          ? "Committee is checking your payment."
+          ? "Jawatankuasa sedang menyemak bayaran anda."
           : payment.status === "unpaid"
-            ? "Waiting for receipt upload."
-            : "Review completed.",
+            ? "Menunggu resit dimuat naik."
+            : "Semakan selesai.",
     },
     {
-      label: payment.status === "rejected" ? "Rejected" : "Approved",
+      label: payment.status === "rejected" ? "Ditolak" : "Diluluskan",
       done: ["paid", "rejected"].includes(payment.status),
       icon: payment.status === "rejected" || displayStatus === "overdue" ? XCircle : CheckCircle2,
       description:
         payment.status === "paid"
-          ? "Your payment has been approved."
+          ? "Bayaran anda sudah disahkan."
           : payment.status === "rejected"
-            ? payment.reject_reason ?? "Please upload a corrected receipt."
+            ? payment.reject_reason ?? "Sila muat naik resit yang betul."
             : displayStatus === "overdue"
-              ? "This month has passed the due date and still needs payment."
-            : "Final decision pending.",
+              ? "Bayaran bulan ini sudah melepasi tarikh akhir."
+            : "Menunggu keputusan akhir.",
     },
   ];
 
@@ -82,18 +82,18 @@ export function PaymentTimeline({
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.12em] text-primary">
-              Activity log
+              Log aktiviti
             </p>
             {auditPagination ? (
               <p className="mt-1 text-sm font-semibold text-slate-600">
-                Showing {auditLogs.length} of {auditPagination.totalItems} activity records.
+                Memaparkan {auditLogs.length} daripada {auditPagination.totalItems} rekod aktiviti.
               </p>
             ) : null}
           </div>
         </div>
         <div className="mt-3 space-y-3">
           {auditLogs.length === 0 ? (
-            <p className="text-base font-medium text-muted">No activity yet.</p>
+            <p className="text-base font-medium text-muted">Belum ada aktiviti.</p>
           ) : (
             auditLogs.map((log) => (
               <div key={log.id} className="rounded-2xl bg-white px-4 py-3">

@@ -9,17 +9,17 @@ async function uploadReceipt(page: Parameters<typeof test>[0]["page"], identifie
   await loginWithCredentials(page, identifier, password);
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
 
-  await page.getByRole("link", { name: /pay now/i }).click();
+  await page.getByRole("link", { name: /bayar sekarang/i }).click();
   await expect(page).toHaveURL(/\/payments$/);
-  await expect(page.getByRole("heading", { name: "Submit your receipt" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Hantar resit bayaran" })).toBeVisible();
 
   await page.getByTestId("payment-receipt-input").setInputFiles(createTinyPng());
   await page.getByTestId("submit-receipt-button").click();
 
   await expect(
-    page.getByText("Payment proof uploaded successfully. It is now waiting for approval."),
+    page.getByText("Resit bayaran berjaya dihantar dan sedang menunggu semakan jawatankuasa."),
   ).toBeVisible();
-  await expect(page.getByText("Your receipt has been submitted and is waiting for committee review.")).toBeVisible();
+  await expect(page.getByText("Resit anda sudah dihantar dan sedang menunggu semakan jawatankuasa.")).toBeVisible();
 }
 
 test.describe.serial("resident payment and admin review flows", () => {
@@ -30,7 +30,7 @@ test.describe.serial("resident payment and admin review flows", () => {
     );
 
     await uploadReceipt(page, env.paymentResidentIdentifier!, env.paymentResidentPassword!);
-    await expect(page.getByText("Current status")).toBeVisible();
+    await expect(page.getByText("Status semasa")).toBeVisible();
   });
 
   test("admin can approve an uploaded receipt", async ({ browser }) => {

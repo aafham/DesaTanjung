@@ -61,7 +61,7 @@ export function PaginationControls({
       aria-label="Pagination"
     >
       <p className="text-sm font-bold text-muted">
-        Page <span className="text-slate-950">{currentPage}</span> of{" "}
+        Halaman <span className="text-slate-950">{currentPage}</span> daripada{" "}
         <span className="text-slate-950">{totalPages}</span>
       </p>
       <div className="flex flex-wrap items-center justify-end gap-2">
@@ -70,10 +70,10 @@ export function PaginationControls({
           onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
           className="min-h-11 px-4"
-          aria-label="Previous page"
+          aria-label="Halaman sebelumnya"
         >
           <ChevronLeft className="h-4 w-4" />
-          <span className="sr-only">Previous</span>
+          <span className="sr-only">Sebelumnya</span>
         </Button>
 
         {pageItems.map((pageItem) =>
@@ -83,7 +83,7 @@ export function PaginationControls({
               variant={currentPage === pageItem ? "primary" : "secondary"}
               onClick={() => onPageChange(pageItem)}
               className="min-h-11 min-w-11 px-4"
-              aria-label={`Page ${pageItem}`}
+              aria-label={`Halaman ${pageItem}`}
               aria-current={currentPage === pageItem ? "page" : undefined}
             >
               {pageItem}
@@ -104,10 +104,10 @@ export function PaginationControls({
           onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
           className="min-h-11 px-4"
-          aria-label="Next page"
+          aria-label="Halaman seterusnya"
         >
           <ChevronRight className="h-4 w-4" />
-          <span className="sr-only">Next</span>
+          <span className="sr-only">Seterusnya</span>
         </Button>
       </div>
     </nav>

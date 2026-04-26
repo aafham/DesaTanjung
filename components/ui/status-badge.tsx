@@ -2,11 +2,11 @@ import type { DisplayPaymentStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const labelMap: Record<DisplayPaymentStatus, string> = {
-  paid: "Paid",
-  pending: "Pending",
-  rejected: "Rejected",
-  unpaid: "Unpaid",
-  overdue: "Overdue",
+  paid: "Selesai",
+  pending: "Dalam semakan",
+  rejected: "Ditolak",
+  unpaid: "Belum bayar",
+  overdue: "Lewat bayar",
 };
 
 const styleMap: Record<DisplayPaymentStatus, string> = {

@@ -29,9 +29,9 @@ const navItems: Record<
 > = {
   user: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/payments", label: "Payments", icon: CreditCard },
-    { href: "/notifications", label: "Notifications", icon: Bell },
-    { href: "/profile", label: "Profile", icon: UserCircle2 },
+    { href: "/payments", label: "Bayaran", icon: CreditCard },
+    { href: "/notifications", label: "Notifikasi", icon: Bell },
+    { href: "/profile", label: "Profil", icon: UserCircle2 },
   ],
   admin: [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -76,7 +76,7 @@ export function AppShell({
         href="#main-content"
         className="sr-only absolute left-4 top-4 z-50 rounded-full bg-slate-950 px-4 py-3 text-sm font-bold text-white focus:not-sr-only"
       >
-        Skip to main content
+      Langkau ke kandungan utama
       </a>
       <div
         className={`mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-7 px-4 py-4 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-8 ${
@@ -93,16 +93,16 @@ export function AppShell({
               Desa Tanjung
             </p>
             <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-slate-950">
-              {profile.role === "admin" ? "Committee Panel" : "Resident Portal"}
+              {profile.role === "admin" ? "Committee Panel" : "Portal Penduduk"}
             </h1>
             <p className="mt-3 text-base text-muted">
-              Signed in as {profile.house_number} - {profile.name}
+              Log masuk sebagai {profile.house_number} - {profile.name}
             </p>
           </div>
 
           <div className="mb-3 px-1">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-              {profile.role === "admin" ? "Admin tools" : "Resident menu"}
+              {profile.role === "admin" ? "Admin tools" : "Menu penduduk"}
             </p>
           </div>
 
@@ -159,11 +159,11 @@ export function AppShell({
           </nav>
 
           <div className="mt-7 rounded-3xl border border-slate-100 bg-white/90 p-5">
-            <p className="text-base font-bold text-slate-950">Quick note</p>
+            <p className="text-base font-bold text-slate-950">Nota ringkas</p>
             <p className="mt-2 text-base text-muted">
               {profile.role === "admin"
                 ? "New uploads appear here automatically every 30 seconds."
-                : "Upload your receipt after each transfer so the committee can verify it quickly."}
+                : "Muat naik resit selepas membuat bayaran supaya jawatankuasa boleh semak dengan cepat."}
             </p>
           </div>
 
@@ -183,14 +183,13 @@ export function AppShell({
                     <LoaderCircle className="h-7 w-7 animate-spin text-primary" />
                   </div>
                   <p className="mt-4 text-sm font-bold uppercase tracking-[0.14em] text-primary">
-                    Opening page
+                    Membuka halaman
                   </p>
                   <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-                    {activeLoadingItem?.label ?? "Loading"}
+                    {activeLoadingItem?.label ?? "Memuatkan"}
                   </h3>
                   <p className="mt-3 text-base leading-8 text-slate-600">
-                    We&apos;re loading the latest portal data so the next page opens with fresh
-                    information.
+                    Sila tunggu seketika sementara sistem memuatkan maklumat terkini.
                   </p>
                 </div>
               </div>
