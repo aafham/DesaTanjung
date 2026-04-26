@@ -34,11 +34,12 @@ Nota penting:
 
 - Flow `upload`, `approve/reject`, `cash paid`, dan `settings` akan mengubah data sebenar.
 - Gunakan account atau environment disposable untuk mutation tests.
-- Wiring suite telah disemak semula dan Playwright mengesan semua `12` test dengan betul.
-- Suite disposable terkini berjaya dengan `10 passed, 2 skipped`; skip yang tinggal ialah first-login tetap tanpa env disposable kekal dan settings mutation bila `E2E_ALLOW_SETTINGS_MUTATION` tidak dihidupkan.
+- Wiring suite telah disemak semula dan Playwright mengesan semua `13` test dengan betul.
+- Suite disposable terkini berjaya dengan `11 passed, 2 skipped`; skip yang tinggal ialah first-login tetap tanpa env disposable kekal dan settings mutation bila `E2E_ALLOW_SETTINGS_MUTATION` tidak dihidupkan.
 - First-login resident telah disahkan dengan akaun disposable sementara: `1 passed`.
 - Flow admin mutation yang telah disahkan secara E2E: `approve`, `reject`, `cash paid`, `settings update`, dan `QR upload`.
-- Flow user yang telah disahkan secara E2E: resident login, first-login change password, upload resit, profile update, dan notification selepas approve.
+- Flow user yang telah disahkan secara E2E: resident login, first-login change password, upload resit, profile update, notification selepas approve, dan notification selepas reject.
+- Next dev origin warning untuk Playwright/localhost sudah dikemaskan melalui `allowedDevOrigins` di `next.config.ts`.
 - Playwright config kini dijalankan secara serial untuk kurangkan flaky login pada environment Supabase remote.
 
 1. Salin `.env.e2e.example` ke `.env.e2e.local`
@@ -205,6 +206,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] first-login resident dengan akaun disposable sementara
   - [x] upload resit user
   - [x] notification selepas approve
+  - [x] notification selepas reject
   - [x] profile update
 - [x] Scalability user bila history makin panjang:
   - [x] payment history user guna `range` + `count` dari database
@@ -213,8 +215,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 #### Masih perlu dibuat / boleh dipertingkatkan
 
 - [ ] E2E user fasa seterusnya:
-  - [ ] tambah assertion notification selepas reject
   - [ ] kekalkan akaun `E2E_FIRST_LOGIN_*` disposable tetap jika mahu run full suite tanpa cipta akaun sementara
+  - [ ] tambah mobile assertions untuk flow upload, notification, dan profile
 - [ ] Tambah assertion visual / accessibility pada flow user yang paling penting:
   - [ ] upload resit
   - [ ] receipt preview modal
@@ -329,6 +331,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] global activity page kekal paparkan log terbaru 14 hari
   - [x] fungsi database `prune_user_activity_logs(90)` disediakan untuk prune log global lama
   - [x] butang maintenance di Health page untuk run prune 90 hari bila admin perlukan
+  - [x] fungsi database `prune_server_action_errors(30)` disediakan untuk prune log error lama
+  - [x] butang maintenance di Health page untuk run prune error 30 hari bila admin perlukan
   - [x] payment history dan payment audit kekal pada resident/payment detail
 - [x] Performance / scalability admin yang sudah dibuat:
   - [x] server-side narrowing untuk global search
@@ -352,6 +356,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] mesej error yang lebih konsisten pada server action utama
   - [x] fail-safe yang lebih mesra pada flow kritikal admin
   - [x] server action error kritikal dilog ke `server_action_errors`
+  - [x] log error production ada retention/cleanup 30 hari
 - [x] Polisi operasi live admin yang sudah disediakan:
   - [x] elakkan kongsi satu akaun admin untuk ramai AJK
   - [x] sediakan akaun admin berasingan untuk audit yang lebih jelas
@@ -478,6 +483,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] server action `createCurrentMonthRecordAction` dibuang kerana tiada caller aktif
 - [x] README disusun semula ikut fungsi sebenar `User` dan `Admin`
 - [x] Checklist lama yang bercampur-campur diringkaskan supaya senang audit progress
+- [x] ESLint diarah ignore output generated seperti `.next`, `playwright-report`, dan `test-results`
 
 #### Masih boleh dibuat
 
@@ -794,7 +800,9 @@ Nota:
 - page `Admin Activity` memaparkan log terbaru 14 hari sahaja supaya view global kekal ringan
 - history penting payment masih kekal pada `Resident detail`
 - schema menyediakan fungsi `public.prune_user_activity_logs(90)` untuk buang global activity log yang lebih lama daripada 90 hari
+- schema menyediakan fungsi `public.prune_server_action_errors(30)` untuk buang error monitor lama selepas 30 hari
 - fungsi prune ini hanya menyentuh `user_activity_logs`, bukan `payments` atau `payment_audit_logs`
+- error monitor prune hanya menyentuh `server_action_errors`
 - cadangan operasi live: jalankan prune sebulan sekali selepas backup atau selepas laporan bulanan disimpan
 
 ## Notification flow
@@ -844,7 +852,7 @@ Keutamaan seterusnya:
 - jadualkan rutin `prune_user_activity_logs(90)` selepas portal live
 - run `supabase/query-plan-checklist.sql` di Supabase SQL Editor selepas data sebenar sudah banyak
 - `mobile UI audit` untuk user dan admin
-- tambah E2E notification reject dan mobile assertions
+- tambah mobile assertions untuk flow penting user dan admin
 - pantau Production error monitor di Health selepas portal digunakan komuniti sebenar
 
 ## Scripts yang tersedia

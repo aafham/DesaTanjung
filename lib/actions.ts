@@ -1280,3 +1280,36 @@ export async function pruneActivityLogsAction() {
     `Activity log maintenance completed. ${data ?? 0} old row${data === 1 ? "" : "s"} removed.`,
   );
 }
+
+export async function pruneServerActionErrorsAction() {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("prune_server_action_errors", {
+    p_keep_days: 30,
+  });
+
+  if (error) {
+    await redirectWithLoggedActionError({
+      path: "/admin/health",
+      fallback: "Unable to prune old server action error logs right now. Please confirm the latest Supabase schema has been applied.",
+      error,
+      actorId: profile.id,
+      action: "prune_server_action_errors_failed",
+      metadata: { keepDays: 30 },
+    });
+  }
+
+  await logAdminAudit(
+    profile.id,
+    "server_action_errors_pruned",
+    `Admin pruned ${data ?? 0} old server action error row${data === 1 ? "" : "s"}.`,
+  );
+
+  revalidatePath("/admin/health");
+  redirectWithMessage(
+    "/admin/health",
+    `Server action error maintenance completed. ${data ?? 0} old row${data === 1 ? "" : "s"} removed.`,
+  );
+}

@@ -5,7 +5,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { DataWarning } from "@/components/data-warning";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
-import { pruneActivityLogsAction } from "@/lib/actions";
+import { pruneActivityLogsAction, pruneServerActionErrorsAction } from "@/lib/actions";
 import { getAdminHealthData } from "@/lib/data";
 import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
 
@@ -471,7 +471,28 @@ where id in (
           </form>
         </Card>
 
-        <Card>
+        <Card className="border-amber-200 bg-amber-50">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-amber-900">Error monitor maintenance</p>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">
+            Keep production error logs focused
+          </h3>
+          <p className="mt-2 text-base leading-7 text-slate-700">
+            The Health page shows critical server action errors from the latest 7 days. This maintenance action removes old error monitor rows after 30 days so production debugging stays tidy.
+          </p>
+          <form action={pruneServerActionErrorsAction} className="mt-5">
+            <ConfirmSubmitButton
+              confirmTitle="Prune old server action errors?"
+              confirmMessage="This removes only server action error monitor rows older than 30 days. Resident data, payment records, receipts, and activity logs are not removed."
+              confirmLabel="Prune error logs"
+              className="bg-slate-950 text-white"
+            >
+              Run 30-day error prune
+            </ConfirmSubmitButton>
+          </form>
+        </Card>
+      </section>
+
+      <Card>
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Monthly operation rhythm</p>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             <div className="rounded-3xl bg-slate-50 px-4 py-4">
@@ -494,7 +515,6 @@ where id in (
             </div>
           </div>
         </Card>
-      </section>
 
       <Card className="border-sky-200 bg-sky-50">
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-sky-900">Environment security</p>

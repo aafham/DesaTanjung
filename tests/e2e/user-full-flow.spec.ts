@@ -85,4 +85,45 @@ test.describe.serial("full resident user flow", () => {
     await expect(notificationPage.getByText(/has been approved by the committee/i).first()).toBeVisible();
     await notificationPage.close();
   });
+
+  test("resident receives reject notification after admin rejects receipt", async ({ browser }) => {
+    test.skip(
+      !env.adminIdentifier ||
+        !env.adminPassword ||
+        !env.paymentResidentIdentifier ||
+        !env.paymentResidentPassword,
+      "Set admin and payment resident credentials in .env.e2e.local",
+    );
+
+    const residentPage = await browser.newPage();
+    await uploadReceipt(residentPage);
+    await residentPage.close();
+
+    const adminPage = await browser.newPage();
+    await loginWithCredentials(adminPage, env.adminIdentifier!, env.adminPassword!);
+    await expect(adminPage).toHaveURL(/\/admin$/, { timeout: 15_000 });
+    await adminPage.goto("/admin/approvals");
+
+    const approvalCard = adminPage.getByTestId(`approval-card-${env.paymentResidentIdentifier!}`);
+    await expect(approvalCard).toBeVisible();
+    await approvalCard.getByLabel("Reject reason").selectOption({ label: "Wrong month selected." });
+    await approvalCard.getByTestId(`reject-payment-${env.paymentResidentIdentifier!}`).click();
+    await adminPage.getByRole("button", { name: "Confirm" }).click();
+    await expect(adminPage.getByText("Payment proof rejected with reason saved.")).toBeVisible();
+    await adminPage.close();
+
+    const notificationPage = await browser.newPage();
+    await loginWithCredentials(
+      notificationPage,
+      env.paymentResidentIdentifier!,
+      env.paymentResidentPassword!,
+    );
+    await expect(notificationPage).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+    await notificationPage.goto("/notifications");
+
+    await expect(notificationPage.getByRole("heading", { name: "Resident inbox", exact: true })).toBeVisible();
+    await expect(notificationPage.getByText(/payment proof .* was rejected/i).first()).toBeVisible();
+    await expect(notificationPage.getByText(/wrong month selected/i).first()).toBeVisible();
+    await notificationPage.close();
+  });
 });

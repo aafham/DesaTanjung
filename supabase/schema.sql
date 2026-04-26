@@ -251,6 +251,31 @@ $$;
 comment on function public.prune_user_activity_logs(integer) is
   'Deletes old global portal activity logs while preserving payment records and payment audit history.';
 
+create or replace function public.prune_server_action_errors(p_keep_days integer default 30)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_deleted integer;
+  v_keep_days integer := greatest(coalesce(p_keep_days, 30), 7);
+begin
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  delete from public.server_action_errors
+  where created_at < timezone('utc', now()) - make_interval(days => v_keep_days);
+
+  get diagnostics v_deleted = row_count;
+  return v_deleted;
+end;
+$$;
+
+comment on function public.prune_server_action_errors(integer) is
+  'Deletes old server action error monitor rows after the configured retention window.';
+
 create or replace function public.admin_resident_payment_rows(
   p_month text,
   p_query text default '',
