@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible } from "next/font/google";
+import { getLocale } from "@/lib/i18n";
 import "./globals.css";
 
 const atkinson = Atkinson_Hyperlegible({
@@ -13,13 +14,15 @@ export const metadata: Metadata = {
   description: "Pengurusan bayaran bulanan untuk komuniti penduduk.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
-    <html lang="ms">
+    <html lang={locale}>
       <body className={`${atkinson.variable} font-sans`}>
         {children}
       </body>

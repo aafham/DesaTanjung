@@ -9,7 +9,83 @@ import { ResidentNotificationList } from "@/components/resident-notification-lis
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getUserDashboardData } from "@/lib/data";
+import { getLocale } from "@/lib/i18n";
 import { formatMalaysianPhoneNumber } from "@/lib/utils";
+
+const dashboardCopy = {
+  ms: {
+    currentMonth: "Bulan semasa",
+    intro: "Semak status bayaran bulan ini dan muat naik resit selepas membuat pindahan.",
+    house: "Rumah",
+    due: "Tarikh akhir",
+    rejectedReason: "Sebab ditolak",
+    committeeNote: "Nota jawatankuasa",
+    payNow: "Bayar sekarang",
+    notifications: "Lihat notifikasi",
+    houseNumber: "Nombor rumah",
+    ownerName: "Nama pemilik",
+    address: "Alamat",
+    phone: "Nombor telefon",
+    updateProfile: "Sila kemas kini profil",
+    latestStatus: "Status terkini",
+    monthlyFee: "Yuran bulanan",
+    noAnnouncements: "Belum ada makluman penduduk.",
+    timeline: "Timeline",
+    latestActivity: "Aktiviti bayaran terkini",
+    historyLabel: "Sejarah",
+    paymentHistory: "Sejarah bayaran",
+    statusMessage: {
+      paid: "Bayaran sudah disahkan. Terima kasih kerana menjelaskan bayaran bulan ini.",
+      pending: "Resit sudah dimuat naik. Sila tunggu semakan jawatankuasa.",
+      unpaid: "Belum ada rekod bayaran. Tekan Bayar Sekarang untuk muat naik resit.",
+      rejected: "Resit ditolak. Sila muat naik resit yang lebih jelas atau betul.",
+      overdue: "Bayaran bulan ini sudah lewat. Sila jelaskan secepat mungkin.",
+    },
+    statusTitle: {
+      paid: "Selesai",
+      pending: "Dalam semakan",
+      unpaid: "Menunggu bayaran",
+      rejected: "Ditolak",
+      overdue: "Lewat bayar",
+    },
+  },
+  en: {
+    currentMonth: "Current month",
+    intro: "Check this month payment status and upload your receipt after making a transfer.",
+    house: "House",
+    due: "Due",
+    rejectedReason: "Reject reason",
+    committeeNote: "Committee note",
+    payNow: "Pay now",
+    notifications: "View notifications",
+    houseNumber: "House number",
+    ownerName: "Owner name",
+    address: "Address",
+    phone: "Phone number",
+    updateProfile: "Please update profile",
+    latestStatus: "Latest status",
+    monthlyFee: "Monthly fee",
+    noAnnouncements: "No resident announcements have been posted yet.",
+    timeline: "Timeline",
+    latestActivity: "Latest payment activity",
+    historyLabel: "History",
+    paymentHistory: "Payment history",
+    statusMessage: {
+      paid: "Payment has been approved. Thank you for settling this month.",
+      pending: "Your receipt has been uploaded. Please wait for committee review.",
+      unpaid: "No payment record yet. Press Pay now to upload your receipt.",
+      rejected: "Your receipt was rejected. Please upload a clearer or correct receipt.",
+      overdue: "This month payment is overdue. Please settle it as soon as possible.",
+    },
+    statusTitle: {
+      paid: "Paid",
+      pending: "Under review",
+      unpaid: "Waiting for payment",
+      rejected: "Rejected",
+      overdue: "Overdue",
+    },
+  },
+} as const;
 
 export default async function DashboardPage({
   searchParams,
@@ -17,6 +93,8 @@ export default async function DashboardPage({
   searchParams: Promise<{ historyPage?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const copy = dashboardCopy[locale];
   const historyPage = Number.parseInt(params.historyPage ?? "1", 10) || 1;
   const {
     announcements,
@@ -32,21 +110,8 @@ export default async function DashboardPage({
     warnings,
   } =
     await getUserDashboardData(historyPage, 6);
-  const statusMessage = {
-    paid: "Bayaran sudah disahkan. Terima kasih kerana menjelaskan bayaran bulan ini.",
-    pending: "Resit sudah dimuat naik. Sila tunggu semakan jawatankuasa.",
-    unpaid: "Belum ada rekod bayaran. Tekan Bayar Sekarang untuk muat naik resit.",
-    rejected: "Resit ditolak. Sila muat naik resit yang lebih jelas atau betul.",
-    overdue: "Bayaran bulan ini sudah lewat. Sila jelaskan secepat mungkin.",
-  }[currentPayment.display_status];
-
-  const statusTitle = {
-    paid: "Selesai",
-    pending: "Dalam semakan",
-    unpaid: "Menunggu bayaran",
-    rejected: "Ditolak",
-    overdue: "Lewat bayar",
-  }[currentPayment.display_status];
+  const statusMessage = copy.statusMessage[currentPayment.display_status];
+  const statusTitle = copy.statusTitle[currentPayment.display_status];
 
   return (
     <div className="space-y-6">
@@ -60,23 +125,24 @@ export default async function DashboardPage({
               "linear-gradient(135deg, #07111f 0%, #0b2f2d 55%, #064e48 100%)",
           }}
         >
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">Bulan semasa</p>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">{copy.currentMonth}</p>
           <h2 className="mt-3 font-display text-5xl font-bold leading-tight text-white">
             {currentMonthLabel}
           </h2>
           <p className="mt-4 max-w-lg text-lg text-slate-100">
-            Semak status bayaran bulan ini dan muat naik resit selepas membuat pindahan.
+            {copy.intro}
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
             <StatusBadge
               status={currentPayment.display_status}
+              locale={locale}
               className="border border-white/15 bg-white/10 text-white ring-0"
             />
             <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
-              Rumah {profile.house_number}
+              {copy.house} {profile.house_number}
             </span>
             <span className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
-              Tarikh akhir {dueDateLabel}
+              {copy.due} {dueDateLabel}
             </span>
           </div>
           <div className="mt-5 flex items-start gap-3 rounded-3xl border border-white/10 bg-white/10 p-4 text-base text-white">
@@ -85,12 +151,12 @@ export default async function DashboardPage({
           </div>
           {currentPayment.reject_reason ? (
             <div className="mt-4 rounded-3xl bg-rose-100 p-4 text-base font-bold text-rose-950">
-              Sebab ditolak: {currentPayment.reject_reason}
+              {copy.rejectedReason}: {currentPayment.reject_reason}
             </div>
           ) : null}
           {currentPayment.notes ? (
             <div className="mt-4 rounded-3xl border border-white/10 bg-white/10 p-4 text-base text-white">
-              Nota jawatankuasa: {currentPayment.notes}
+              {copy.committeeNote}: {currentPayment.notes}
             </div>
           ) : null}
           <div className="mt-8 flex flex-wrap gap-3">
@@ -98,7 +164,7 @@ export default async function DashboardPage({
               href="/payments"
               className="inline-flex min-h-14 items-center gap-2 rounded-full bg-teal-200 px-6 py-3 text-lg font-bold text-slate-950 transition hover:bg-white"
             >
-              Bayar sekarang
+              {copy.payNow}
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -106,7 +172,7 @@ export default async function DashboardPage({
               className="inline-flex min-h-14 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-6 py-3 text-base font-bold text-white transition hover:bg-white/15"
             >
               <BellRing className="h-4 w-4" />
-              Lihat notifikasi
+              {copy.notifications}
             </Link>
           </div>
         </Card>
@@ -115,10 +181,10 @@ export default async function DashboardPage({
           <Card className="border-slate-200 bg-slate-50/80">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-base font-bold text-muted">Nombor rumah</p>
+                <p className="text-base font-bold text-muted">{copy.houseNumber}</p>
                 <p className="text-3xl font-bold text-slate-950">{profile.house_number}</p>
               </div>
-              <StatusBadge status={currentPayment.display_status} />
+              <StatusBadge status={currentPayment.display_status} locale={locale} />
             </div>
           </Card>
           <Card>
@@ -127,7 +193,7 @@ export default async function DashboardPage({
                 <Wallet className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Nama pemilik</p>
+                <p className="text-base font-bold text-muted">{copy.ownerName}</p>
                 <p className="text-xl font-bold text-slate-950">{profile.name}</p>
               </div>
             </div>
@@ -138,7 +204,7 @@ export default async function DashboardPage({
                 <Home className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Alamat</p>
+                <p className="text-base font-bold text-muted">{copy.address}</p>
                 <p className="text-xl font-bold text-slate-950">{profile.address}</p>
               </div>
             </div>
@@ -149,11 +215,11 @@ export default async function DashboardPage({
                 <Phone className="h-5 w-5 text-sky-700" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Nombor telefon</p>
+                <p className="text-base font-bold text-muted">{copy.phone}</p>
                 <p className="text-xl font-bold text-slate-950">
                   {profile.phone_number
                     ? formatMalaysianPhoneNumber(profile.phone_number)
-                    : "Sila kemas kini profil"}
+                    : copy.updateProfile}
                 </p>
               </div>
             </div>
@@ -164,7 +230,7 @@ export default async function DashboardPage({
                 <Clock3 className="h-5 w-5 text-amber-800" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Status terkini</p>
+                <p className="text-base font-bold text-muted">{copy.latestStatus}</p>
                 <p className="text-xl font-bold text-slate-950">{statusTitle}</p>
               </div>
             </div>
@@ -175,11 +241,11 @@ export default async function DashboardPage({
                 <Clock3 className="h-5 w-5 text-rose-700" />
               </div>
               <div>
-                <p className="text-base font-bold text-muted">Tarikh akhir</p>
+                <p className="text-base font-bold text-muted">{copy.due}</p>
                 <p className="text-xl font-bold text-slate-950">{dueDateLabel}</p>
                 {settings.monthly_fee ? (
                   <p className="mt-1 text-sm text-muted">
-                    Yuran bulanan RM {settings.monthly_fee.toFixed(2)}
+                    {copy.monthlyFee} RM {settings.monthly_fee.toFixed(2)}
                   </p>
                 ) : null}
               </div>
@@ -190,31 +256,31 @@ export default async function DashboardPage({
 
       <AnnouncementFeed
         announcements={announcements}
-        emptyMessage="No resident announcements have been posted yet."
+        emptyMessage={copy.noAnnouncements}
       />
 
-      <ResidentNotificationList notifications={notifications} />
+      <ResidentNotificationList notifications={notifications} locale={locale} />
 
       <section className="space-y-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Timeline</p>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.timeline}</p>
           <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-            Aktiviti bayaran terkini
+            {copy.latestActivity}
           </h3>
         </div>
         <Card>
-          <PaymentTimeline payment={currentPayment} auditLogs={auditLogs} />
+          <PaymentTimeline payment={currentPayment} auditLogs={auditLogs} locale={locale} />
         </Card>
       </section>
 
       <section className="space-y-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Sejarah</p>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.historyLabel}</p>
           <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-            Sejarah bayaran
+            {copy.paymentHistory}
           </h3>
         </div>
-        <PaymentHistoryTable history={history} pagination={historyPagination} />
+        <PaymentHistoryTable history={history} pagination={historyPagination} locale={locale} />
       </section>
     </div>
   );

@@ -159,6 +159,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] paparan QR pembayaran
   - [x] preview QR lebih besar
   - [x] monthly fee dan due date
+- [x] Pilihan bahasa `BM / English` disimpan dalam cookie supaya resident boleh tukar bahasa sendiri
+- [x] Copy utama resident portal boleh bertukar BM/English untuk dashboard, bayaran, notifikasi, profil, upload resit, timeline, dan history
 - [x] Upload resit ke Supabase Storage
 - [x] Upload UX yang lebih baik:
   - [x] preview gambar
@@ -421,6 +423,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Payment timeline lebih jelas dari segi contrast dan hierarchy
 - [x] Receipt preview modal lebih kemas dan accessible
 - [x] Confirm submit dialog lebih kemas dan accessible
+- [x] Toggle bahasa `BM / English` ditambah untuk resident portal
+- [x] Copy resident-facing diseragamkan untuk `Dashboard`, `Bayaran/Payments`, `Notifikasi/Notifications`, `Profil/Profile`, status badge, pagination, upload resit, timeline, dan history
 - [x] Konsistensi font seluruh app
 - [x] Focus state global diperkemas
 - [x] Skip to content link disediakan
@@ -439,7 +443,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Contrast audit kecil pada komponen user yang masih berbaki
 - [ ] Semakan visual untuk empty state, error state, dan loading state pada page user
 - [ ] Screenshot audit UI untuk page user utama
-- [ ] Semak copy Bahasa Melayu / English supaya arahan user lebih konsisten dan mudah faham
+- [ ] Sambung sokongan dwi-bahasa penuh untuk page auth awal seperti `Login` dan `Change password`
 
 #### UI interface admin
 
@@ -453,6 +457,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Residents mobile/tablet cards diperkemas supaya action utama terus nampak tanpa perlu expand
 - [x] Resident detail page dipolish semula
 - [x] Resident detail `Payment activity` dihadkan kepada 4 log setiap page dengan pagination server-side
+- [x] Resident detail `Payment activity` pagination dipadatkan supaya tidak serabut bila log banyak
 - [x] Users page dipolish semula
 - [x] Search page dipolish semula sebagai compact global finder
 - [x] Announcements page dipolish semula dengan board summary, audience guide, dan pagination
@@ -741,11 +746,12 @@ npm run build
 2. Masukkan nombor rumah sebagai username
 3. Masukkan password semasa
 4. Jika ini login pertama, tukar kata laluan di page `Change password`
-5. Semak `Dashboard` untuk status bulan semasa, due date, dan notifikasi terkini
-6. Buka `Payments` untuk lihat bank info, QR, dan muat naik resit
-7. Selepas upload, status akan jadi `pending` sehingga admin semak
-8. Buka `Notifications` untuk lihat update seperti approve, reject, atau cash paid
-9. Buka `Profile` untuk kemas kini nama, alamat, nombor telefon, atau tukar kata laluan
+5. Jika mahu, tukar bahasa melalui toggle `BM / English` di sidebar resident
+6. Semak `Dashboard` untuk status bulan semasa, due date, dan notifikasi terkini
+7. Buka `Bayaran / Payments` untuk lihat bank info, QR, dan muat naik resit
+8. Selepas upload, status akan jadi `Dalam semakan / Under review` sehingga admin semak
+9. Buka `Notifikasi / Notifications` untuk lihat update seperti approve, reject, atau cash paid
+10. Buka `Profil / Profile` untuk kemas kini nama, alamat, nombor telefon, atau tukar kata laluan
 
 ### Untuk admin / jawatankuasa
 

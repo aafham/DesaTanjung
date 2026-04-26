@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -13,10 +14,25 @@ import {
   slugifyHouseNumber,
 } from "@/lib/utils";
 import { DEFAULT_ADMIN_PASSWORD, DEFAULT_USER_PASSWORD } from "@/lib/constants";
+import { localeCookieName, normalizeLocale } from "@/lib/i18n";
 
 type ActionErrorLike = {
   message?: string | null;
 };
+
+export async function setLocaleAction(formData: FormData) {
+  const locale = normalizeLocale(String(formData.get("locale") ?? ""));
+  const cookieStore = await cookies();
+
+  cookieStore.set(localeCookieName, locale, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+
+  revalidatePath("/", "layout");
+}
 
 function redirectWithError(path: string, message: string) {
   const separator = path.includes("?") ? "&" : "?";

@@ -7,6 +7,64 @@ import { FormSubmitButton } from "@/components/form-submit-button";
 import { PageToast } from "@/components/page-toast";
 import { getResidentNotifications, requireUserProfile } from "@/lib/data";
 import { updateProfileAction } from "@/lib/actions";
+import { getLocale } from "@/lib/i18n";
+
+const profileCopy = {
+  ms: {
+    eyebrow: "Profil",
+    title: "Maklumat penduduk",
+    intro: "Semak maklumat rumah, nombor telefon, dan pastikan profil anda sentiasa terkini.",
+    notice: "Pastikan nombor telefon dan alamat betul supaya jawatankuasa boleh menghubungi anda jika ada isu bayaran, notis penyelenggaraan, atau makluman penting.",
+    houseNumber: "Nombor rumah",
+    ownerName: "Nama pemilik",
+    address: "Alamat",
+    phone: "Nombor telefon",
+    notSaved: "Belum disimpan",
+    updateProfile: "Kemas kini profil",
+    editTitle: "Edit maklumat penduduk",
+    editIntro: "Kemas kini nama pemilik, alamat rumah, dan nombor telefon jika ada perubahan.",
+    username: "Nombor rumah / Username",
+    homeAddress: "Alamat rumah",
+    phoneHelp: "Gunakan format nombor telefon Malaysia seperti 012-345 6789.",
+    saving: "Menyimpan profil...",
+    save: "Simpan perubahan profil",
+    profileStatus: "Status profil",
+    complete: "Maklumat sudah lengkap",
+    completePhone: "Lengkapkan nombor telefon",
+    completeHelp: "Nombor telefon anda sudah disimpan, jadi jawatankuasa boleh menghubungi anda jika perlu.",
+    missingHelp: "Tambah nombor telefon supaya jawatankuasa mudah menghubungi anda untuk bayaran atau makluman komuniti.",
+    security: "Keselamatan",
+    changePassword: "Tukar kata laluan",
+    passwordHelp: "Anda boleh tukar kata laluan jika mahu kemas kini keselamatan akaun.",
+  },
+  en: {
+    eyebrow: "Profile",
+    title: "Resident details",
+    intro: "Check your house details, phone number, and keep your profile up to date.",
+    notice: "Make sure your phone number and address are correct so the committee can contact you about payment issues, maintenance notices, or important updates.",
+    houseNumber: "House number",
+    ownerName: "Owner name",
+    address: "Address",
+    phone: "Phone number",
+    notSaved: "Not saved",
+    updateProfile: "Update profile",
+    editTitle: "Edit resident details",
+    editIntro: "Update the owner name, house address, and phone number if anything changes.",
+    username: "House number / Username",
+    homeAddress: "House address",
+    phoneHelp: "Use a Malaysian phone format such as 012-345 6789.",
+    saving: "Saving profile...",
+    save: "Save profile changes",
+    profileStatus: "Profile status",
+    complete: "Details are complete",
+    completePhone: "Complete phone number",
+    completeHelp: "Your phone number is saved, so the committee can contact you if needed.",
+    missingHelp: "Add a phone number so the committee can contact you about payments or community updates.",
+    security: "Security",
+    changePassword: "Change password",
+    passwordHelp: "You can change your password if you want to update account security.",
+  },
+} as const;
 
 export default async function ProfilePage({
   searchParams,
@@ -14,51 +72,52 @@ export default async function ProfilePage({
   searchParams: Promise<{ error?: string; message?: string }>;
 }) {
   const params = await searchParams;
-  const profile = await requireUserProfile();
+  const [profile, locale] = await Promise.all([requireUserProfile(), getLocale()]);
+  const copy = profileCopy[locale];
   const notifications = await getResidentNotifications(profile.id, 3);
 
   return (
     <div className="space-y-6">
       <PageToast message={params.message} error={params.error} />
       <section>
-        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Profil</p>
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.eyebrow}</p>
         <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
-          Maklumat penduduk
+          {copy.title}
         </h2>
         <p className="mt-3 max-w-2xl text-base text-muted">
-          Semak maklumat rumah, nombor telefon, dan pastikan profil anda sentiasa terkini.
+          {copy.intro}
         </p>
       </section>
 
       <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-base leading-8 text-slate-700">
-        Pastikan nombor telefon dan alamat betul supaya jawatankuasa boleh menghubungi anda jika ada isu bayaran, notis penyelenggaraan, atau makluman penting.
+        {copy.notice}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card>
           <UserRound className="h-6 w-6 text-primary" />
-          <p className="mt-4 text-base font-bold text-muted">Nombor rumah</p>
+          <p className="mt-4 text-base font-bold text-muted">{copy.houseNumber}</p>
           <p className="font-display text-4xl font-bold leading-tight text-slate-950">
             {profile.house_number}
           </p>
         </Card>
         <Card>
           <UserRound className="h-6 w-6 text-primary" />
-          <p className="mt-4 text-base font-bold text-muted">Nama pemilik</p>
+          <p className="mt-4 text-base font-bold text-muted">{copy.ownerName}</p>
           <p className="text-2xl font-bold leading-tight text-slate-950">{profile.name}</p>
         </Card>
         <Card>
           <MapPinned className="h-6 w-6 text-primary" />
-          <p className="mt-4 text-base font-bold text-muted">Alamat</p>
+          <p className="mt-4 text-base font-bold text-muted">{copy.address}</p>
           <p className="text-2xl font-bold leading-tight text-slate-950">{profile.address}</p>
         </Card>
         <Card>
           <Phone className="h-6 w-6 text-primary" />
-          <p className="mt-4 text-base font-bold text-muted">Nombor telefon</p>
+          <p className="mt-4 text-base font-bold text-muted">{copy.phone}</p>
           <p className="text-2xl font-bold leading-tight text-slate-950">
             {profile.phone_number
               ? formatMalaysianPhoneNumber(profile.phone_number)
-              : "Belum disimpan"}
+              : copy.notSaved}
           </p>
         </Card>
       </div>
@@ -66,19 +125,19 @@ export default async function ProfilePage({
       <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="h-full">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Kemas kini profil</p>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.updateProfile}</p>
             <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-              Edit maklumat penduduk
+              {copy.editTitle}
             </h3>
             <p className="mt-2 text-base text-muted">
-              Kemas kini nama pemilik, alamat rumah, dan nombor telefon jika ada perubahan.
+              {copy.editIntro}
             </p>
           </div>
 
           <form action={updateProfileAction} className="mt-6 grid gap-4 md:grid-cols-2">
             <div>
               <label htmlFor="profile-house-number" className="mb-2 block text-base font-bold text-slate-950">
-                Nombor rumah / Username
+                {copy.username}
               </label>
               <input
                 id="profile-house-number"
@@ -89,7 +148,7 @@ export default async function ProfilePage({
             </div>
             <div>
               <label htmlFor="profile-name" className="mb-2 block text-base font-bold text-slate-950">
-                Nama pemilik
+                {copy.ownerName}
               </label>
               <input
                 id="profile-name"
@@ -101,7 +160,7 @@ export default async function ProfilePage({
             </div>
             <div>
               <label htmlFor="profile-address" className="mb-2 block text-base font-bold text-slate-950">
-                Alamat rumah
+                {copy.homeAddress}
               </label>
               <input
                 id="profile-address"
@@ -113,7 +172,7 @@ export default async function ProfilePage({
             </div>
             <div>
               <label htmlFor="profile-phone" className="mb-2 block text-base font-bold text-slate-950">
-                Nombor telefon
+                {copy.phone}
               </label>
               <input
                 id="profile-phone"
@@ -123,11 +182,11 @@ export default async function ProfilePage({
                 placeholder="012-345 6789"
                 className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
               />
-              <p className="mt-2 text-sm text-muted">Gunakan format nombor telefon Malaysia seperti 012-345 6789.</p>
+              <p className="mt-2 text-sm text-muted">{copy.phoneHelp}</p>
             </div>
             <div className="md:col-span-2">
-              <FormSubmitButton className="min-h-14 px-6 py-3" pendingLabel="Menyimpan profil...">
-                Simpan perubahan profil
+              <FormSubmitButton className="min-h-14 px-6 py-3" pendingLabel={copy.saving}>
+                {copy.save}
               </FormSubmitButton>
             </div>
           </form>
@@ -135,25 +194,25 @@ export default async function ProfilePage({
 
         <div className="space-y-4">
           <Card className="border-slate-200 bg-slate-50/80">
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Status profil</p>
+            <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.profileStatus}</p>
             <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-              {profile.phone_number ? "Maklumat sudah lengkap" : "Lengkapkan nombor telefon"}
+              {profile.phone_number ? copy.complete : copy.completePhone}
             </h3>
             <p className="mt-3 text-base text-slate-700">
               {profile.phone_number
-                ? "Nombor telefon anda sudah disimpan, jadi jawatankuasa boleh menghubungi anda jika perlu."
-                : "Tambah nombor telefon supaya jawatankuasa mudah menghubungi anda untuk bayaran atau makluman komuniti."}
+                ? copy.completeHelp
+                : copy.missingHelp}
             </p>
           </Card>
 
           <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Keselamatan</p>
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.security}</p>
               <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-                Tukar kata laluan
+                {copy.changePassword}
               </h3>
               <p className="mt-2 text-base text-muted">
-                Anda boleh tukar kata laluan jika mahu kemas kini keselamatan akaun.
+                {copy.passwordHelp}
               </p>
             </div>
             <Link
@@ -161,11 +220,11 @@ export default async function ProfilePage({
               className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white"
             >
               <KeyRound className="h-4 w-4" />
-              Tukar kata laluan
+              {copy.changePassword}
             </Link>
           </Card>
 
-          <ResidentNotificationList notifications={notifications} compact />
+          <ResidentNotificationList notifications={notifications} compact locale={locale} />
         </div>
       </div>
     </div>

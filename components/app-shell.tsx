@@ -20,20 +20,12 @@ import {
 } from "lucide-react";
 import { SidebarCalendar } from "@/components/sidebar-calendar";
 import { SignOutButton } from "@/components/sign-out-button";
+import { LanguageToggle } from "@/components/language-toggle";
+import type { Locale } from "@/lib/i18n";
 import type { Role, UserProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const navItems: Record<
-  Role,
-  Array<{ href: string; label: string; icon: typeof LayoutDashboard }>
-> = {
-  user: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/payments", label: "Bayaran", icon: CreditCard },
-    { href: "/notifications", label: "Notifikasi", icon: Bell },
-    { href: "/profile", label: "Profil", icon: UserCircle2 },
-  ],
-  admin: [
+const adminNavItems: Array<{ href: string; label: string; icon: typeof LayoutDashboard }> = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/approvals", label: "Approvals", icon: ShieldCheck },
     { href: "/admin/residents", label: "Residents", icon: UserCircle2 },
@@ -44,21 +36,73 @@ const navItems: Record<
     { href: "/admin/announcements", label: "Notices", icon: Megaphone },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/settings", label: "Settings", icon: Settings },
+];
+
+const userNavItems: Record<Locale, Array<{ href: string; label: string; icon: typeof LayoutDashboard }>> = {
+  ms: [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/payments", label: "Bayaran", icon: CreditCard },
+    { href: "/notifications", label: "Notifikasi", icon: Bell },
+    { href: "/profile", label: "Profil", icon: UserCircle2 },
   ],
+  en: [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/payments", label: "Payments", icon: CreditCard },
+    { href: "/notifications", label: "Notifications", icon: Bell },
+    { href: "/profile", label: "Profile", icon: UserCircle2 },
+  ],
+};
+
+const shellCopy: Record<Locale, {
+  skip: string;
+  residentTitle: string;
+  signedIn: string;
+  residentMenu: string;
+  quickNoteTitle: string;
+  residentQuickNote: string;
+  loadingLabel: string;
+  loadingTitle: string;
+  loadingBody: string;
+}> = {
+  ms: {
+    skip: "Langkau ke kandungan utama",
+    residentTitle: "Portal Penduduk",
+    signedIn: "Log masuk sebagai",
+    residentMenu: "Menu penduduk",
+    quickNoteTitle: "Nota ringkas",
+    residentQuickNote: "Muat naik resit selepas membuat bayaran supaya jawatankuasa boleh semak dengan cepat.",
+    loadingLabel: "Membuka halaman",
+    loadingTitle: "Memuatkan",
+    loadingBody: "Sila tunggu seketika sementara sistem memuatkan maklumat terkini.",
+  },
+  en: {
+    skip: "Skip to main content",
+    residentTitle: "Resident Portal",
+    signedIn: "Signed in as",
+    residentMenu: "Resident menu",
+    quickNoteTitle: "Quick note",
+    residentQuickNote: "Upload your receipt after payment so the committee can review it quickly.",
+    loadingLabel: "Opening page",
+    loadingTitle: "Loading",
+    loadingBody: "Please wait while the portal loads the latest information.",
+  },
 };
 
 export function AppShell({
   profile,
   badgeCounts,
+  locale,
   children,
 }: {
   profile: UserProfile;
   badgeCounts?: Partial<Record<"notifications" | "approvals", number>>;
+  locale: Locale;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [loadingHref, setLoadingHref] = useState<string | null>(null);
-  const items = navItems[profile.role];
+  const copy = shellCopy[locale];
+  const items = profile.role === "admin" ? adminNavItems : userNavItems[locale];
   const printOnlyReportRoute =
     profile.role === "admin" && pathname.startsWith("/admin/reports");
   const activeLoadingItem = useMemo(
@@ -76,7 +120,7 @@ export function AppShell({
         href="#main-content"
         className="sr-only absolute left-4 top-4 z-50 rounded-full bg-slate-950 px-4 py-3 text-sm font-bold text-white focus:not-sr-only"
       >
-      Langkau ke kandungan utama
+        {copy.skip}
       </a>
       <div
         className={`mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-7 px-4 py-4 sm:px-6 lg:flex-row lg:items-start lg:px-8 lg:py-8 ${
@@ -93,16 +137,18 @@ export function AppShell({
               Desa Tanjung
             </p>
             <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-slate-950">
-              {profile.role === "admin" ? "Committee Panel" : "Portal Penduduk"}
+              {profile.role === "admin" ? "Committee Panel" : copy.residentTitle}
             </h1>
             <p className="mt-3 text-base text-muted">
-              Log masuk sebagai {profile.house_number} - {profile.name}
+              {copy.signedIn} {profile.house_number} - {profile.name}
             </p>
           </div>
 
-          <div className="mb-3 px-1">
+          {profile.role === "user" ? <LanguageToggle locale={locale} /> : null}
+
+          <div className="mb-3 mt-5 px-1">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-              {profile.role === "admin" ? "Admin tools" : "Menu penduduk"}
+              {profile.role === "admin" ? "Admin tools" : copy.residentMenu}
             </p>
           </div>
 
@@ -159,18 +205,20 @@ export function AppShell({
           </nav>
 
           <div className="mt-7 rounded-3xl border border-slate-100 bg-white/90 p-5">
-            <p className="text-base font-bold text-slate-950">Nota ringkas</p>
+            <p className="text-base font-bold text-slate-950">
+              {profile.role === "admin" ? "Quick note" : copy.quickNoteTitle}
+            </p>
             <p className="mt-2 text-base text-muted">
               {profile.role === "admin"
                 ? "New uploads appear here automatically every 30 seconds."
-                : "Muat naik resit selepas membuat bayaran supaya jawatankuasa boleh semak dengan cepat."}
+                : copy.residentQuickNote}
             </p>
           </div>
 
           <SidebarCalendar />
 
           <div className="mt-7">
-            <SignOutButton />
+            <SignOutButton locale={locale} />
           </div>
         </aside>
 
@@ -183,13 +231,13 @@ export function AppShell({
                     <LoaderCircle className="h-7 w-7 animate-spin text-primary" />
                   </div>
                   <p className="mt-4 text-sm font-bold uppercase tracking-[0.14em] text-primary">
-                    Membuka halaman
+                    {copy.loadingLabel}
                   </p>
                   <h3 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950">
-                    {activeLoadingItem?.label ?? "Memuatkan"}
+                    {activeLoadingItem?.label ?? copy.loadingTitle}
                   </h3>
                   <p className="mt-3 text-base leading-8 text-slate-600">
-                    Sila tunggu seketika sementara sistem memuatkan maklumat terkini.
+                    {copy.loadingBody}
                   </p>
                 </div>
               </div>

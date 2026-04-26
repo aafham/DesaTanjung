@@ -1,12 +1,22 @@
 import type { DisplayPaymentStatus } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-const labelMap: Record<DisplayPaymentStatus, string> = {
-  paid: "Selesai",
-  pending: "Dalam semakan",
-  rejected: "Ditolak",
-  unpaid: "Belum bayar",
-  overdue: "Lewat bayar",
+const labelMap: Record<Locale, Record<DisplayPaymentStatus, string>> = {
+  ms: {
+    paid: "Selesai",
+    pending: "Dalam semakan",
+    rejected: "Ditolak",
+    unpaid: "Belum bayar",
+    overdue: "Lewat bayar",
+  },
+  en: {
+    paid: "Paid",
+    pending: "Under review",
+    rejected: "Rejected",
+    unpaid: "Unpaid",
+    overdue: "Overdue",
+  },
 };
 
 const styleMap: Record<DisplayPaymentStatus, string> = {
@@ -20,9 +30,11 @@ const styleMap: Record<DisplayPaymentStatus, string> = {
 export function StatusBadge({
   status,
   className,
+  locale = "ms",
 }: {
   status: DisplayPaymentStatus;
   className?: string;
+  locale?: Locale;
 }) {
   return (
     <span
@@ -32,7 +44,7 @@ export function StatusBadge({
         className,
       )}
     >
-      {labelMap[status]}
+      {labelMap[locale][status]}
     </span>
   );
 }

@@ -6,6 +6,7 @@ import {
   markResidentNotificationsReadAction,
   markSingleResidentNotificationReadAction,
 } from "@/lib/actions";
+import type { Locale } from "@/lib/i18n";
 import type { NotificationRecord } from "@/lib/types";
 import type { PaginationMeta } from "@/lib/types";
 import { formatTimestamp } from "@/lib/utils";
@@ -14,12 +15,60 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { ServerPaginationControls } from "@/components/ui/server-pagination-controls";
 import { Card } from "@/components/ui/card";
 
-function getNotificationPresentation(message: string) {
+const notificationCopy = {
+  ms: {
+    approved: "Diluluskan",
+    action: "Perlu tindakan",
+    pending: "Dalam semakan",
+    cash: "Bayaran tunai",
+    update: "Makluman",
+    titleSmall: "Notifikasi",
+    unread: "belum dibaca",
+    inbox: "Inbox penduduk",
+    markAllTitle: "Tanda semua notifikasi sebagai dibaca?",
+    markAllMessage: "Ini akan mengosongkan tanda belum dibaca pada notifikasi penduduk.",
+    markAll: "Tanda semua dibaca",
+    all: "Semua",
+    showing: "Memaparkan",
+    of: "daripada",
+    notifications: "notifikasi.",
+    oldNote: "Notifikasi lama boleh dibuka melalui butang halaman seterusnya.",
+    emptyAll: "Belum ada notifikasi penduduk. Status semakan resit dan peringatan bayaran akan muncul di sini.",
+    emptyFilter: "Tiada notifikasi sepadan dengan tapisan semasa.",
+    new: "Baharu",
+    read: "Baca",
+  },
+  en: {
+    approved: "Approved",
+    action: "Needs action",
+    pending: "Under review",
+    cash: "Cash payment",
+    update: "Update",
+    titleSmall: "Notifications",
+    unread: "unread",
+    inbox: "Resident inbox",
+    markAllTitle: "Mark all notifications as read?",
+    markAllMessage: "This will clear unread markers from resident notifications.",
+    markAll: "Mark all read",
+    all: "All",
+    showing: "Showing",
+    of: "of",
+    notifications: "notifications.",
+    oldNote: "Older notifications can be opened using the next page button.",
+    emptyAll: "No resident notifications yet. Receipt review status and payment reminders will appear here.",
+    emptyFilter: "No notifications match the current filter.",
+    new: "New",
+    read: "Read",
+  },
+} as const;
+
+function getNotificationPresentation(message: string, locale: Locale) {
+  const copy = notificationCopy[locale];
   const normalized = message.toLowerCase();
 
   if (normalized.includes("approved") || normalized.includes("disahkan") || normalized.includes("diluluskan")) {
     return {
-      label: "Diluluskan",
+      label: copy.approved,
       icon: CheckCircle2,
       tones: "border-emerald-200 bg-emerald-50 text-emerald-950",
       badge: "bg-emerald-100 text-emerald-900",
@@ -28,7 +77,7 @@ function getNotificationPresentation(message: string) {
 
   if (normalized.includes("rejected") || normalized.includes("ditolak")) {
     return {
-      label: "Perlu tindakan",
+      label: copy.action,
       icon: ShieldAlert,
       tones: "border-rose-200 bg-rose-50 text-rose-950",
       badge: "bg-rose-100 text-rose-900",
@@ -42,7 +91,7 @@ function getNotificationPresentation(message: string) {
     normalized.includes("sudah dihantar")
   ) {
     return {
-      label: "Dalam semakan",
+      label: copy.pending,
       icon: Clock3,
       tones: "border-amber-200 bg-amber-50 text-amber-950",
       badge: "bg-amber-100 text-amber-900",
@@ -51,7 +100,7 @@ function getNotificationPresentation(message: string) {
 
   if (normalized.includes("cash") || normalized.includes("tunai")) {
     return {
-      label: "Bayaran tunai",
+      label: copy.cash,
       icon: Wallet,
       tones: "border-sky-200 bg-sky-50 text-sky-950",
       badge: "bg-sky-100 text-sky-900",
@@ -59,20 +108,21 @@ function getNotificationPresentation(message: string) {
   }
 
   return {
-    label: "Makluman",
+    label: copy.update,
     icon: Megaphone,
     tones: "border-line bg-slate-50 text-slate-950",
     badge: "bg-slate-100 text-slate-700",
   };
 }
 
-function getNotificationCategory(message: string) {
-  const label = getNotificationPresentation(message).label;
+function getNotificationCategory(message: string, locale: Locale) {
+  const copy = notificationCopy[locale];
+  const label = getNotificationPresentation(message, locale).label;
 
-  if (label === "Diluluskan") return "approved";
-  if (label === "Dalam semakan") return "pending";
-  if (label === "Perlu tindakan") return "action";
-  if (label === "Bayaran tunai") return "cash";
+  if (label === copy.approved) return "approved";
+  if (label === copy.pending) return "pending";
+  if (label === copy.action) return "action";
+  if (label === copy.cash) return "cash";
   return "update";
 }
 
@@ -82,14 +132,17 @@ export function ResidentNotificationList({
   pagination,
   paginationBasePath = "/notifications",
   redirectPath = "/notifications",
+  locale = "ms",
 }: {
   notifications: NotificationRecord[];
   compact?: boolean;
   pagination?: PaginationMeta;
   paginationBasePath?: string;
   redirectPath?: string;
+  locale?: Locale;
 }) {
   const PAGE_SIZE = 5;
+  const copy = notificationCopy[locale];
   const [filter, setFilter] = useState<"all" | "approved" | "pending" | "action" | "cash" | "update">(
     "all",
   );
@@ -108,9 +161,9 @@ export function ResidentNotificationList({
           return true;
         }
 
-        return getNotificationCategory(notification.message) === filter;
+        return getNotificationCategory(notification.message, locale) === filter;
       }),
-    [filter, notifications, serverPaginated],
+    [filter, locale, notifications, serverPaginated],
   );
   const totalPages = pagination?.totalPages ?? (compact ? 1 : Math.max(1, Math.ceil(filteredNotifications.length / PAGE_SIZE)));
 
@@ -161,15 +214,15 @@ export function ResidentNotificationList({
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Notifikasi</p>
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.titleSmall}</p>
               {unreadCount > 0 ? (
                 <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
-                  {unreadCount} belum dibaca
+                  {unreadCount} {copy.unread}
                 </span>
               ) : null}
             </div>
             <h3 className="mt-1 font-display text-3xl font-bold leading-tight text-slate-950">
-              Inbox penduduk
+              {copy.inbox}
             </h3>
           </div>
         </div>
@@ -177,12 +230,12 @@ export function ResidentNotificationList({
         {unreadCount > 0 ? (
           <form action={markResidentNotificationsReadAction}>
             <ConfirmSubmitButton
-              confirmTitle="Tanda semua notifikasi sebagai dibaca?"
-              confirmMessage="Ini akan mengosongkan tanda belum dibaca pada notifikasi penduduk."
-              confirmLabel="Tanda semua dibaca"
+              confirmTitle={copy.markAllTitle}
+              confirmMessage={copy.markAllMessage}
+              confirmLabel={copy.markAll}
               className="bg-slate-950 px-4 py-2 text-sm text-white"
             >
-              Tanda semua dibaca
+              {copy.markAll}
             </ConfirmSubmitButton>
           </form>
         ) : null}
@@ -192,12 +245,12 @@ export function ResidentNotificationList({
         <>
           <div className="mt-5 flex flex-wrap gap-2">
             {[
-              { value: "all", label: "Semua" },
-              { value: "approved", label: "Diluluskan" },
-              { value: "pending", label: "Dalam semakan" },
-              { value: "action", label: "Perlu tindakan" },
-              { value: "cash", label: "Bayaran tunai" },
-              { value: "update", label: "Makluman" },
+              { value: "all", label: copy.all },
+              { value: "approved", label: copy.approved },
+              { value: "pending", label: copy.pending },
+              { value: "action", label: copy.action },
+              { value: "cash", label: copy.cash },
+              { value: "update", label: copy.update },
             ].map((option) => (
               <button
                 key={option.value}
@@ -220,14 +273,14 @@ export function ResidentNotificationList({
           </div>
 
           <div className="mt-4 rounded-3xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-            Memaparkan {startItem}-{endItem} daripada {filteredNotifications.length} notifikasi.
+            {copy.showing} {startItem}-{endItem} {copy.of} {filteredNotifications.length} {copy.notifications}
           </div>
         </>
       ) : null}
 
       {!compact && serverPaginated ? (
         <div className="mt-4 rounded-3xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-          Memaparkan {startItem}-{endItem} daripada {totalItems} notifikasi. Notifikasi lama boleh dibuka melalui butang halaman seterusnya.
+          {copy.showing} {startItem}-{endItem} {copy.of} {totalItems} {copy.notifications} {copy.oldNote}
         </div>
       ) : null}
 
@@ -235,12 +288,12 @@ export function ResidentNotificationList({
         {filteredNotifications.length === 0 ? (
           <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
             {notifications.length === 0
-              ? "Belum ada notifikasi penduduk. Status semakan resit dan peringatan bayaran akan muncul di sini."
-              : "Tiada notifikasi sepadan dengan tapisan semasa."}
+              ? copy.emptyAll
+              : copy.emptyFilter}
           </div>
         ) : (
           paginatedNotifications.map((notification) => {
-            const presentation = getNotificationPresentation(notification.message);
+            const presentation = getNotificationPresentation(notification.message, locale);
             const Icon = presentation.icon;
 
             return (
@@ -264,7 +317,7 @@ export function ResidentNotificationList({
                         </span>
                         {!notification.is_read ? (
                           <span className="rounded-full bg-slate-950 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-white">
-                            Baharu
+                            {copy.new}
                           </span>
                         ) : null}
                       </div>
@@ -281,7 +334,7 @@ export function ResidentNotificationList({
                         type="submit"
                         className="rounded-full bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-700 transition hover:bg-slate-100"
                       >
-                        Baca
+                        {copy.read}
                       </button>
                     </form>
                   ) : null}

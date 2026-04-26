@@ -1,53 +1,100 @@
 import { CheckCircle2, Clock3, UploadCloud, XCircle } from "lucide-react";
 import type { PaginationMeta, PaymentAuditLog, ResidentPaymentRecord } from "@/lib/types";
-import { ServerPaginationControls } from "@/components/ui/server-pagination-controls";
+import type { Locale } from "@/lib/i18n";
+import { CompactServerPaginationControls } from "@/components/ui/compact-server-pagination-controls";
 import { formatTimestamp } from "@/lib/utils";
+
+const timelineCopy = {
+  ms: {
+    record: "Rekod bayaran",
+    review: "Dalam semakan",
+    rejected: "Ditolak",
+    approved: "Diluluskan",
+    noReceipt: "Belum ada resit dimuat naik.",
+    receiptUploaded: "Resit sudah dimuat naik ke sistem.",
+    reviewing: "Jawatankuasa sedang menyemak bayaran anda.",
+    waitingReceipt: "Menunggu resit dimuat naik.",
+    reviewDone: "Semakan selesai.",
+    paid: "Bayaran anda sudah disahkan.",
+    uploadCorrect: "Sila muat naik resit yang betul.",
+    overdue: "Bayaran bulan ini sudah melepasi tarikh akhir.",
+    waitingDecision: "Menunggu keputusan akhir.",
+    activityLog: "Log aktiviti",
+    showing: "Memaparkan",
+    from: "daripada",
+    records: "rekod aktiviti.",
+    empty: "Belum ada aktiviti.",
+  },
+  en: {
+    record: "Transfer record",
+    review: "Under review",
+    rejected: "Rejected",
+    approved: "Approved",
+    noReceipt: "No receipt has been uploaded yet.",
+    receiptUploaded: "Receipt has been uploaded to the system.",
+    reviewing: "The committee is reviewing your payment.",
+    waitingReceipt: "Waiting for receipt upload.",
+    reviewDone: "Review completed.",
+    paid: "Your payment has been approved.",
+    uploadCorrect: "Please upload the correct receipt.",
+    overdue: "This month payment is past the due date.",
+    waitingDecision: "Waiting for the final decision.",
+    activityLog: "Activity log",
+    showing: "Showing",
+    from: "of",
+    records: "activity records.",
+    empty: "No activity yet.",
+  },
+} as const;
 
 export function PaymentTimeline({
   payment,
   auditLogs,
   auditPagination,
   getAuditPageHref,
+  locale = "ms",
 }: {
   payment: ResidentPaymentRecord;
   auditLogs: PaymentAuditLog[];
   auditPagination?: PaginationMeta;
   getAuditPageHref?: (page: number) => string;
+  locale?: Locale;
 }) {
+  const copy = timelineCopy[locale];
   const displayStatus = payment.display_status;
   const steps = [
     {
-      label: "Rekod bayaran",
+      label: copy.record,
       done: payment.status !== "unpaid",
       icon: UploadCloud,
       description:
         payment.status === "unpaid"
-          ? "Belum ada resit dimuat naik."
-          : "Resit sudah dimuat naik ke sistem.",
+          ? copy.noReceipt
+          : copy.receiptUploaded,
     },
     {
-      label: "Dalam semakan",
+      label: copy.review,
       done: ["pending", "paid", "rejected"].includes(payment.status),
       icon: Clock3,
       description:
         payment.status === "pending"
-          ? "Jawatankuasa sedang menyemak bayaran anda."
+          ? copy.reviewing
           : payment.status === "unpaid"
-            ? "Menunggu resit dimuat naik."
-            : "Semakan selesai.",
+            ? copy.waitingReceipt
+            : copy.reviewDone,
     },
     {
-      label: payment.status === "rejected" ? "Ditolak" : "Diluluskan",
+      label: payment.status === "rejected" ? copy.rejected : copy.approved,
       done: ["paid", "rejected"].includes(payment.status),
       icon: payment.status === "rejected" || displayStatus === "overdue" ? XCircle : CheckCircle2,
       description:
         payment.status === "paid"
-          ? "Bayaran anda sudah disahkan."
+          ? copy.paid
           : payment.status === "rejected"
-            ? payment.reject_reason ?? "Sila muat naik resit yang betul."
+            ? payment.reject_reason ?? copy.uploadCorrect
             : displayStatus === "overdue"
-              ? "Bayaran bulan ini sudah melepasi tarikh akhir."
-            : "Menunggu keputusan akhir.",
+              ? copy.overdue
+            : copy.waitingDecision,
     },
   ];
 
@@ -82,18 +129,18 @@ export function PaymentTimeline({
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.12em] text-primary">
-              Log aktiviti
+              {copy.activityLog}
             </p>
             {auditPagination ? (
               <p className="mt-1 text-sm font-semibold text-slate-600">
-                Memaparkan {auditLogs.length} daripada {auditPagination.totalItems} rekod aktiviti.
+                {copy.showing} {auditLogs.length} {copy.from} {auditPagination.totalItems} {copy.records}
               </p>
             ) : null}
           </div>
         </div>
         <div className="mt-3 space-y-3">
           {auditLogs.length === 0 ? (
-            <p className="text-base font-medium text-muted">Belum ada aktiviti.</p>
+            <p className="text-base font-medium text-muted">{copy.empty}</p>
           ) : (
             auditLogs.map((log) => (
               <div key={log.id} className="rounded-2xl bg-white px-4 py-3">
@@ -105,9 +152,10 @@ export function PaymentTimeline({
         </div>
         {auditPagination && getAuditPageHref ? (
           <div className="mt-4">
-            <ServerPaginationControls
+            <CompactServerPaginationControls
               pagination={auditPagination}
               getHref={getAuditPageHref}
+              locale={locale}
             />
           </div>
         ) : null}
