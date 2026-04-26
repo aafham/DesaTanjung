@@ -42,6 +42,32 @@ type SearchPaymentRecord = PaymentRecord & {
 
 type ManagedAnnouncement = AnnouncementRecord;
 
+type AdminResidentPaymentRow = {
+  id: string;
+  house_number: string;
+  name: string;
+  address: string;
+  phone_number: string | null;
+  role: UserProfile["role"];
+  must_change_password: boolean;
+  payment_id: string | null;
+  payment_user_id: string | null;
+  payment_month: string | null;
+  payment_status: PaymentStatus | null;
+  proof_url: string | null;
+  payment_created_at: string | null;
+  payment_updated_at: string | null;
+  reviewed_at: string | null;
+  payment_method: "online" | "cash" | null;
+  notes: string | null;
+  reject_reason: string | null;
+  display_status: DisplayPaymentStatus;
+  total_count: number;
+  settled_count: number;
+  reviewed_count: number;
+  follow_up_count: number;
+};
+
 function createWarningMessage(scope: string, message: string) {
   return `${scope}: ${message}`;
 }
@@ -708,6 +734,75 @@ export async function getAdminResidentsData({
     };
   }
 
+  const { data: residentPaymentRows, error: residentPaymentRowsError } = await supabase.rpc(
+    "admin_resident_payment_rows",
+    {
+      p_month: month,
+      p_query: query,
+      p_status: statusFilter,
+      p_method: methodFilter,
+      p_limit: safePageSize,
+      p_offset: from,
+    },
+  );
+
+  if (!residentPaymentRowsError) {
+    const rows = (residentPaymentRows as AdminResidentPaymentRow[] | null) ?? [];
+    const totalCount = rows[0]?.total_count ?? 0;
+    const pagination = createPaginationMeta(safePage, safePageSize, totalCount);
+    const paginatedResidents = rows.map((row) => {
+      const currentPayment =
+        row.payment_id && row.payment_user_id && row.payment_month && row.payment_status
+          ? ({
+              id: row.payment_id,
+              user_id: row.payment_user_id,
+              month: row.payment_month,
+              status: row.payment_status,
+              proof_url: row.proof_url,
+              created_at: row.payment_created_at ?? new Date().toISOString(),
+              updated_at: row.payment_updated_at ?? new Date().toISOString(),
+              reviewed_at: row.reviewed_at,
+              payment_method: row.payment_method ?? "online",
+              notes: row.notes,
+              reject_reason: row.reject_reason,
+              display_status: row.display_status,
+              is_overdue: row.display_status === "overdue",
+              signed_proof_url: null,
+            } satisfies ResidentPaymentRecord)
+          : enrichPaymentRecord(null, month, settings.due_day);
+
+      return {
+        id: row.id,
+        house_number: row.house_number,
+        name: row.name,
+        address: row.address,
+        phone_number: row.phone_number,
+        role: row.role,
+        must_change_password: row.must_change_password,
+        currentPayment,
+      } satisfies ResidentWithPayment;
+    });
+
+    return {
+      profile,
+      currentMonth: month,
+      currentMonthLabel: formatMonthLabel(month),
+      residents: paginatedResidents,
+      warnings: getSystemHealthWarnings(settings),
+      filters: {
+        query,
+        statusFilter,
+        methodFilter,
+      },
+      pagination,
+      summary: {
+        settledCount: rows[0]?.settled_count ?? 0,
+        reviewedCount: rows[0]?.reviewed_count ?? 0,
+        followUpCount: rows[0]?.follow_up_count ?? 0,
+      },
+    };
+  }
+
   const { data: residents, error: residentsError } = await supabase
     .from("users")
     .select("id, house_number, name, address, phone_number, role, must_change_password")
@@ -722,6 +817,7 @@ export async function getAdminResidentsData({
 
   const warnings = [
     ...getSystemHealthWarnings(settings),
+    createWarningMessage("Resident payment filter RPC fallback", residentPaymentRowsError.message),
     ...(residentsError ? [createWarningMessage("Residents", residentsError.message)] : []),
     ...(monthlyRecordsError ? [createWarningMessage("Monthly records", monthlyRecordsError.message)] : []),
   ];

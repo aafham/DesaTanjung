@@ -320,10 +320,11 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] server-side narrowing untuk global search
   - [x] semakan index database untuk query admin yang kerap
   - [x] pagination berpandukan server / URL untuk users, residents, dan activity
-  - [x] query database diperketat lagi untuk users, activity, dan default residents list
+  - [x] query database diperketat lagi untuk users, activity, default residents list, dan residents payment filter
   - [x] activity retention / prune function disediakan dalam schema
   - [x] export CSV penuh ikut filter untuk activity
   - [x] export CSV penuh ikut filter untuk residents
+  - [x] RPC admin `admin_resident_payment_rows` disediakan untuk elak load semua residents/payments bila filter status atau method aktif
 - [x] Test automation tersedia untuk flow admin utama:
   - [x] admin login
   - [x] resident upload -> admin approve / reject
@@ -347,7 +348,6 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 #### Masih perlu dibuat / boleh dipertingkatkan
 
 - [ ] Performance / scalability admin fasa seterusnya:
-  - [ ] DB-level query penuh untuk residents bila guna `status` / `payment method` filter
   - [ ] jadualkan `prune_user_activity_logs(90)` sebagai rutin bulanan selepas live
   - [ ] semak query plan Supabase selepas data sebenar sudah banyak
 - [ ] Operational readiness admin:

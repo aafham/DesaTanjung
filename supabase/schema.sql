@@ -132,6 +132,9 @@ on public.payments (month, status, updated_at desc);
 create index if not exists payments_user_month_updated_idx
 on public.payments (user_id, month, updated_at desc);
 
+create index if not exists payments_month_method_status_updated_idx
+on public.payments (month, payment_method, status, updated_at desc);
+
 create index if not exists notifications_user_scope_created_idx
 on public.notifications (user_id, scope, created_at desc);
 
@@ -152,31 +155,6 @@ on public.user_activity_logs (created_at desc);
 
 create index if not exists announcements_audience_pinned_published_idx
 on public.announcements (audience, is_pinned desc, published_at desc);
-
-create or replace function public.prune_user_activity_logs(p_keep_days integer default 90)
-returns integer
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  v_deleted integer;
-  v_keep_days integer := greatest(coalesce(p_keep_days, 90), 14);
-begin
-  if not public.is_admin() then
-    raise exception 'Admin access required';
-  end if;
-
-  delete from public.user_activity_logs
-  where created_at < timezone('utc', now()) - make_interval(days => v_keep_days);
-
-  get diagnostics v_deleted = row_count;
-  return v_deleted;
-end;
-$$;
-
-comment on function public.prune_user_activity_logs(integer) is
-  'Deletes old global portal activity logs while preserving payment records and payment audit history.';
 
 insert into public.app_settings (id)
 values (true)
@@ -230,6 +208,151 @@ as $$
       and role = 'admin'
   );
 $$;
+
+create or replace function public.prune_user_activity_logs(p_keep_days integer default 90)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_deleted integer;
+  v_keep_days integer := greatest(coalesce(p_keep_days, 90), 14);
+begin
+  if not public.is_admin() then
+    raise exception 'Admin access required';
+  end if;
+
+  delete from public.user_activity_logs
+  where created_at < timezone('utc', now()) - make_interval(days => v_keep_days);
+
+  get diagnostics v_deleted = row_count;
+  return v_deleted;
+end;
+$$;
+
+comment on function public.prune_user_activity_logs(integer) is
+  'Deletes old global portal activity logs while preserving payment records and payment audit history.';
+
+create or replace function public.admin_resident_payment_rows(
+  p_month text,
+  p_query text default '',
+  p_status text default 'all',
+  p_method text default 'all',
+  p_limit integer default 5,
+  p_offset integer default 0
+)
+returns table (
+  id uuid,
+  house_number text,
+  name text,
+  address text,
+  phone_number text,
+  role text,
+  must_change_password boolean,
+  payment_id uuid,
+  payment_user_id uuid,
+  payment_month text,
+  payment_status public.payment_status,
+  proof_url text,
+  payment_created_at timestamptz,
+  payment_updated_at timestamptz,
+  reviewed_at timestamptz,
+  payment_method text,
+  notes text,
+  reject_reason text,
+  display_status text,
+  total_count bigint,
+  settled_count bigint,
+  reviewed_count bigint,
+  follow_up_count bigint
+)
+language sql
+security definer
+set search_path = public
+as $$
+  with settings as (
+    select due_day
+    from public.app_settings
+    where id = true
+  ),
+  scoped as (
+    select
+      u.id,
+      u.house_number,
+      u.name,
+      u.address,
+      u.phone_number,
+      u.role::text as role,
+      u.must_change_password,
+      p.id as payment_id,
+      p.user_id as payment_user_id,
+      p.month as payment_month,
+      p.status as payment_status,
+      p.proof_url,
+      p.created_at as payment_created_at,
+      p.updated_at as payment_updated_at,
+      p.reviewed_at,
+      p.payment_method::text as payment_method,
+      p.notes,
+      p.reject_reason,
+      case
+        when coalesce(p.status, 'unpaid'::public.payment_status) in ('paid', 'pending', 'rejected') then coalesce(p.status, 'unpaid'::public.payment_status)::text
+        when timezone('utc', now()) > make_timestamptz(
+          split_part(p_month, '-', 1)::int,
+          split_part(p_month, '-', 2)::int,
+          least(greatest(coalesce((select due_day from settings), 7), 1), 28),
+          23,
+          59,
+          59.999
+        ) then 'overdue'
+        else 'unpaid'
+      end as display_status
+    from public.users u
+    left join public.payments p
+      on p.user_id = u.id
+     and p.month = p_month
+    where public.is_admin()
+      and u.role = 'user'
+      and (
+        nullif(trim(p_query), '') is null
+        or u.house_number ilike '%' || replace(replace(trim(p_query), '\', '\\'), '%', '\%') || '%' escape '\'
+        or u.name ilike '%' || replace(replace(trim(p_query), '\', '\\'), '%', '\%') || '%' escape '\'
+        or u.address ilike '%' || replace(replace(trim(p_query), '\', '\\'), '%', '\%') || '%' escape '\'
+        or coalesce(u.phone_number, '') ilike '%' || replace(replace(trim(p_query), '\', '\\'), '%', '\%') || '%' escape '\'
+      )
+  ),
+  filtered as (
+    select *
+    from scoped
+    where (
+      p_status = 'all'
+      or coalesce(payment_status, 'unpaid'::public.payment_status)::text = p_status
+      or display_status = p_status
+    )
+    and (
+      p_method = 'all'
+      or payment_method = p_method
+    )
+  ),
+  counted as (
+    select
+      *,
+      count(*) over() as total_count,
+      count(*) filter (where display_status = 'paid') over() as settled_count,
+      count(*) filter (where coalesce(payment_status, 'unpaid'::public.payment_status)::text in ('paid', 'rejected')) over() as reviewed_count,
+      count(*) filter (where display_status in ('unpaid', 'overdue', 'rejected')) over() as follow_up_count
+    from filtered
+  )
+  select *
+  from counted
+  order by house_number asc
+  limit greatest(p_limit, 1)
+  offset greatest(p_offset, 0);
+$$;
+
+comment on function public.admin_resident_payment_rows(text, text, text, text, integer, integer) is
+  'Admin-only paged resident payment directory filter used to avoid loading all residents and payments in application code.';
 
 create or replace function public.submit_payment_proof(p_month text, p_proof_url text)
 returns uuid
