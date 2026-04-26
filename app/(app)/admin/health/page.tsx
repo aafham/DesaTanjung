@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { CircleAlert, CircleCheckBig, TriangleAlert } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin-page-header";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { DataWarning } from "@/components/data-warning";
+import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
+import { pruneActivityLogsAction } from "@/lib/actions";
 import { getAdminHealthData } from "@/lib/data";
 import { formatMonthLabel } from "@/lib/utils";
 
@@ -76,7 +79,12 @@ function getSuggestedFixPath({
   return { href: "/admin", label: "Open Dashboard" };
 }
 
-export default async function AdminHealthPage() {
+export default async function AdminHealthPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ message?: string; error?: string }>;
+}) {
+  const params = await searchParams;
   const { checks, duplicateGroups, missingPhoneResidents, warnings } = await getAdminHealthData();
   const healthyCount = checks.filter((check) => check.status === "healthy").length;
   const warningCount = checks.filter((check) => check.status === "warning").length;
@@ -171,6 +179,7 @@ where id in (
 
   return (
     <div className="space-y-6">
+      <PageToast message={params.message} error={params.error} />
       <DataWarning warnings={warnings} />
 
       <AdminPageHeader
@@ -391,6 +400,52 @@ where id in (
             </Card>
           );
         })}
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <Card className="border-teal-200 bg-teal-50">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Activity maintenance</p>
+          <h3 className="mt-2 text-2xl font-bold text-slate-950">
+            Keep global activity logs light
+          </h3>
+          <p className="mt-2 text-base leading-7 text-slate-700">
+            The Activity page already shows the latest 14 days. This maintenance action removes global activity logs older than 90 days while keeping payment records and payment audit history.
+          </p>
+          <form action={pruneActivityLogsAction} className="mt-5">
+            <ConfirmSubmitButton
+              confirmTitle="Prune old activity logs?"
+              confirmMessage="This removes only global activity logs older than 90 days. Payment records, receipts, resident history, and payment audit logs are not removed."
+              confirmLabel="Prune old logs"
+              className="bg-slate-950 text-white"
+            >
+              Run 90-day prune
+            </ConfirmSubmitButton>
+          </form>
+        </Card>
+
+        <Card>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">Monthly operation rhythm</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-3xl bg-slate-50 px-4 py-4">
+              <p className="text-base font-bold text-slate-950">1. Before due date</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                Confirm QR, due day, monthly fee, and missing phone list.
+              </p>
+            </div>
+            <div className="rounded-3xl bg-slate-50 px-4 py-4">
+              <p className="text-base font-bold text-slate-950">2. After collection</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                Review pending proofs, export reports, and follow up unpaid houses.
+              </p>
+            </div>
+            <div className="rounded-3xl bg-slate-50 px-4 py-4">
+              <p className="text-base font-bold text-slate-950">3. After report saved</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                Keep exports/backups, then run activity log maintenance if needed.
+              </p>
+            </div>
+          </div>
+        </Card>
       </section>
 
       <Card>

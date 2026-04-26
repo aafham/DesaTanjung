@@ -315,6 +315,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Activity retention policy:
   - [x] global activity page kekal paparkan log terbaru 14 hari
   - [x] fungsi database `prune_user_activity_logs(90)` disediakan untuk prune log global lama
+  - [x] butang maintenance di Health page untuk run prune 90 hari bila admin perlukan
   - [x] payment history dan payment audit kekal pada resident/payment detail
 - [x] Performance / scalability admin yang sudah dibuat:
   - [x] server-side narrowing untuk global search
@@ -322,6 +323,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] pagination berpandukan server / URL untuk users, residents, dan activity
   - [x] query database diperketat lagi untuk users, activity, default residents list, dan residents payment filter
   - [x] activity retention / prune function disediakan dalam schema
+  - [x] activity retention boleh dijalankan dari Admin Health sebagai maintenance action
   - [x] export CSV penuh ikut filter untuk activity
   - [x] export CSV penuh ikut filter untuk residents
   - [x] RPC admin `admin_resident_payment_rows` disediakan untuk elak load semua residents/payments bila filter status atau method aktif
@@ -338,6 +340,9 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Polisi operasi live admin yang sudah disediakan:
   - [x] elakkan kongsi satu akaun admin untuk ramai AJK
   - [x] sediakan akaun admin berasingan untuk audit yang lebih jelas
+- [x] Operational readiness admin:
+  - [x] SOP bulanan AJK untuk review payment, export report, backup data, dan maintenance log
+  - [x] rhythm operasi bulanan dipaparkan di Health page
 - [x] Full admin E2E mutation flow sudah dijalankan pada disposable environment:
   - [x] approve
   - [x] reject
@@ -348,10 +353,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 #### Masih perlu dibuat / boleh dipertingkatkan
 
 - [ ] Performance / scalability admin fasa seterusnya:
-  - [ ] jadualkan `prune_user_activity_logs(90)` sebagai rutin bulanan selepas live
   - [ ] semak query plan Supabase selepas data sebenar sudah banyak
 - [ ] Operational readiness admin:
-  - [ ] SOP bulanan AJK untuk review payment, export report, dan backup data
   - [ ] panduan rotate admin bila jawatankuasa bertukar
   - [ ] checklist restore data / emergency jika tersilap delete user atau payment
 - [ ] Security / permission refinement:
@@ -412,6 +415,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Announcements page dipolish semula dengan board summary, audience guide, dan pagination
 - [x] Settings page dipolish semula dengan readiness summary, resident-facing preview, dan admin checklist
 - [x] Health page dipolish semula dengan launch readiness summary dan follow-up buckets
+- [x] Health page ditambah activity maintenance card dan monthly operation rhythm
 - [x] Activity page dipolish semula dengan audit summary dan clearer filtered export workflow
 - [x] Reports page dipolish semula dengan meeting highlights dan follow-up queue
 - [x] Keyboard-first admin filtering diperkemas pada users, residents, search, activity, dan month filter
@@ -523,6 +527,7 @@ Nota:
 |   |-- (app)
 |   |   |-- admin
 |   |   |   |-- activity/page.tsx
+|   |   |   |-- activity/export/route.ts
 |   |   |   |-- announcements/page.tsx
 |   |   |   |-- approvals/page.tsx
 |   |   |   |-- health/page.tsx
@@ -530,6 +535,7 @@ Nota:
 |   |   |   |-- reports/snapshot/route.ts
 |   |   |   |-- residents/page.tsx
 |   |   |   |-- residents/[id]/page.tsx
+|   |   |   |-- residents/export/route.ts
 |   |   |   |-- search/page.tsx
 |   |   |   |-- settings/page.tsx
 |   |   |   `-- users/page.tsx
@@ -705,12 +711,22 @@ npm run build
 10. Buka `Reports` untuk print report atau download snapshot bulanan
 11. Buka `Activity` untuk audit log terbaru 14 hari
 12. Buka `Announcements` untuk publish notice
+13. Selepas report bulanan disimpan, buka `Health` dan run `Run 90-day prune` jika mahu buang global activity log lama
 
 Nota operasi admin:
 
 - elakkan kongsi satu login admin untuk ramai AJK
 - cipta satu akaun admin berasingan bagi setiap jawatankuasa yang perlu akses
 - ini akan buat audit log lebih jelas bila ada approve, reject, settings update, atau user management
+
+### SOP bulanan AJK
+
+1. Sebelum kutipan dibuka, semak `Settings` untuk QR, bank info, monthly fee, dan due day.
+2. Semak `Health` untuk missing phone, duplicate payment, dan readiness sistem.
+3. Semasa kutipan berjalan, guna `Approvals` untuk approve/reject resit dan `Residents` untuk cash paid atau reminder.
+4. Selepas due date, export CSV dari `Residents`, print/download snapshot dari `Reports`, dan simpan backup laporan bulanan.
+5. Selepas laporan disimpan, run `Run 90-day prune` di `Health` jika mahu buang global activity log lama.
+6. Bila jawatankuasa bertukar, cipta akaun admin baru di `Users` dan elakkan berkongsi akaun lama.
 
 ## Log aktiviti yang direkod
 

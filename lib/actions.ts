@@ -1056,3 +1056,34 @@ export async function deleteManagedUserAction(formData: FormData) {
   revalidatePath("/admin/residents");
   redirectWithMessage("/admin/users", `User ${houseNumber} deleted successfully.`);
 }
+
+export async function pruneActivityLogsAction() {
+  const profile = await requireUserProfile();
+  requireAdmin(profile);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("prune_user_activity_logs", {
+    p_keep_days: 90,
+  });
+
+  if (error) {
+    redirectWithActionError(
+      "/admin/health",
+      "Unable to prune old activity logs right now. Please confirm the latest Supabase schema has been applied.",
+      error,
+    );
+  }
+
+  await logAdminAudit(
+    profile.id,
+    "activity_logs_pruned",
+    `Admin pruned ${data ?? 0} old global activity log row${data === 1 ? "" : "s"}.`,
+  );
+
+  revalidatePath("/admin/health");
+  revalidatePath("/admin/activity");
+  redirectWithMessage(
+    "/admin/health",
+    `Activity log maintenance completed. ${data ?? 0} old row${data === 1 ? "" : "s"} removed.`,
+  );
+}
