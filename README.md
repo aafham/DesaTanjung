@@ -470,6 +470,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] technical checks, maintenance, security, dan SQL helper dipindahkan ke bahagian collapsible
 - [x] Activity page dipolish semula dengan audit summary dan clearer filtered export workflow
 - [x] Reports page dipolish semula dengan meeting highlights dan follow-up queue
+- [x] Reports page dikemas semula sebagai meeting-ready report: hero summary, compact KPI, money summary, follow-up queue, dan breakdown table yang lebih mudah scan
 - [x] Keyboard-first admin filtering diperkemas pada users, residents, search, activity, dan month filter
 - [x] Contrast admin diperkemas lagi pada reminder panel gelap dan report copy yang masih borderline
 - [x] Search panel sidebar issue dibetulkan supaya tidak mengecil pada page tertentu
