@@ -81,15 +81,15 @@ export default async function ProfilePage({
       <PageToast message={params.message} error={params.error} />
       <section>
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.eyebrow}</p>
-        <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
+        <h2 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
           {copy.title}
         </h2>
-        <p className="mt-3 max-w-2xl text-base text-muted">
+        <p className="mt-3 max-w-2xl text-base leading-7 text-muted">
           {copy.intro}
         </p>
       </section>
 
-      <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4 text-base leading-8 text-slate-700">
+      <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-base leading-7 text-slate-700 sm:px-5 sm:leading-8">
         {copy.notice}
       </div>
 
@@ -97,24 +97,24 @@ export default async function ProfilePage({
         <Card>
           <UserRound className="h-6 w-6 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">{copy.houseNumber}</p>
-          <p className="font-display text-4xl font-bold leading-tight text-slate-950">
+          <p className="break-words font-display text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
             {profile.house_number}
           </p>
         </Card>
         <Card>
           <UserRound className="h-6 w-6 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">{copy.ownerName}</p>
-          <p className="text-2xl font-bold leading-tight text-slate-950">{profile.name}</p>
+          <p className="break-words text-2xl font-bold leading-tight text-slate-950">{profile.name}</p>
         </Card>
         <Card>
           <MapPinned className="h-6 w-6 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">{copy.address}</p>
-          <p className="text-2xl font-bold leading-tight text-slate-950">{profile.address}</p>
+          <p className="break-words text-2xl font-bold leading-tight text-slate-950">{profile.address}</p>
         </Card>
         <Card>
           <Phone className="h-6 w-6 text-primary" />
           <p className="mt-4 text-base font-bold text-muted">{copy.phone}</p>
-          <p className="text-2xl font-bold leading-tight text-slate-950">
+          <p className="break-words text-2xl font-bold leading-tight text-slate-950">
             {profile.phone_number
               ? formatMalaysianPhoneNumber(profile.phone_number)
               : copy.notSaved}
@@ -221,7 +221,7 @@ export default async function ProfilePage({
             </div>
             <Link
               href="/change-password"
-              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white"
+              className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white sm:w-auto"
             >
               <KeyRound className="h-4 w-4" />
               {copy.changePassword}

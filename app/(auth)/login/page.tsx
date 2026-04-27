@@ -18,20 +18,20 @@ export default async function LoginPage({
   const params = await searchParams;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-hero-glow px-4 py-8">
+    <main className="flex min-h-screen items-center justify-center bg-hero-glow px-4 py-6 sm:py-8">
       <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="rounded-4xl border border-line bg-surface/95 p-6 shadow-soft backdrop-blur sm:p-8">
+        <section className="rounded-4xl border border-line bg-surface/95 p-5 shadow-soft backdrop-blur sm:p-8">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">
             Desa Tanjung
           </p>
-          <h1 className="mt-4 max-w-xl font-display text-4xl font-bold leading-tight text-slate-950 sm:text-[3.2rem]">
+          <h1 className="mt-4 max-w-xl font-display text-3xl font-bold leading-tight text-slate-950 sm:text-[3.2rem]">
             Portal bayaran bulanan komuniti.
           </h1>
-          <p className="mt-4 max-w-lg text-lg font-medium text-muted">
+          <p className="mt-4 max-w-lg text-base font-medium leading-7 text-muted sm:text-lg sm:leading-8">
             Semak status bayaran, muat naik resit, dan rujuk maklumat bayaran bulanan dengan lebih teratur.
           </p>
 
-          <div className="mt-8 space-y-4 rounded-4xl border border-line bg-white/80 p-5 text-base text-slate-800">
+          <div className="mt-6 space-y-4 rounded-4xl border border-line bg-white/80 p-4 text-base text-slate-800 sm:mt-8 sm:p-5">
             <div className="flex items-start gap-3">
               <UserRound className="mt-1 h-5 w-5 text-primary" />
               <p>
@@ -52,7 +52,7 @@ export default async function LoginPage({
         </section>
 
         <section
-          className="rounded-4xl border border-slate-800 p-6 text-white shadow-soft sm:p-8"
+          className="rounded-4xl border border-slate-800 p-5 text-white shadow-soft sm:p-8"
           style={{
             background:
               "linear-gradient(180deg, #07111f 0%, #0b1728 100%)",
@@ -61,8 +61,8 @@ export default async function LoginPage({
           <p className="text-sm font-bold uppercase tracking-[0.16em] text-teal-200">
             Log masuk
           </p>
-          <h2 className="mt-3 font-display text-4xl font-bold leading-tight">Akses akaun anda</h2>
-          <p className="mt-3 text-base text-slate-200">
+          <h2 className="mt-3 font-display text-3xl font-bold leading-tight sm:text-4xl">Akses akaun anda</h2>
+          <p className="mt-3 text-base leading-7 text-slate-200">
             Masukkan nombor rumah atau username bersama kata laluan untuk masuk ke portal.
           </p>
 

@@ -229,9 +229,17 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] profile page
   - [x] assertion tiada horizontal overflow pada page user utama mobile
   - [x] mobile mutation upload resit sebenar pada disposable payment resident
+- [x] Mobile UI audit penuh user:
+  - [x] `/login`
+  - [x] `/dashboard`
+  - [x] `/payments`
+  - [x] `/notifications`
+  - [x] `/profile`
+  - [x] typography, spacing, full-width mobile actions, dan overflow risk dikemaskan
 - [x] Scalability user bila history makin panjang:
   - [x] payment history user guna `range` + `count` dari database
   - [x] notification inbox penuh guna `range` + `count` dari database
+  - [x] query plan helper dikembangkan untuk notification inbox, payment history, activity timeline, compact inbox preview, dan announcements feed
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
@@ -248,14 +256,9 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] payments upload
   - [x] notifications
   - [x] profile
-- [ ] Mobile UI audit penuh untuk user:
-  - [ ] `/login`
-  - [ ] `/dashboard`
-  - [ ] `/payments`
-  - [ ] `/notifications`
-  - [ ] `/profile`
 - [ ] Scalability user fasa seterusnya:
-  - [ ] semak query plan Supabase selepas rekod payment/notification sebenar makin banyak
+  - [x] sediakan query plan checklist untuk page user utama
+  - [ ] run `supabase/query-plan-checklist.sql` di Supabase SQL Editor selepas rekod payment/notification sebenar makin banyak
   - [ ] pertimbangkan archive view berasingan jika penduduk mahu lihat rekod bertahun-tahun dalam satu carian khas
 
 ### Checklist admin
@@ -446,13 +449,13 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 
 ##### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] Audit UI mobile penuh secara visual untuk:
-  - [ ] `/login`
-  - [x] `/dashboard` smoke-tested
-  - [x] `/payments` smoke-tested
-  - [x] `/notifications` smoke-tested
-  - [x] `/profile` smoke-tested
-- [ ] Contrast audit kecil pada komponen user yang masih berbaki
+- [x] Audit UI mobile penuh secara visual untuk:
+  - [x] `/login`
+  - [x] `/dashboard`
+  - [x] `/payments`
+  - [x] `/notifications`
+  - [x] `/profile`
+- [x] Contrast audit kecil pada komponen user yang masih berbaki
 - [ ] Semakan visual untuk empty state, error state, dan loading state pada page user
 - [ ] Screenshot audit UI untuk page user utama
 - [ ] Sambung sokongan dwi-bahasa penuh untuk page `Login`

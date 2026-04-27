@@ -119,17 +119,17 @@ export default async function DashboardPage({
       <DataWarning warnings={warnings} />
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Card
-          className="border-slate-900 text-white"
+          className="border-slate-900 p-5 text-white sm:p-6"
           style={{
             background:
               "linear-gradient(135deg, #07111f 0%, #0b2f2d 55%, #064e48 100%)",
           }}
         >
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-teal-100">{copy.currentMonth}</p>
-          <h2 className="mt-3 font-display text-5xl font-bold leading-tight text-white">
+          <h2 className="mt-3 font-display text-4xl font-bold leading-tight text-white sm:text-5xl">
             {currentMonthLabel}
           </h2>
-          <p className="mt-4 max-w-lg text-lg text-slate-100">
+          <p className="mt-4 max-w-lg text-base leading-7 text-slate-100 sm:text-lg sm:leading-8">
             {copy.intro}
           </p>
           <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -159,17 +159,17 @@ export default async function DashboardPage({
               {copy.committeeNote}: {currentPayment.notes}
             </div>
           ) : null}
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link
               href="/payments"
-              className="inline-flex min-h-14 items-center gap-2 rounded-full bg-teal-200 px-6 py-3 text-lg font-bold text-slate-950 transition hover:bg-white"
+              className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-teal-200 px-6 py-3 text-lg font-bold text-slate-950 transition hover:bg-white sm:w-auto"
             >
               {copy.payNow}
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/notifications"
-              className="inline-flex min-h-14 items-center gap-2 rounded-full border border-white/15 bg-white/10 px-6 py-3 text-base font-bold text-white transition hover:bg-white/15"
+              className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full border border-white/15 bg-white/10 px-6 py-3 text-base font-bold text-white transition hover:bg-white/15 sm:w-auto"
             >
               <BellRing className="h-4 w-4" />
               {copy.notifications}

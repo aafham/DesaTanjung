@@ -36,10 +36,10 @@ export default async function ResidentNotificationsPage({
 
       <section>
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.eyebrow}</p>
-        <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
+        <h2 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
           {copy.title}
         </h2>
-        <p className="mt-3 max-w-2xl text-base text-muted">
+        <p className="mt-3 max-w-2xl text-base leading-7 text-muted">
           {copy.intro}
         </p>
       </section>

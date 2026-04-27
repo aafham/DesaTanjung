@@ -31,6 +31,7 @@ order by l.created_at desc
 limit 10 offset 0;
 
 -- 4. Resident notification inbox
+-- Replace auth.uid() with a real resident UUID if running outside an authenticated SQL session.
 explain analyze
 select id, user_id, payment_id, message, is_read, scope, created_at
 from public.notifications
@@ -40,6 +41,7 @@ order by created_at desc
 limit 10 offset 0;
 
 -- 5. Resident payment history
+-- Checks the paged dashboard history query. Expected: index usage on payments.user_id/month.
 explain analyze
 select id, user_id, month, status, proof_url, updated_at
 from public.payments
@@ -47,7 +49,35 @@ where user_id = auth.uid()
 order by month desc
 limit 6 offset 0;
 
--- 6. Production server action error monitor
+-- 6. Resident dashboard latest user activity
+-- Checks the latest payment timeline area. Expected: index usage on user_activity_logs.user_id/created_at.
+explain analyze
+select id, user_id, action, message, created_at
+from public.user_activity_logs
+where user_id = auth.uid()
+order by created_at desc
+limit 8;
+
+-- 7. Resident compact notifications on dashboard/payments
+-- Checks the small inbox previews. Expected: same notification index, low rows returned.
+explain analyze
+select id, user_id, payment_id, message, is_read, scope, created_at
+from public.notifications
+where user_id = auth.uid()
+  and scope = 'resident'
+order by created_at desc
+limit 4;
+
+-- 8. Resident announcements feed
+-- Checks notice feed query. Expected: index or small ordered scan by published_at.
+explain analyze
+select id, title, body, is_pinned, published_at
+from public.announcements
+where is_published = true
+order by is_pinned desc, published_at desc
+limit 10;
+
+-- 9. Production server action error monitor
 explain analyze
 select id, actor_id, action, route, message, error_message, created_at
 from public.server_action_errors

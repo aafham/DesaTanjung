@@ -110,10 +110,10 @@ export default async function PaymentsPage() {
       <DataWarning warnings={warnings} />
       <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="space-y-5">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.info}</p>
-              <h2 className="mt-2 font-display text-4xl font-bold leading-tight text-slate-950">
+              <h2 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
                 {currentMonthLabel}
               </h2>
             </div>
@@ -139,7 +139,7 @@ export default async function PaymentsPage() {
                 {settings.bank_account_name}
               </p>
               <p className="mt-5 text-base font-bold text-muted">{copy.accountNumber}</p>
-              <p className="font-display text-4xl font-bold leading-tight text-slate-950">
+              <p className="break-words font-display text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">
                 {settings.bank_account_number}
               </p>
               {settings.monthly_fee ? (
@@ -207,7 +207,7 @@ export default async function PaymentsPage() {
             </div>
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.uploadLabel}</p>
-              <h3 className="mt-1 font-display text-3xl font-bold leading-tight text-slate-950">
+              <h3 className="mt-1 font-display text-2xl font-bold leading-tight text-slate-950 sm:text-3xl">
                 {copy.uploadTitle}
               </h3>
             </div>
@@ -299,7 +299,7 @@ export default async function PaymentsPage() {
           </div>
           <Link
             href="/notifications"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white transition hover:bg-slate-800"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white transition hover:bg-slate-800 sm:w-auto"
           >
             <BellRing className="h-4 w-4" />
             {copy.allNotifications}
