@@ -264,8 +264,8 @@ export function ResidentNotificationList({
                 className={`rounded-full px-4 py-2 text-sm font-bold transition ${
                   filter === option.value
                     ? "bg-slate-950 text-white"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
+                    : "bg-slate-100 text-slate-800 hover:bg-slate-200"
+                } focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20`}
               >
                 {option.label}
               </button>
@@ -332,7 +332,7 @@ export function ResidentNotificationList({
                       <input type="hidden" name="redirect_path" value={redirectPath} />
                       <button
                         type="submit"
-                        className="rounded-full bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-700 transition hover:bg-slate-100"
+                        className="rounded-full bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-800 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
                       >
                         {copy.read}
                       </button>

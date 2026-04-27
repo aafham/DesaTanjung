@@ -36,6 +36,7 @@ Nota penting:
 - Gunakan account atau environment disposable untuk mutation tests.
 - Wiring suite telah disemak semula dan Playwright mengesan semua `15` test dengan betul.
 - Suite disposable terkini berjaya dengan `14 passed, 1 skipped`; skip yang tinggal ialah settings mutation bila `E2E_ALLOW_SETTINGS_MUTATION` tidak dihidupkan.
+- Resident E2E biasa boleh disediakan/reset dengan `npm run setup:e2e:residents` supaya login smoke dan upload flow guna password yang sah.
 - First-login resident kini boleh disediakan/reset dengan `npm run setup:e2e:first-login` sebelum full suite dijalankan.
 - Mobile smoke coverage ditambah untuk page penting user dan admin melalui projek Playwright `mobile-smoke`.
 - Flow admin mutation yang telah disahkan secara E2E: `approve`, `reject`, `cash paid`, `settings update`, dan `QR upload`.
@@ -54,6 +55,7 @@ Nota penting:
 3. Jalankan:
 
 ```bash
+npm run setup:e2e:residents
 npm run setup:e2e:first-login
 npm run test:e2e
 ```
@@ -65,7 +67,7 @@ npm run test:e2e:ui
 npm run test:e2e:headed
 ```
 
-Nota: `npm run setup:e2e:first-login` menggunakan service role local untuk cipta/reset akaun disposable `E2E_FIRST_LOGIN_*`, kemudian mengemas kini `.env.e2e.local`. Jalankan semula command ini sebelum full suite jika test first-login baru sahaja menukar password account tersebut.
+Nota: `npm run setup:e2e:residents` menggunakan service role local untuk cipta/reset akaun `E2E_RESIDENT_*` dan `E2E_PAYMENT_RESIDENT_*` tanpa memaksa first-login. `npm run setup:e2e:first-login` pula menggunakan service role local untuk cipta/reset akaun disposable `E2E_FIRST_LOGIN_*`, kemudian mengemas kini `.env.e2e.local`. Jalankan semula command ini sebelum full suite jika test first-login baru sahaja menukar password account tersebut.
 
 ### Cadangan setup disposable untuk flow admin
 
@@ -213,6 +215,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] login page render
   - [x] invalid login error
   - [x] resident login smoke test
+  - [x] script reset/setup resident E2E biasa untuk pulihkan credential smoke test
 - [x] Suite E2E user pada disposable/test account:
   - [x] first-login resident dengan akaun disposable yang boleh di-reset melalui script
   - [x] upload resit user
@@ -240,10 +243,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] receipt preview modal
   - [x] notification inbox
   - [x] profile form
-- [ ] Contrast + keyboard audit kecil yang masih berbaki pada page user:
-  - [ ] login
+- [x] Contrast + keyboard audit kecil yang masih berbaki pada page user:
+  - [x] login
   - [x] payments upload
-  - [ ] notifications
+  - [x] notifications
   - [x] profile
 - [ ] Mobile UI audit penuh untuk user:
   - [ ] `/login`
@@ -526,6 +529,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Checklist lama yang bercampur-campur diringkaskan supaya senang audit progress
 - [x] ESLint diarah ignore output generated seperti `.next`, `playwright-report`, dan `test-results`
 - [x] Playwright dipecahkan kepada projek `chromium` dan `mobile-smoke` supaya mutation test tidak digandakan pada viewport mobile
+- [x] Script `setup:e2e:residents` ditambah untuk cipta/reset akaun resident biasa dan payment resident disposable
 - [x] Script `setup:e2e:first-login` ditambah untuk cipta/reset akaun first-login disposable
 
 #### Masih boleh dibuat
@@ -906,6 +910,7 @@ npm run dev
 npm run build
 npm run start
 npm run lint
+npm run setup:e2e:residents
 npm run setup:e2e:first-login
 npm run test:e2e
 npm run test:e2e:ui

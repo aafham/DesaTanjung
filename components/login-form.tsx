@@ -11,7 +11,8 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="min-h-14 w-full rounded-full bg-teal-300 px-5 py-3 text-lg font-bold text-slate-950 transition hover:bg-teal-200 disabled:cursor-wait disabled:opacity-80"
+      className="min-h-14 w-full rounded-full bg-teal-300 px-5 py-3 text-lg font-bold text-slate-950 transition hover:bg-teal-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-200/60 disabled:cursor-wait disabled:opacity-80"
+      aria-describedby="login-submit-help"
     >
       {pending ? "Sedang log masuk..." : "Masuk portal"}
     </button>
@@ -50,7 +51,7 @@ export function LoginForm({
   const errorId = error ? "login-form-error" : undefined;
 
   return (
-    <form action={action} className="relative mt-8 space-y-5">
+    <form action={action} className="relative mt-8 space-y-5" aria-describedby="login-submit-help">
       <LoadingOverlay />
 
       <div>
@@ -66,7 +67,7 @@ export function LoginForm({
           placeholder="Contoh: A-12 atau admin"
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
-          className="min-h-14 w-full rounded-3xl border border-slate-600 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none ring-0 placeholder:text-slate-400 focus:border-teal-400"
+          className="min-h-14 w-full rounded-3xl border border-slate-500 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none ring-0 placeholder:text-slate-300 focus:border-teal-300 focus:ring-4 focus:ring-teal-300/20"
         />
       </div>
 
@@ -82,7 +83,7 @@ export function LoginForm({
           autoComplete="current-password"
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
-          inputClassName="min-h-14 w-full rounded-3xl border border-slate-600 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none placeholder:text-slate-400 focus:border-teal-400"
+          inputClassName="min-h-14 w-full rounded-3xl border border-slate-500 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none placeholder:text-slate-300 focus:border-teal-300 focus:ring-4 focus:ring-teal-300/20"
           buttonClassName="text-slate-300 hover:bg-white/10 hover:text-white"
         />
       </div>
@@ -99,6 +100,9 @@ export function LoginForm({
       ) : null}
 
       <SubmitButton />
+      <p id="login-submit-help" className="sr-only">
+        Tekan Enter selepas mengisi username dan kata laluan untuk masuk ke portal.
+      </p>
     </form>
   );
 }

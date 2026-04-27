@@ -37,7 +37,7 @@ test.describe("mobile smoke coverage", () => {
     await expectNoHorizontalOverflow(page);
 
     await page.goto("/profile");
-    await expect(page.getByRole("heading", { name: "Resident details" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Resident details", exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Save profile changes" })).toBeVisible();
     await expect(page.getByLabel("Phone number")).toHaveAttribute("autocomplete", "tel");
     await expectNoHorizontalOverflow(page);
