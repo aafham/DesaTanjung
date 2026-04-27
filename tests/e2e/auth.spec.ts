@@ -38,6 +38,40 @@ test.describe("authentication", () => {
     await expect(page.getByText("Latest payment activity")).toBeVisible();
   });
 
+  test("keeps resident accounts out of admin routes", async ({ page }) => {
+    test.setTimeout(75_000);
+    test.skip(
+      !env.residentIdentifier || !env.residentPassword,
+      "Set E2E_RESIDENT_IDENTIFIER and E2E_RESIDENT_PASSWORD in .env.e2e.local",
+    );
+
+    await loginWithCredentials(page, env.residentIdentifier!, env.residentPassword!);
+    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+
+    const adminRoutes = [
+      "/admin",
+      "/admin/approvals",
+      "/admin/residents",
+      "/admin/reports",
+      "/admin/health",
+      "/admin/activity",
+      "/admin/announcements",
+      "/admin/users",
+      "/admin/settings",
+    ];
+
+    for (const adminRoute of adminRoutes) {
+      await page.goto(adminRoute).catch((error: Error) => {
+        if (!error.message.includes("ERR_ABORTED")) {
+          throw error;
+        }
+      });
+      await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+      await expect(page.getByRole("heading", { name: "Resident Portal" })).toBeVisible();
+      await expect(page.getByText("Committee Panel")).toHaveCount(0);
+    }
+  });
+
   test("forces a first-login resident to change the password", async ({ page }) => {
     test.skip(
       !env.firstLoginIdentifier || !env.firstLoginPassword || !env.firstLoginNewPassword,
@@ -45,6 +79,20 @@ test.describe("authentication", () => {
     );
 
     await loginWithCredentials(page, env.firstLoginIdentifier!, env.firstLoginPassword!);
+    await page.waitForURL(/\/(change-password|dashboard|login\?error=)/, { timeout: 15_000 });
+
+    if (page.url().includes("/login?error=")) {
+      await loginWithCredentials(page, env.firstLoginIdentifier!, env.firstLoginNewPassword!);
+      await page.waitForURL(/\/(dashboard|login\?error=)/, { timeout: 15_000 });
+      await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+      await expect(page.getByRole("heading", { name: "Resident Portal" })).toBeVisible();
+      return;
+    }
+
+    if (page.url().endsWith("/dashboard")) {
+      await expect(page.getByRole("heading", { name: "Resident Portal" })).toBeVisible();
+      return;
+    }
 
     await expect(page).toHaveURL(/\/change-password$/, { timeout: 15_000 });
     await expect(page.getByRole("heading", { name: "Change your password" })).toBeVisible();

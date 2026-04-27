@@ -40,7 +40,7 @@ Nota penting:
 - First-login resident kini boleh disediakan/reset dengan `npm run setup:e2e:first-login` sebelum full suite dijalankan.
 - Mobile smoke coverage ditambah untuk page penting user dan admin melalui projek Playwright `mobile-smoke`.
 - Flow admin mutation yang telah disahkan secara E2E: `approve`, `reject`, `cash paid`, `settings update`, dan `QR upload`.
-- Flow user yang telah disahkan secara E2E: resident login, first-login change password, upload resit, profile update, notification selepas approve, dan notification selepas reject.
+- Flow user yang telah disahkan secara E2E: resident login, first-login change password, admin-route guard, upload resit, profile update, notification selepas approve, dan notification selepas reject.
 - Next dev origin warning untuk Playwright/localhost sudah dikemaskan melalui `allowedDevOrigins` di `next.config.ts`.
 - Playwright config kini dijalankan secara serial untuk kurangkan flaky login pada environment Supabase remote.
 
@@ -240,6 +240,13 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] payment history user guna `range` + `count` dari database
   - [x] notification inbox penuh guna `range` + `count` dari database
   - [x] query plan helper dikembangkan untuk notification inbox, payment history, activity timeline, compact inbox preview, dan announcements feed
+- [x] Privacy / access-control user asas:
+  - [x] resident dashboard, payment history, notification inbox, dan profile action di-scope kepada `profile.id`
+  - [x] resident notification read action di-scope kepada `user_id = profile.id` dan `scope = resident`
+  - [x] bukti resit user hanya dijana signed URL daripada payment row yang sudah di-scope kepada resident tersebut
+  - [x] RLS schema menyekat `users`, `payments`, `notifications`, `payment_audit_logs`, dan `user_activity_logs` kepada owner atau admin
+  - [x] storage `payment-proofs` di-scope kepada folder `auth.uid()` atau admin
+  - [x] E2E guard memastikan resident tidak boleh buka route admin utama
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
@@ -260,6 +267,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] sediakan query plan checklist untuk page user utama
   - [ ] run `supabase/query-plan-checklist.sql` di Supabase SQL Editor selepas rekod payment/notification sebenar makin banyak
   - [ ] pertimbangkan archive view berasingan jika penduduk mahu lihat rekod bertahun-tahun dalam satu carian khas
+- [ ] Privacy / access-control user fasa seterusnya:
+  - [ ] run semula `supabase/schema.sql` di Supabase live dan semak policy aktif selepas deploy besar
+  - [ ] tambah ujian dua resident berbeza jika ada akaun disposable kedua untuk sahkan tiada cross-resident data leak
+  - [ ] semak Storage object path sebenar selepas upload live supaya semua resit kekal dalam folder user sendiri
 
 ### Checklist admin
 
