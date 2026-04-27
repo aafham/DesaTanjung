@@ -132,7 +132,7 @@ export function ResidentNotificationList({
   pagination,
   paginationBasePath = "/notifications",
   redirectPath = "/notifications",
-  locale = "ms",
+  locale = "en",
 }: {
   notifications: NotificationRecord[];
   compact?: boolean;

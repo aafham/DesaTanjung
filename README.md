@@ -159,8 +159,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] paparan QR pembayaran
   - [x] preview QR lebih besar
   - [x] monthly fee dan due date
-- [x] Pilihan bahasa `BM / English` disimpan dalam cookie supaya resident boleh tukar bahasa sendiri
-- [x] Copy utama resident portal boleh bertukar BM/English untuk dashboard, bayaran, notifikasi, profil, upload resit, timeline, dan history
+- [x] Default bahasa portal ialah English, dengan pilihan `BM / English` disimpan dalam cookie
+- [x] Toggle bahasa diletakkan di bawah calendar untuk user dan admin supaya mudah dicari
+- [x] First-time `Change password` memaparkan pilihan bahasa sebelum user tukar kata laluan
+- [x] Copy utama resident portal boleh bertukar BM/English untuk dashboard, payments, notifications, profile, upload resit, timeline, dan history
 - [x] Upload resit ke Supabase Storage
 - [x] Upload UX yang lebih baik:
   - [x] preview gambar
@@ -423,8 +425,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Payment timeline lebih jelas dari segi contrast dan hierarchy
 - [x] Receipt preview modal lebih kemas dan accessible
 - [x] Confirm submit dialog lebih kemas dan accessible
-- [x] Toggle bahasa `BM / English` ditambah untuk resident portal
-- [x] Copy resident-facing diseragamkan untuk `Dashboard`, `Bayaran/Payments`, `Notifikasi/Notifications`, `Profil/Profile`, status badge, pagination, upload resit, timeline, dan history
+- [x] Toggle bahasa `BM / English` ditambah di bawah calendar untuk user dan admin
+- [x] Default bahasa ditetapkan kepada English, dengan BM sebagai pilihan
+- [x] First-time `Change password` ada language picker sebelum form password
+- [x] Copy resident-facing diseragamkan untuk `Dashboard`, `Payments`, `Notifications`, `Profile`, status badge, pagination, upload resit, timeline, dan history
 - [x] Konsistensi font seluruh app
 - [x] Focus state global diperkemas
 - [x] Skip to content link disediakan
@@ -443,7 +447,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Contrast audit kecil pada komponen user yang masih berbaki
 - [ ] Semakan visual untuk empty state, error state, dan loading state pada page user
 - [ ] Screenshot audit UI untuk page user utama
-- [ ] Sambung sokongan dwi-bahasa penuh untuk page auth awal seperti `Login` dan `Change password`
+- [ ] Sambung sokongan dwi-bahasa penuh untuk page `Login`
 
 #### UI interface admin
 
@@ -471,6 +475,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Activity page dipolish semula dengan audit summary dan clearer filtered export workflow
 - [x] Reports page dipolish semula dengan meeting highlights dan follow-up queue
 - [x] Reports page dikemas semula sebagai meeting-ready report: hero summary, compact KPI, money summary, follow-up queue, dan breakdown table yang lebih mudah scan
+- [x] Reports page dibetulkan lagi supaya filter/action buttons tidak overflow dan KPI cards tidak terlalu sempit/tinggi pada desktop
 - [x] Keyboard-first admin filtering diperkemas pada users, residents, search, activity, dan month filter
 - [x] Contrast admin diperkemas lagi pada reminder panel gelap dan report copy yang masih borderline
 - [x] Search panel sidebar issue dibetulkan supaya tidak mengecil pada page tertentu
@@ -747,7 +752,7 @@ npm run build
 2. Masukkan nombor rumah sebagai username
 3. Masukkan password semasa
 4. Jika ini login pertama, tukar kata laluan di page `Change password`
-5. Jika mahu, tukar bahasa melalui toggle `BM / English` di sidebar resident
+5. Default bahasa ialah English. Jika mahu BM, tukar bahasa melalui toggle `BM / English` di bawah calendar
 6. Semak `Dashboard` untuk status bulan semasa, due date, dan notifikasi terkini
 7. Buka `Bayaran / Payments` untuk lihat bank info, QR, dan muat naik resit
 8. Selepas upload, status akan jadi `Dalam semakan / Under review` sehingga admin semak

@@ -30,7 +30,7 @@ const styleMap: Record<DisplayPaymentStatus, string> = {
 export function StatusBadge({
   status,
   className,
-  locale = "ms",
+  locale = "en",
 }: {
   status: DisplayPaymentStatus;
   className?: string;

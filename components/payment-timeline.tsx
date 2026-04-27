@@ -52,7 +52,7 @@ export function PaymentTimeline({
   auditLogs,
   auditPagination,
   getAuditPageHref,
-  locale = "ms",
+  locale = "en",
 }: {
   payment: ResidentPaymentRecord;
   auditLogs: PaymentAuditLog[];

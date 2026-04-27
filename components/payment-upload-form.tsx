@@ -93,7 +93,7 @@ const uploadCopy = {
 export function PaymentUploadForm({
   userId,
   houseNumber,
-  locale = "ms",
+  locale = "en",
 }: {
   userId: string;
   houseNumber: string;

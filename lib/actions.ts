@@ -20,6 +20,11 @@ type ActionErrorLike = {
   message?: string | null;
 };
 
+async function getActionLocale() {
+  const cookieStore = await cookies();
+  return normalizeLocale(cookieStore.get(localeCookieName)?.value);
+}
+
 export async function setLocaleAction(formData: FormData) {
   const locale = normalizeLocale(String(formData.get("locale") ?? ""));
   const cookieStore = await cookies();
@@ -205,6 +210,7 @@ async function createNotification({
 }
 
 export async function loginAction(formData: FormData) {
+  const locale = await getActionLocale();
   const identifier = String(formData.get("identifier") ?? "");
   const password = String(formData.get("password") ?? "");
 
@@ -215,7 +221,10 @@ export async function loginAction(formData: FormData) {
   });
 
   if (error) {
-    redirectWithError("/login", "Username atau kata laluan tidak betul.");
+    redirectWithError(
+      "/login",
+      locale === "ms" ? "Username atau kata laluan tidak betul." : "Username or password is incorrect.",
+    );
   }
 
   const profile = await requireUserProfile();
@@ -239,16 +248,25 @@ export async function loginAction(formData: FormData) {
 }
 
 export async function changePasswordAction(formData: FormData) {
+  const locale = await getActionLocale();
   const profile = await requireUserProfile();
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirm_password") ?? "");
 
   if (password.length < 8) {
-    redirectWithError("/change-password", "Kata laluan mesti sekurang-kurangnya 8 aksara.");
+    redirectWithError(
+      "/change-password",
+      locale === "ms" ? "Kata laluan mesti sekurang-kurangnya 8 aksara." : "Password must be at least 8 characters.",
+    );
   }
 
   if (password !== confirmPassword) {
-    redirectWithError("/change-password", "Kata laluan baharu dan pengesahan mesti sama.");
+    redirectWithError(
+      "/change-password",
+      locale === "ms"
+        ? "Kata laluan baharu dan pengesahan mesti sama."
+        : "New password and confirmation must match.",
+    );
   }
 
   const supabase = await createClient();
@@ -257,7 +275,9 @@ export async function changePasswordAction(formData: FormData) {
   if (error) {
     redirectWithActionError(
       "/change-password",
-      "Kata laluan tidak dapat dikemas kini sekarang. Sila cuba lagi.",
+      locale === "ms"
+        ? "Kata laluan tidak dapat dikemas kini sekarang. Sila cuba lagi."
+        : "Password could not be updated right now. Please try again.",
       error,
     );
   }
@@ -273,6 +293,7 @@ export async function changePasswordAction(formData: FormData) {
 }
 
 export async function updateProfileAction(formData: FormData) {
+  const locale = await getActionLocale();
   const profile = await requireUserProfile();
   const name = String(formData.get("name") ?? "").trim();
   const address = String(formData.get("address") ?? "").trim();
@@ -280,11 +301,21 @@ export async function updateProfileAction(formData: FormData) {
   const phoneNumber = normalizeMalaysianPhoneNumber(phoneNumberInput);
 
   if (!name || !address || !phoneNumberInput) {
-    redirectWithError("/profile", "Sila lengkapkan nama, alamat, dan nombor telefon.");
+    redirectWithError(
+      "/profile",
+      locale === "ms"
+        ? "Sila lengkapkan nama, alamat, dan nombor telefon."
+        : "Please complete your name, address, and phone number.",
+    );
   }
 
   if (!phoneNumber) {
-    redirectWithError("/profile", "Sila masukkan nombor telefon Malaysia yang sah.");
+    redirectWithError(
+      "/profile",
+      locale === "ms"
+        ? "Sila masukkan nombor telefon Malaysia yang sah."
+        : "Please enter a valid Malaysian phone number.",
+    );
   }
 
   const supabase = await createClient();
@@ -322,7 +353,10 @@ export async function updateProfileAction(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/payments");
   revalidatePath("/profile");
-  redirectWithMessage("/profile", "Profil berjaya dikemas kini.");
+  redirectWithMessage(
+    "/profile",
+    locale === "ms" ? "Profil berjaya dikemas kini." : "Profile updated successfully.",
+  );
 }
 
 export async function signOutAction() {
@@ -345,6 +379,7 @@ export async function signOutAction() {
 }
 
 export async function approvePaymentAction(formData: FormData) {
+  const locale = await getActionLocale();
   const profile = await requireUserProfile();
 
   if (profile.role !== "admin") {
@@ -395,7 +430,10 @@ export async function approvePaymentAction(formData: FormData) {
       userId: payment.user_id,
       paymentId,
       scope: "resident",
-      message: `Bayaran untuk ${formatMonthLabel(payment.month)} sudah disahkan oleh jawatankuasa.`,
+      message:
+        locale === "ms"
+          ? `Bayaran untuk ${formatMonthLabel(payment.month)} sudah disahkan oleh jawatankuasa.`
+          : `Payment for ${formatMonthLabel(payment.month)} has been approved by the committee.`,
     });
   }
   await logAdminAudit(
@@ -417,6 +455,7 @@ export async function approvePaymentAction(formData: FormData) {
 }
 
 export async function rejectPaymentAction(formData: FormData) {
+  const locale = await getActionLocale();
   const profile = await requireUserProfile();
 
   if (profile.role !== "admin") {
@@ -468,9 +507,14 @@ export async function rejectPaymentAction(formData: FormData) {
       userId: payment.user_id,
       paymentId,
       scope: "resident",
-      message: `Resit bayaran untuk ${formatMonthLabel(payment.month)} ditolak. Sebab: ${
-        rejectReason || "Resit bayaran perlu dibetulkan."
-      }`,
+      message:
+        locale === "ms"
+          ? `Resit bayaran untuk ${formatMonthLabel(payment.month)} ditolak. Sebab: ${
+              rejectReason || "Resit bayaran perlu dibetulkan."
+            }`
+          : `Payment proof for ${formatMonthLabel(payment.month)} was rejected. Reason: ${
+              rejectReason || "Payment proof needs correction."
+            }`,
     });
   }
   await logAdminAudit(
@@ -549,6 +593,7 @@ export async function markSingleResidentNotificationReadAction(formData: FormDat
 }
 
 export async function markCashPaymentAction(formData: FormData) {
+  const locale = await getActionLocale();
   const profile = await requireUserProfile();
 
   if (profile.role !== "admin") {
@@ -582,7 +627,10 @@ export async function markCashPaymentAction(formData: FormData) {
   await createNotification({
     userId: residentId,
     scope: "resident",
-    message: `Bayaran untuk ${formatMonthLabel(month)} ditanda selesai secara tunai.`,
+    message:
+      locale === "ms"
+        ? `Bayaran untuk ${formatMonthLabel(month)} ditanda selesai secara tunai.`
+        : `Payment for ${formatMonthLabel(month)} was marked as paid by cash.`,
   });
   await logAdminAudit(
     profile.id,
@@ -599,6 +647,7 @@ export async function markCashPaymentAction(formData: FormData) {
 }
 
 export async function bulkMarkCashPaymentAction(formData: FormData) {
+  const locale = await getActionLocale();
   const profile = await requireUserProfile();
   requireAdmin(profile);
 
@@ -630,7 +679,10 @@ export async function bulkMarkCashPaymentAction(formData: FormData) {
     await createNotification({
       userId: residentId,
       scope: "resident",
-      message: `Bayaran untuk ${formatMonthLabel(month)} ditanda selesai secara tunai.`,
+      message:
+        locale === "ms"
+          ? `Bayaran untuk ${formatMonthLabel(month)} ditanda selesai secara tunai.`
+          : `Payment for ${formatMonthLabel(month)} was marked as paid by cash.`,
     });
   }
   await logAdminAudit(
@@ -882,6 +934,7 @@ export async function submitPaymentProofAction(
   houseNumber: string,
   month: string,
 ) {
+  const locale = await getActionLocale();
   const profile = await requireUserProfile();
   const supabase = await createClient();
 
@@ -920,7 +973,10 @@ export async function submitPaymentProofAction(
     userId: profile.id,
     paymentId,
     scope: "resident",
-    message: `Resit bayaran untuk ${formatMonthLabel(month)} sudah dihantar dan sedang menunggu semakan jawatankuasa.`,
+    message:
+      locale === "ms"
+        ? `Resit bayaran untuk ${formatMonthLabel(month)} sudah dihantar dan sedang menunggu semakan jawatankuasa.`
+        : `Payment receipt for ${formatMonthLabel(month)} has been submitted and is waiting for committee review.`,
   });
   await logUserActivity(
     profile.id,

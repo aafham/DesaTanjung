@@ -7,7 +7,7 @@ const signOutCopy = {
   en: { label: "Sign out", pending: "Signing out..." },
 } as const;
 
-export function SignOutButton({ locale = "ms" }: { locale?: Locale }) {
+export function SignOutButton({ locale = "en" }: { locale?: Locale }) {
   const copy = signOutCopy[locale];
 
   return (

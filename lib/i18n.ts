@@ -3,11 +3,11 @@ import { cookies } from "next/headers";
 export const locales = ["ms", "en"] as const;
 export type Locale = (typeof locales)[number];
 
-export const defaultLocale: Locale = "ms";
+export const defaultLocale: Locale = "en";
 export const localeCookieName = "dt_locale";
 
 export function normalizeLocale(value: string | null | undefined): Locale {
-  return value === "en" ? "en" : "ms";
+  return value === "ms" ? "ms" : "en";
 }
 
 export async function getLocale(): Promise<Locale> {

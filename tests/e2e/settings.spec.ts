@@ -59,9 +59,9 @@ test.describe("admin settings", () => {
       await expect(residentPage).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
       await residentPage.goto("/payments");
 
-      await expect(residentPage.getByAltText("Kod QR bayaran komuniti")).toBeVisible();
+      await expect(residentPage.getByAltText("Community payment QR code")).toBeVisible();
       const residentQrSrc = await residentPage
-        .getByAltText("Kod QR bayaran komuniti")
+        .getByAltText("Community payment QR code")
         .getAttribute("src");
 
       expect(residentQrSrc).toBe(afterPreviewSrc);

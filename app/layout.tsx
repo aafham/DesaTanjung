@@ -10,8 +10,8 @@ const atkinson = Atkinson_Hyperlegible({
 });
 
 export const metadata: Metadata = {
-  title: "Portal Bayaran Desa Tanjung",
-  description: "Pengurusan bayaran bulanan untuk komuniti penduduk.",
+  title: "Desa Tanjung Payment Portal",
+  description: "Monthly payment management for the resident community.",
 };
 
 export default async function RootLayout({

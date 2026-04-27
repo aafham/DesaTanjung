@@ -109,11 +109,11 @@ export default async function AdminReportsPage({
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr] xl:items-stretch">
+      <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)]">
         <Card className="overflow-hidden border-slate-900 bg-slate-950 p-0 text-white print:border-slate-300 print:bg-white print:text-slate-950">
-          <div className="bg-[radial-gradient(circle_at_top_left,#14b8a6_0%,transparent_32%),linear-gradient(135deg,#07111f_0%,#0b2f2d_58%,#063f3a_100%)] px-6 py-7 print:bg-white">
+          <div className="bg-[radial-gradient(circle_at_top_left,#14b8a6_0%,transparent_32%),linear-gradient(135deg,#07111f_0%,#0b2f2d_58%,#063f3a_100%)] px-5 py-6 sm:px-6 print:bg-white">
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-100 print:text-slate-600">Reports</p>
-            <h2 className="mt-3 font-display text-5xl font-bold leading-[1.02] text-white print:text-slate-950">
+            <h2 className="mt-3 font-display text-4xl font-bold leading-[1.04] text-white sm:text-5xl print:text-slate-950">
               Monthly report for {currentMonthLabel}
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-8 text-slate-100 print:text-slate-700">
@@ -142,22 +142,22 @@ export default async function AdminReportsPage({
 
         <div className="grid gap-4">
           <Card className="print:border-slate-300 print:shadow-none">
-            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div className="min-w-0">
               <MonthFilter currentMonth={currentMonth} />
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <Link
                   href={`/admin/reports/snapshot?month=${currentMonth}`}
-                  className="inline-flex min-h-14 items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-bold text-slate-950 transition hover:bg-slate-50"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-bold text-slate-950 transition hover:bg-slate-50 sm:w-auto"
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download snapshot
                 </Link>
-                <PrintPageButton className="min-h-14" />
+                <PrintPageButton className="min-h-12 w-full sm:w-auto" />
               </div>
             </div>
           </Card>
 
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-3 sm:grid-cols-2">
             {[
               {
                 label: "Paid houses",
@@ -165,6 +165,7 @@ export default async function AdminReportsPage({
                 help: `${totals.totalResidents} houses total`,
                 icon: CheckCircle2,
                 tone: "border-emerald-200 bg-emerald-50 text-emerald-950",
+                valueClassName: "text-3xl",
               },
               {
                 label: "Pending review",
@@ -172,6 +173,7 @@ export default async function AdminReportsPage({
                 help: "Receipts waiting",
                 icon: Clock3,
                 tone: "border-amber-200 bg-amber-50 text-amber-950",
+                valueClassName: "text-3xl",
               },
               {
                 label: "Need follow-up",
@@ -179,6 +181,7 @@ export default async function AdminReportsPage({
                 help: "Unpaid, overdue, rejected",
                 icon: AlertTriangle,
                 tone: "border-rose-200 bg-rose-50 text-rose-950",
+                valueClassName: "text-3xl",
               },
               {
                 label: "Due date",
@@ -186,16 +189,23 @@ export default async function AdminReportsPage({
                 help: `${totals.pendingCount} pending receipts`,
                 icon: FileText,
                 tone: "border-sky-200 bg-sky-50 text-sky-950",
+                valueClassName: "text-2xl",
               },
             ].map((item) => {
               const Icon = item.icon;
 
               return (
-                <div key={item.label} className={`rounded-4xl border px-5 py-5 shadow-sm ${item.tone}`}>
-                  <Icon className="h-5 w-5" />
-                  <p className="mt-3 text-sm font-bold uppercase tracking-[0.12em]">{item.label}</p>
-                  <p className="mt-2 text-3xl font-bold leading-tight">{item.value}</p>
-                  <p className="mt-2 text-sm font-semibold opacity-80">{item.help}</p>
+                <div key={item.label} className={`rounded-4xl border px-5 py-4 shadow-sm ${item.tone}`}>
+                  <div className="flex items-start gap-3">
+                    <Icon className="mt-0.5 h-5 w-5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold uppercase tracking-[0.12em]">{item.label}</p>
+                      <p className={`mt-2 break-words font-bold leading-tight ${item.valueClassName}`}>
+                        {item.value}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold opacity-80">{item.help}</p>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -203,7 +213,7 @@ export default async function AdminReportsPage({
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid items-start gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <Card className="print:border-slate-300 print:shadow-none">
           <div className="flex items-start gap-4">
             <div className="hidden rounded-3xl bg-teal-50 p-4 sm:block">

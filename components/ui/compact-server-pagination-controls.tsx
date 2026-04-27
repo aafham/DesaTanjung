@@ -27,7 +27,7 @@ const copy = {
 export function CompactServerPaginationControls({
   pagination,
   getHref,
-  locale = "ms",
+  locale = "en",
 }: {
   pagination: PaginationMeta;
   getHref: (page: number) => string;

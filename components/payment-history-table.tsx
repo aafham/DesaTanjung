@@ -39,7 +39,7 @@ const historyCopy = {
 export function PaymentHistoryTable({
   history,
   pagination,
-  locale = "ms",
+  locale = "en",
 }: {
   history: ResidentPaymentRecord[];
   pagination?: PaginationMeta;

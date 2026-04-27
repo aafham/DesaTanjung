@@ -144,9 +144,7 @@ export function AppShell({
             </p>
           </div>
 
-          {profile.role === "user" ? <LanguageToggle locale={locale} /> : null}
-
-          <div className="mb-3 mt-5 px-1">
+          <div className="mb-3 px-1">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
               {profile.role === "admin" ? "Admin tools" : copy.residentMenu}
             </p>
@@ -216,6 +214,8 @@ export function AppShell({
           </div>
 
           <SidebarCalendar />
+
+          <LanguageToggle locale={locale} />
 
           <div className="mt-7">
             <SignOutButton locale={locale} />

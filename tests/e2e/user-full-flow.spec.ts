@@ -12,12 +12,12 @@ async function uploadReceipt(page: Parameters<typeof test>[0]["page"]) {
   );
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
 
-  await page.getByRole("link", { name: /bayar sekarang/i }).click();
+  await page.getByRole("link", { name: /pay now/i }).click();
   await expect(page).toHaveURL(/\/payments$/);
   await page.getByTestId("payment-receipt-input").setInputFiles(createTinyPng("resident-full-flow.png"));
   await page.getByTestId("submit-receipt-button").click();
   await expect(
-    page.getByText("Resit bayaran berjaya dihantar dan sedang menunggu semakan jawatankuasa."),
+    page.getByText("Payment receipt uploaded successfully and is waiting for committee review."),
   ).toBeVisible();
 }
 
@@ -32,19 +32,19 @@ test.describe.serial("full resident user flow", () => {
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
 
     await page.goto("/profile");
-    await expect(page.getByRole("heading", { name: "Maklumat penduduk" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Resident details" })).toBeVisible();
 
-    const name = await page.getByLabel("Nama pemilik").inputValue();
-    const address = await page.getByLabel("Alamat rumah").inputValue();
-    const phone = (await page.getByLabel("Nombor telefon").inputValue()) || "012-345 6789";
+    const name = await page.getByLabel("Owner name").inputValue();
+    const address = await page.getByLabel("House address").inputValue();
+    const phone = (await page.getByLabel("Phone number").inputValue()) || "012-345 6789";
 
-    await page.getByLabel("Nama pemilik").fill(name);
-    await page.getByLabel("Alamat rumah").fill(address);
-    await page.getByLabel("Nombor telefon").fill(phone);
-    await page.getByRole("button", { name: "Simpan perubahan profil" }).click();
+    await page.getByLabel("Owner name").fill(name);
+    await page.getByLabel("House address").fill(address);
+    await page.getByLabel("Phone number").fill(phone);
+    await page.getByRole("button", { name: "Save profile changes" }).click();
 
-    await expect(page).toHaveURL(/\/profile\?message=Profil%20berjaya%20dikemas%20kini/);
-    await expect(page.getByText("Profil berjaya dikemas kini.")).toBeVisible();
+    await expect(page).toHaveURL(/\/profile\?message=Profile%20updated%20successfully/);
+    await expect(page.getByText("Profile updated successfully.")).toBeVisible();
   });
 
   test("resident receives approval notification after admin approves receipt", async ({ browser }) => {
@@ -81,8 +81,8 @@ test.describe.serial("full resident user flow", () => {
     await expect(notificationPage).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
     await notificationPage.goto("/notifications");
 
-    await expect(notificationPage.getByRole("heading", { name: "Inbox penduduk", exact: true })).toBeVisible();
-    await expect(notificationPage.getByText(/sudah disahkan oleh jawatankuasa/i).first()).toBeVisible();
+    await expect(notificationPage.getByRole("heading", { name: "Resident inbox", exact: true })).toBeVisible();
+    await expect(notificationPage.getByText(/has been approved by the committee/i).first()).toBeVisible();
     await notificationPage.close();
   });
 
@@ -121,8 +121,8 @@ test.describe.serial("full resident user flow", () => {
     await expect(notificationPage).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
     await notificationPage.goto("/notifications");
 
-    await expect(notificationPage.getByRole("heading", { name: "Inbox penduduk", exact: true })).toBeVisible();
-    await expect(notificationPage.getByText(/resit bayaran .* ditolak/i).first()).toBeVisible();
+    await expect(notificationPage.getByRole("heading", { name: "Resident inbox", exact: true })).toBeVisible();
+    await expect(notificationPage.getByText(/payment proof .* was rejected/i).first()).toBeVisible();
     await expect(notificationPage.getByText(/wrong month selected/i).first()).toBeVisible();
     await notificationPage.close();
   });
