@@ -2,11 +2,14 @@
 
 import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Locale } from "@/lib/i18n";
 
 export function PrintPageButton({
   className,
+  locale = "en",
 }: {
   className?: string;
+  locale?: Locale;
 }) {
   return (
     <Button
@@ -16,7 +19,7 @@ export function PrintPageButton({
       onClick={() => window.print()}
     >
       <Printer className="mr-2 h-4 w-4" />
-      Print report
+      {locale === "ms" ? "Cetak laporan" : "Print report"}
     </Button>
   );
 }

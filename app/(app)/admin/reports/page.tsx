@@ -7,7 +7,133 @@ import { PrintPageButton } from "@/components/print-page-button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getAdminReportData } from "@/lib/data";
+import { getLocale } from "@/lib/i18n";
 import { formatTimestamp } from "@/lib/utils";
+
+const reportCopy = {
+  ms: {
+    label: "Laporan",
+    title: "Laporan bulanan untuk",
+    intro: "Semak kemajuan kutipan, jumlah wang diterima, dan rumah yang perlu dibuat susulan sebelum tutup bulan.",
+    overallProgress: "Kemajuan keseluruhan",
+    paidStillNeed: (paid: number, unsettled: number) => `${paid} selesai, ${unsettled} masih perlu tindakan.`,
+    downloadSnapshot: "Muat turun ringkasan",
+    paidHouses: "Rumah selesai",
+    housesTotal: (total: number) => `${total} rumah keseluruhan`,
+    pendingReview: "Menunggu semakan",
+    receiptsWaiting: "Resit menunggu",
+    needFollowUp: "Perlu susulan",
+    needFollowUpHelp: "Belum bayar, lewat, ditolak",
+    dueDate: "Tarikh akhir",
+    pendingReceipts: (count: number) => `${count} resit menunggu`,
+    committeeSummary: "Ringkasan jawatankuasa",
+    collectionProgress: "Kemajuan kutipan untuk",
+    collectionSummary: (paid: number, unsettled: number) =>
+      `${paid} rumah sudah selesai bayaran, manakala ${unsettled} masih perlu susulan sebelum tutup bulan ini.`,
+    paid: "Selesai",
+    pending: "Menunggu",
+    rejected: "Ditolak",
+    expectedCollection: "Jangkaan kutipan",
+    residents: "penduduk",
+    collected: "Diterima",
+    housesPaid: (count: number) => `${count} rumah sudah bayar`,
+    outstanding: "Belum diterima",
+    housesToFollow: (count: number) => `${count} rumah perlu susulan`,
+    meetingHighlights: "Fokus mesyuarat",
+    discussFirst: "Perkara utama untuk dibincang jawatankuasa",
+    collectedHelp: (count: number) => `${count} rumah sudah selesai bulan ini.`,
+    outstandingHelp: (count: number) => `${count} rumah masih perlu susulan.`,
+    pendingReviewHelp: (hasPending: boolean) =>
+      hasPending
+        ? "Ada resit dimuat naik dan menunggu semakan jawatankuasa."
+        : "Tiada resit sedang menunggu semakan sekarang.",
+    followUpQueue: "Senarai susulan",
+    housesStillNeedAction: "Rumah yang masih perlu tindakan",
+    followUpQueueHelp: "Utamakan rumah ini selepas mesyuarat atau eksport jadual penuh di bawah.",
+    noFollowUp: "Tiada rumah yang perlukan susulan tambahan selain resit yang sedang menunggu semakan.",
+    openResidentsFollowUp: "Buka susulan penduduk",
+    residentBreakdown: "Pecahan penduduk",
+    residentBreakdownHelp: "Gunakan ringkasan ini semasa mesyuarat jawatankuasa atau semakan bulanan.",
+    residentBreakdownCaption: "Pecahan bayaran bulanan penduduk untuk bulan laporan yang dipilih.",
+    house: "Rumah",
+    owner: "Pemilik",
+    status: "Status",
+    method: "Kaedah",
+    updated: "Dikemas kini",
+    noRecord: "Belum ada rekod",
+    printReportTitle: "Laporan Kutipan Bulanan",
+    expected: "Jangkaan",
+    community: "Komuniti",
+    bankAccount: "Akaun bank",
+    meetingUse: "Kegunaan mesyuarat",
+    committeeReviewCopy: "Salinan semakan jawatankuasa",
+    preparedBy: "Disediakan oleh",
+    signature: "Tandatangan Jawatankuasa / Bendahari",
+    generatedAt: "Dijana pada",
+    meetingNotes: "Nota semakan mesyuarat",
+  },
+  en: {
+    label: "Reports",
+    title: "Monthly report for",
+    intro: "Review collection progress, money collected, and houses that need follow-up before closing the month.",
+    overallProgress: "Overall progress",
+    paidStillNeed: (paid: number, unsettled: number) => `${paid} paid, ${unsettled} still need action.`,
+    downloadSnapshot: "Download snapshot",
+    paidHouses: "Paid houses",
+    housesTotal: (total: number) => `${total} houses total`,
+    pendingReview: "Pending review",
+    receiptsWaiting: "Receipts waiting",
+    needFollowUp: "Need follow-up",
+    needFollowUpHelp: "Unpaid, overdue, rejected",
+    dueDate: "Due date",
+    pendingReceipts: (count: number) => `${count} pending receipts`,
+    committeeSummary: "Committee summary",
+    collectionProgress: "Collection progress for",
+    collectionSummary: (paid: number, unsettled: number) =>
+      `${paid} houses have settled payment, while ${unsettled} still need follow-up before closing this month.`,
+    paid: "Paid",
+    pending: "Pending",
+    rejected: "Rejected",
+    expectedCollection: "Expected collection",
+    residents: "residents",
+    collected: "Collected",
+    housesPaid: (count: number) => `${count} houses paid`,
+    outstanding: "Outstanding",
+    housesToFollow: (count: number) => `${count} houses to follow up`,
+    meetingHighlights: "Meeting highlights",
+    discussFirst: "What the committee should discuss first",
+    collectedHelp: (count: number) => `${count} houses already settled this month.`,
+    outstandingHelp: (count: number) => `${count} houses still need follow-up.`,
+    pendingReviewHelp: (hasPending: boolean) =>
+      hasPending
+        ? "Receipts are uploaded and waiting for committee review."
+        : "No proof is waiting for review right now.",
+    followUpQueue: "Follow-up queue",
+    housesStillNeedAction: "Houses still needing action",
+    followUpQueueHelp: "Prioritise these houses after the meeting or export the full resident table below.",
+    noFollowUp: "No house currently needs extra follow-up beyond the pending review queue.",
+    openResidentsFollowUp: "Open residents follow-up",
+    residentBreakdown: "Resident breakdown",
+    residentBreakdownHelp: "Use this summary during committee meetings or monthly review.",
+    residentBreakdownCaption: "Resident monthly payment breakdown for the selected report month.",
+    house: "House",
+    owner: "Owner",
+    status: "Status",
+    method: "Method",
+    updated: "Updated",
+    noRecord: "No record yet",
+    printReportTitle: "Monthly Collection Report",
+    expected: "Expected",
+    community: "Community",
+    bankAccount: "Bank account",
+    meetingUse: "Meeting use",
+    committeeReviewCopy: "Committee review copy",
+    preparedBy: "Prepared by",
+    signature: "Committee / Treasurer Signature",
+    generatedAt: "Generated at",
+    meetingNotes: "Meeting review notes",
+  },
+} as const;
 
 export default async function AdminReportsPage({
   searchParams,
@@ -15,6 +141,8 @@ export default async function AdminReportsPage({
   searchParams: Promise<{ month?: string; error?: string; message?: string }>;
 }) {
   const params = await searchParams;
+  const locale = await getLocale();
+  const copy = reportCopy[locale];
   const { currentMonth, currentMonthLabel, dueDateLabel, residents, settings, totals, warnings } =
     await getAdminReportData(params.month);
   const collectionRate =
@@ -31,23 +159,21 @@ export default async function AdminReportsPage({
   const topFollowUpResidents = residentsNeedingFollowUp.slice(0, 4);
   const meetingHighlights = [
     {
-      label: "Collected",
+      label: copy.collected,
       value: `RM ${totals.collectedAmount.toFixed(2)}`,
-      help: `${totals.paidCount} houses already settled this month.`,
+      help: copy.collectedHelp(totals.paidCount),
       tone: "border-emerald-200 bg-emerald-50",
     },
     {
-      label: "Outstanding",
+      label: copy.outstanding,
       value: `RM ${totals.outstandingAmount.toFixed(2)}`,
-      help: `${totals.unsettledCount} houses still need follow-up.`,
+      help: copy.outstandingHelp(totals.unsettledCount),
       tone: "border-rose-200 bg-rose-50",
     },
     {
-      label: "Pending review",
+      label: copy.pendingReview,
       value: String(totals.pendingCount),
-      help: pendingReviewResidents.length > 0
-        ? "Receipts are uploaded and waiting for committee review."
-        : "No proof is waiting for review right now.",
+      help: copy.pendingReviewHelp(pendingReviewResidents.length > 0),
       tone: "border-amber-200 bg-amber-50",
     },
   ] as const;
@@ -62,30 +188,30 @@ export default async function AdminReportsPage({
           Desa Tanjung
         </p>
         <h1 className="mt-2 text-4xl font-bold text-slate-950">
-          Monthly Collection Report
+          {copy.printReportTitle}
         </h1>
         <p className="mt-2 text-lg text-slate-700">{currentMonthLabel}</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Expected</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.expected}</p>
             <p className="mt-1 text-2xl font-bold text-slate-950">
               RM {totals.expectedCollection.toFixed(2)}
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Collected</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.collected}</p>
             <p className="mt-1 text-2xl font-bold text-slate-950">
               RM {totals.collectedAmount.toFixed(2)}
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Outstanding</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.outstanding}</p>
             <p className="mt-1 text-2xl font-bold text-slate-950">
               RM {totals.outstandingAmount.toFixed(2)}
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Due date</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.dueDate}</p>
             <p className="mt-1 text-xl font-bold text-slate-950">{dueDateLabel}</p>
           </div>
         </div>
@@ -94,17 +220,17 @@ export default async function AdminReportsPage({
       <section className="hidden rounded-3xl border border-slate-300 bg-white p-6 print:block">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-slate-200 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Community</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.community}</p>
             <p className="mt-1 text-lg font-bold text-slate-950">{settings.community_name}</p>
           </div>
           <div className="rounded-2xl border border-slate-200 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Bank account</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.bankAccount}</p>
             <p className="mt-1 text-lg font-bold text-slate-950">{settings.bank_name}</p>
             <p className="text-sm text-slate-700">{settings.bank_account_number}</p>
           </div>
           <div className="rounded-2xl border border-slate-200 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Meeting use</p>
-            <p className="mt-1 text-lg font-bold text-slate-950">Committee review copy</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.meetingUse}</p>
+            <p className="mt-1 text-lg font-bold text-slate-950">{copy.committeeReviewCopy}</p>
           </div>
         </div>
       </section>
@@ -112,25 +238,25 @@ export default async function AdminReportsPage({
       <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.25fr)]">
         <Card className="overflow-hidden border-slate-900 bg-slate-950 p-0 text-white print:border-slate-300 print:bg-white print:text-slate-950">
           <div className="bg-[radial-gradient(circle_at_top_left,#14b8a6_0%,transparent_32%),linear-gradient(135deg,#07111f_0%,#0b2f2d_58%,#063f3a_100%)] px-5 py-6 sm:px-6 print:bg-white">
-            <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-100 print:text-slate-600">Reports</p>
+            <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-100 print:text-slate-600">{copy.label}</p>
             <h2 className="mt-3 font-display text-4xl font-bold leading-[1.04] text-white sm:text-5xl print:text-slate-950">
-              Monthly report for {currentMonthLabel}
+              {copy.title} {currentMonthLabel}
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-8 text-slate-100 print:text-slate-700">
-              Review collection progress, money collected, and houses that need follow-up before closing the month.
+              {copy.intro}
             </p>
             <div className="mt-6 rounded-3xl border border-white/10 bg-white/10 px-4 py-4 print:border-slate-200 print:bg-slate-50">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <p className="text-sm font-bold uppercase tracking-[0.12em] text-teal-100 print:text-slate-600">
-                    Overall progress
+                    {copy.overallProgress}
                   </p>
                   <p className="mt-1 font-display text-6xl font-bold leading-none text-white print:text-slate-950">
                     {collectionRate}%
                   </p>
                 </div>
                 <p className="max-w-xs text-base text-slate-100 print:text-slate-700">
-                  {totals.paidCount} paid, {totals.unsettledCount} still need action.
+                  {copy.paidStillNeed(totals.paidCount, totals.unsettledCount)}
                 </p>
               </div>
               <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/20 print:bg-slate-200">
@@ -143,16 +269,16 @@ export default async function AdminReportsPage({
         <div className="grid gap-4">
           <Card className="print:border-slate-300 print:shadow-none">
             <div className="min-w-0">
-              <MonthFilter currentMonth={currentMonth} />
+              <MonthFilter currentMonth={currentMonth} locale={locale} />
               <div className="mt-4 flex flex-wrap gap-3">
                 <Link
                   href={`/admin/reports/snapshot?month=${currentMonth}`}
                   className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-base font-bold text-slate-950 transition hover:bg-slate-50 sm:w-auto"
                 >
                   <Download className="mr-2 h-4 w-4" />
-                  Download snapshot
+                  {copy.downloadSnapshot}
                 </Link>
-                <PrintPageButton className="min-h-12 w-full sm:w-auto" />
+                <PrintPageButton className="min-h-12 w-full sm:w-auto" locale={locale} />
               </div>
             </div>
           </Card>
@@ -160,33 +286,33 @@ export default async function AdminReportsPage({
           <section className="grid gap-3 sm:grid-cols-2">
             {[
               {
-                label: "Paid houses",
+                label: copy.paidHouses,
                 value: totals.paidCount,
-                help: `${totals.totalResidents} houses total`,
+                help: copy.housesTotal(totals.totalResidents),
                 icon: CheckCircle2,
                 tone: "border-emerald-200 bg-emerald-50 text-emerald-950",
                 valueClassName: "text-3xl",
               },
               {
-                label: "Pending review",
+                label: copy.pendingReview,
                 value: totals.pendingCount,
-                help: "Receipts waiting",
+                help: copy.receiptsWaiting,
                 icon: Clock3,
                 tone: "border-amber-200 bg-amber-50 text-amber-950",
                 valueClassName: "text-3xl",
               },
               {
-                label: "Need follow-up",
+                label: copy.needFollowUp,
                 value: totals.unsettledCount,
-                help: "Unpaid, overdue, rejected",
+                help: copy.needFollowUpHelp,
                 icon: AlertTriangle,
                 tone: "border-rose-200 bg-rose-50 text-rose-950",
                 valueClassName: "text-3xl",
               },
               {
-                label: "Due date",
+                label: copy.dueDate,
                 value: dueDateLabel,
-                help: `${totals.pendingCount} pending receipts`,
+                help: copy.pendingReceipts(totals.pendingCount),
                 icon: FileText,
                 tone: "border-sky-200 bg-sky-50 text-sky-950",
                 valueClassName: "text-2xl",
@@ -221,13 +347,13 @@ export default async function AdminReportsPage({
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-                Committee summary
+                {copy.committeeSummary}
               </p>
               <h3 className="mt-2 text-3xl font-bold text-slate-950">
-                Collection progress for {currentMonthLabel}
+                {copy.collectionProgress} {currentMonthLabel}
               </h3>
               <p className="mt-2 max-w-2xl text-base text-slate-700">
-                {totals.paidCount} houses have settled payment, while {totals.unsettledCount} still need follow-up before closing this month.
+                {copy.collectionSummary(totals.paidCount, totals.unsettledCount)}
               </p>
               <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-100">
                 <div className="h-full rounded-full bg-primary" style={{ width: `${collectionRate}%` }} />
@@ -238,15 +364,15 @@ export default async function AdminReportsPage({
 
         <Card className="grid grid-cols-3 gap-3 bg-slate-50">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Paid</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.paid}</p>
             <p className="mt-1 text-3xl font-bold text-emerald-900">{totals.paidCount}</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Pending</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.pending}</p>
             <p className="mt-1 text-3xl font-bold text-amber-900">{totals.pendingCount}</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Rejected</p>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">{copy.rejected}</p>
             <p className="mt-1 text-3xl font-bold text-rose-900">{totals.rejectedCount}</p>
           </div>
         </Card>
@@ -254,28 +380,28 @@ export default async function AdminReportsPage({
 
       <section className="grid gap-4 md:grid-cols-3">
         <Card className="border-sky-200 bg-sky-50">
-          <p className="text-base font-bold text-sky-800">Expected collection</p>
+          <p className="text-base font-bold text-sky-800">{copy.expectedCollection}</p>
           <p className="mt-2 font-display text-4xl font-bold text-sky-950">
             RM {totals.expectedCollection.toFixed(2)}
           </p>
           <p className="mt-2 text-sm font-semibold text-sky-900">
-            RM {(settings.monthly_fee ?? 0).toFixed(2)} x {totals.totalResidents} residents
+            RM {(settings.monthly_fee ?? 0).toFixed(2)} x {totals.totalResidents} {copy.residents}
           </p>
         </Card>
         <Card className="border-emerald-200 bg-emerald-50">
-          <p className="text-base font-bold text-emerald-800">Collected</p>
+          <p className="text-base font-bold text-emerald-800">{copy.collected}</p>
           <p className="mt-2 font-display text-4xl font-bold text-emerald-950">
             RM {totals.collectedAmount.toFixed(2)}
           </p>
-          <p className="mt-2 text-sm font-semibold text-emerald-900">{totals.paidCount} houses paid</p>
+          <p className="mt-2 text-sm font-semibold text-emerald-900">{copy.housesPaid(totals.paidCount)}</p>
         </Card>
         <Card className="border-rose-200 bg-rose-50">
-          <p className="text-base font-bold text-rose-800">Outstanding</p>
+          <p className="text-base font-bold text-rose-800">{copy.outstanding}</p>
           <p className="mt-2 font-display text-4xl font-bold text-rose-950">
             RM {totals.outstandingAmount.toFixed(2)}
           </p>
           <p className="mt-2 text-sm font-semibold text-rose-900">
-            {totals.unsettledCount} houses to follow up
+            {copy.housesToFollow(totals.unsettledCount)}
           </p>
         </Card>
       </section>
@@ -283,10 +409,10 @@ export default async function AdminReportsPage({
       <section className="grid items-start gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <Card className="bg-slate-50/80">
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-            Meeting highlights
+            {copy.meetingHighlights}
           </p>
           <h3 className="mt-2 text-3xl font-bold text-slate-950">
-            What the committee should discuss first
+            {copy.discussFirst}
           </h3>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
             {meetingHighlights.map((item) => (
@@ -301,18 +427,18 @@ export default async function AdminReportsPage({
 
         <Card className="bg-slate-50/80">
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">
-            Follow-up queue
+            {copy.followUpQueue}
           </p>
           <h3 className="mt-2 text-3xl font-bold text-slate-950">
-            Houses still needing action
+            {copy.housesStillNeedAction}
           </h3>
           <p className="mt-2 text-base text-slate-700">
-            Prioritise these houses after the meeting or export the full resident table below.
+            {copy.followUpQueueHelp}
           </p>
           <div className="mt-5 space-y-3">
             {topFollowUpResidents.length === 0 ? (
               <div className="rounded-3xl bg-emerald-50 px-4 py-4 text-base font-semibold text-emerald-900">
-                No house currently needs extra follow-up beyond the pending review queue.
+                {copy.noFollowUp}
               </div>
             ) : (
               topFollowUpResidents.map((resident) => (
@@ -324,7 +450,7 @@ export default async function AdminReportsPage({
                       </p>
                       <p className="mt-1 text-sm text-slate-700">{resident.address}</p>
                     </div>
-                    <StatusBadge status={resident.currentPayment?.display_status ?? "unpaid"} />
+                    <StatusBadge status={resident.currentPayment?.display_status ?? "unpaid"} locale={locale} />
                   </div>
                 </div>
               ))
@@ -335,7 +461,7 @@ export default async function AdminReportsPage({
               href={`/admin/residents?month=${currentMonth}`}
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-base font-bold text-white transition hover:bg-slate-800"
             >
-              Open residents follow-up
+              {copy.openResidentsFollowUp}
             </Link>
           </div>
         </Card>
@@ -343,23 +469,23 @@ export default async function AdminReportsPage({
 
       <Card className="p-0 overflow-hidden">
         <div className="border-b border-line bg-slate-50 px-4 py-4">
-          <h3 className="text-2xl font-bold text-slate-950">Resident breakdown</h3>
+          <h3 className="text-2xl font-bold text-slate-950">{copy.residentBreakdown}</h3>
           <p className="mt-1 text-base font-medium text-muted">
-            Use this summary during committee meetings or monthly review.
+            {copy.residentBreakdownHelp}
           </p>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-line text-left">
             <caption className="sr-only">
-              Resident monthly payment breakdown for the selected report month.
+              {copy.residentBreakdownCaption}
             </caption>
             <thead className="bg-white">
               <tr className="text-xs font-bold uppercase tracking-[0.12em] text-slate-700">
-                <th className="px-4 py-4">House</th>
-                <th className="px-4 py-4">Owner</th>
-                <th className="px-4 py-4">Status</th>
-                <th className="px-4 py-4">Method</th>
-                <th className="px-4 py-4">Updated</th>
+                <th className="px-4 py-4">{copy.house}</th>
+                <th className="px-4 py-4">{copy.owner}</th>
+                <th className="px-4 py-4">{copy.status}</th>
+                <th className="px-4 py-4">{copy.method}</th>
+                <th className="px-4 py-4">{copy.updated}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line text-base text-slate-800">
@@ -370,7 +496,7 @@ export default async function AdminReportsPage({
                   </td>
                   <td className="px-4 py-4">{resident.name}</td>
                   <td className="px-4 py-4">
-                    <StatusBadge status={resident.currentPayment?.display_status ?? "unpaid"} />
+                    <StatusBadge status={resident.currentPayment?.display_status ?? "unpaid"} locale={locale} />
                   </td>
                   <td className="px-4 py-4 capitalize">
                     {resident.currentPayment?.payment_method ?? "-"}
@@ -378,7 +504,7 @@ export default async function AdminReportsPage({
                   <td className="px-4 py-4">
                     {resident.currentPayment?.updated_at
                       ? formatTimestamp(resident.currentPayment.updated_at)
-                      : "No record yet"}
+                      : copy.noRecord}
                   </td>
                 </tr>
               ))}
@@ -391,21 +517,21 @@ export default async function AdminReportsPage({
         <div className="grid gap-10 md:grid-cols-2">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-700">
-              Prepared by
+              {copy.preparedBy}
             </p>
             <div className="mt-10 border-t border-slate-300 pt-3 text-base text-slate-700">
-              Committee / Treasurer Signature
+              {copy.signature}
             </div>
           </div>
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-700">
-              Generated at
+              {copy.generatedAt}
             </p>
             <div className="mt-4 text-base font-semibold text-slate-950">
               {formatTimestamp(new Date().toISOString())}
             </div>
             <div className="mt-6 border-t border-slate-300 pt-3 text-base text-slate-700">
-              Meeting review notes
+              {copy.meetingNotes}
             </div>
           </div>
         </div>

@@ -476,6 +476,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Reports page dipolish semula dengan meeting highlights dan follow-up queue
 - [x] Reports page dikemas semula sebagai meeting-ready report: hero summary, compact KPI, money summary, follow-up queue, dan breakdown table yang lebih mudah scan
 - [x] Reports page dibetulkan lagi supaya filter/action buttons tidak overflow dan KPI cards tidak terlalu sempit/tinggi pada desktop
+- [x] Language toggle admin dibetulkan supaya redirect/refresh page semasa selepas tukar BM/English
+- [x] Sidebar admin dan Reports page mula guna copy BM/English mengikut pilihan bahasa
 - [x] Keyboard-first admin filtering diperkemas pada users, residents, search, activity, dan month filter
 - [x] Contrast admin diperkemas lagi pada reminder panel gelap dan report copy yang masih borderline
 - [x] Search panel sidebar issue dibetulkan supaya tidak mengecil pada page tertentu

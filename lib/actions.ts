@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -28,6 +28,7 @@ async function getActionLocale() {
 export async function setLocaleAction(formData: FormData) {
   const locale = normalizeLocale(String(formData.get("locale") ?? ""));
   const cookieStore = await cookies();
+  const headerStore = await headers();
 
   cookieStore.set(localeCookieName, locale, {
     httpOnly: true,
@@ -37,6 +38,17 @@ export async function setLocaleAction(formData: FormData) {
   });
 
   revalidatePath("/", "layout");
+
+  const referer = headerStore.get("referer");
+
+  if (referer) {
+    try {
+      const url = new URL(referer);
+      redirect(`${url.pathname}${url.search}`);
+    } catch {
+      redirect("/");
+    }
+  }
 }
 
 function redirectWithError(path: string, message: string) {

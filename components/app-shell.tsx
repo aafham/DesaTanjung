@@ -25,7 +25,20 @@ import type { Locale } from "@/lib/i18n";
 import type { Role, UserProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const adminNavItems: Array<{ href: string; label: string; icon: typeof LayoutDashboard }> = [
+const adminNavItems: Record<Locale, Array<{ href: string; label: string; icon: typeof LayoutDashboard }>> = {
+  ms: [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/approvals", label: "Kelulusan", icon: ShieldCheck },
+    { href: "/admin/residents", label: "Penduduk", icon: UserCircle2 },
+    { href: "/admin/search", label: "Carian", icon: Search },
+    { href: "/admin/reports", label: "Laporan", icon: ReceiptText },
+    { href: "/admin/health", label: "Kesihatan", icon: HeartPulse },
+    { href: "/admin/activity", label: "Aktiviti", icon: Activity },
+    { href: "/admin/announcements", label: "Notis", icon: Megaphone },
+    { href: "/admin/users", label: "Akaun", icon: Users },
+    { href: "/admin/settings", label: "Tetapan", icon: Settings },
+  ],
+  en: [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/approvals", label: "Approvals", icon: ShieldCheck },
     { href: "/admin/residents", label: "Residents", icon: UserCircle2 },
@@ -36,7 +49,8 @@ const adminNavItems: Array<{ href: string; label: string; icon: typeof LayoutDas
     { href: "/admin/announcements", label: "Notices", icon: Megaphone },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/settings", label: "Settings", icon: Settings },
-];
+  ],
+};
 
 const userNavItems: Record<Locale, Array<{ href: string; label: string; icon: typeof LayoutDashboard }>> = {
   ms: [
@@ -55,10 +69,13 @@ const userNavItems: Record<Locale, Array<{ href: string; label: string; icon: ty
 
 const shellCopy: Record<Locale, {
   skip: string;
+  adminTitle: string;
   residentTitle: string;
   signedIn: string;
+  adminMenu: string;
   residentMenu: string;
   quickNoteTitle: string;
+  adminQuickNote: string;
   residentQuickNote: string;
   loadingLabel: string;
   loadingTitle: string;
@@ -66,10 +83,13 @@ const shellCopy: Record<Locale, {
 }> = {
   ms: {
     skip: "Langkau ke kandungan utama",
+    adminTitle: "Panel Jawatankuasa",
     residentTitle: "Portal Penduduk",
     signedIn: "Log masuk sebagai",
+    adminMenu: "Alat admin",
     residentMenu: "Menu penduduk",
     quickNoteTitle: "Nota ringkas",
+    adminQuickNote: "Muat naik baharu akan muncul di sini secara automatik setiap 30 saat.",
     residentQuickNote: "Muat naik resit selepas membuat bayaran supaya jawatankuasa boleh semak dengan cepat.",
     loadingLabel: "Membuka halaman",
     loadingTitle: "Memuatkan",
@@ -77,10 +97,13 @@ const shellCopy: Record<Locale, {
   },
   en: {
     skip: "Skip to main content",
+    adminTitle: "Committee Panel",
     residentTitle: "Resident Portal",
     signedIn: "Signed in as",
+    adminMenu: "Admin tools",
     residentMenu: "Resident menu",
     quickNoteTitle: "Quick note",
+    adminQuickNote: "New uploads appear here automatically every 30 seconds.",
     residentQuickNote: "Upload your receipt after payment so the committee can review it quickly.",
     loadingLabel: "Opening page",
     loadingTitle: "Loading",
@@ -102,7 +125,7 @@ export function AppShell({
   const pathname = usePathname();
   const [loadingHref, setLoadingHref] = useState<string | null>(null);
   const copy = shellCopy[locale];
-  const items = profile.role === "admin" ? adminNavItems : userNavItems[locale];
+  const items = profile.role === "admin" ? adminNavItems[locale] : userNavItems[locale];
   const printOnlyReportRoute =
     profile.role === "admin" && pathname.startsWith("/admin/reports");
   const activeLoadingItem = useMemo(
@@ -137,7 +160,7 @@ export function AppShell({
               Desa Tanjung
             </p>
             <h1 className="mt-3 font-display text-3xl font-bold leading-tight text-slate-950">
-              {profile.role === "admin" ? "Committee Panel" : copy.residentTitle}
+              {profile.role === "admin" ? copy.adminTitle : copy.residentTitle}
             </h1>
             <p className="mt-3 text-base text-muted">
               {copy.signedIn} {profile.house_number} - {profile.name}
@@ -146,7 +169,7 @@ export function AppShell({
 
           <div className="mb-3 px-1">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-              {profile.role === "admin" ? "Admin tools" : copy.residentMenu}
+              {profile.role === "admin" ? copy.adminMenu : copy.residentMenu}
             </p>
           </div>
 
@@ -204,11 +227,11 @@ export function AppShell({
 
           <div className="mt-7 rounded-3xl border border-slate-100 bg-white/90 p-5">
             <p className="text-base font-bold text-slate-950">
-              {profile.role === "admin" ? "Quick note" : copy.quickNoteTitle}
+              {copy.quickNoteTitle}
             </p>
             <p className="mt-2 text-base text-muted">
               {profile.role === "admin"
-                ? "New uploads appear here automatically every 30 seconds."
+                ? copy.adminQuickNote
                 : copy.residentQuickNote}
             </p>
           </div>
