@@ -206,6 +206,9 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] dialog focus trap
   - [x] live region untuk toast
   - [x] auth form error state lebih jelas
+  - [x] upload resit boleh difokus dan dibuka melalui keyboard
+  - [x] receipt preview modal ada label/description yang betul untuk screen reader dan copy BM/English
+  - [x] profile form ada autocomplete/input mode untuk nama, alamat, dan telefon
 - [x] Test automation user asas:
   - [x] login page render
   - [x] invalid login error
@@ -221,25 +224,27 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] payments page
   - [x] notifications page
   - [x] profile page
+  - [x] assertion tiada horizontal overflow pada page user utama mobile
+  - [x] mobile mutation upload resit sebenar pada disposable payment resident
 - [x] Scalability user bila history makin panjang:
   - [x] payment history user guna `range` + `count` dari database
   - [x] notification inbox penuh guna `range` + `count` dari database
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
-- [ ] E2E user fasa seterusnya:
-  - [ ] tambah mobile mutation assertions untuk upload sebenar pada disposable account khas
-  - [ ] tambah assertion visual untuk layout mobile yang paling kritikal
-- [ ] Tambah assertion visual / accessibility pada flow user yang paling penting:
-  - [ ] upload resit
-  - [ ] receipt preview modal
-  - [ ] notification inbox
-  - [ ] profile form
+- [x] E2E user fasa seterusnya:
+  - [x] tambah mobile mutation assertions untuk upload sebenar pada disposable account khas
+  - [x] tambah assertion visual untuk layout mobile yang paling kritikal
+- [x] Tambah assertion visual / accessibility pada flow user yang paling penting:
+  - [x] upload resit
+  - [x] receipt preview modal
+  - [x] notification inbox
+  - [x] profile form
 - [ ] Contrast + keyboard audit kecil yang masih berbaki pada page user:
   - [ ] login
-  - [ ] payments upload
+  - [x] payments upload
   - [ ] notifications
-  - [ ] profile
+  - [x] profile
 - [ ] Mobile UI audit penuh untuk user:
   - [ ] `/login`
   - [ ] `/dashboard`

@@ -88,6 +88,7 @@ export function PaymentHistoryTable({
                     src={payment.signed_proof_url}
                     alt={`${copy.receipt} ${formatMonthLabel(payment.month)}`}
                     triggerLabel={copy.viewReceipt}
+                    locale={locale}
                     inline
                   />
                 ) : (
@@ -130,6 +131,7 @@ export function PaymentHistoryTable({
                       src={payment.signed_proof_url}
                       alt={`${copy.receipt} ${formatMonthLabel(payment.month)}`}
                       triggerLabel={copy.viewReceipt}
+                      locale={locale}
                       inline
                     />
                   ) : (

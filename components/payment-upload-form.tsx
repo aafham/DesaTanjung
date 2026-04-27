@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, LoaderCircle, UploadCloud } from "lucide-react";
 import { submitPaymentProofAction } from "@/lib/actions";
@@ -101,6 +101,7 @@ export function PaymentUploadForm({
 }) {
   const copy = uploadCopy[locale];
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -343,7 +344,17 @@ export function PaymentUploadForm({
 
   return (
     <div className="space-y-4">
-      <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-4xl border-2 border-dashed border-line bg-slate-50 px-4 py-10 text-center transition hover:border-primary">
+      <label
+        role="button"
+        tabIndex={isUploading || isPending || uploadStage === "preparing" ? -1 : 0}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
+        className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-4xl border-2 border-dashed border-line bg-slate-50 px-4 py-10 text-center transition hover:border-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/25"
+      >
         <UploadCloud className="h-9 w-9 text-primary" />
         <div>
           <p className="text-xl font-bold text-slate-950">{copy.chooseTitle}</p>
@@ -355,8 +366,10 @@ export function PaymentUploadForm({
           ) : null}
         </div>
         <input
+          ref={fileInputRef}
           type="file"
           accept="image/png,image/jpeg,image/jpg"
+          aria-label={copy.chooseTitle}
           data-testid="payment-receipt-input"
           className="hidden"
           disabled={isUploading || isPending || uploadStage === "preparing"}

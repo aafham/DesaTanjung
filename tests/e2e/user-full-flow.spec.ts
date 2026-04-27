@@ -47,6 +47,49 @@ test.describe.serial("full resident user flow", () => {
     await expect(page.getByText("Profile updated successfully.")).toBeVisible();
   });
 
+  test("resident can upload a receipt from a mobile viewport with accessible upload controls", async ({ page }) => {
+    test.skip(
+      !env.paymentResidentIdentifier || !env.paymentResidentPassword,
+      "Set E2E_PAYMENT_RESIDENT_IDENTIFIER and E2E_PAYMENT_RESIDENT_PASSWORD in .env.e2e.local",
+    );
+
+    await page.setViewportSize({ width: 393, height: 851 });
+    await loginWithCredentials(
+      page,
+      env.paymentResidentIdentifier!,
+      env.paymentResidentPassword!,
+    );
+    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+
+    await page.goto("/payments");
+    const uploadControl = page.getByRole("button", { name: /press here to choose receipt/i });
+    await expect(uploadControl).toBeVisible();
+    await uploadControl.focus();
+    await expect(uploadControl).toBeFocused();
+
+    await page.getByTestId("payment-receipt-input").setInputFiles(createTinyPng("resident-mobile-upload.png"));
+    await expect(page.getByText("Receipt image summary")).toBeVisible();
+    await expect(page.getByAltText("Receipt preview")).toBeVisible();
+    await expect(page.getByTestId("submit-receipt-button")).toBeEnabled();
+
+    await page.getByTestId("submit-receipt-button").click();
+    await expect(
+      page.getByText("Payment receipt uploaded successfully and is waiting for committee review."),
+    ).toBeVisible();
+
+    await page.goto("/dashboard");
+    const viewReceiptButton = page.getByRole("button", { name: /view receipt/i }).first();
+    await expect(viewReceiptButton).toBeVisible();
+    await viewReceiptButton.click();
+
+    const receiptDialog = page.getByRole("dialog", { name: /receipt preview/i });
+    await expect(receiptDialog).toBeVisible();
+    await expect(page.getByRole("button", { name: /close/i })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(receiptDialog).toBeHidden();
+    await expect(viewReceiptButton).toBeFocused();
+  });
+
   test("resident receives approval notification after admin approves receipt", async ({ browser }) => {
     test.skip(
       !env.adminIdentifier ||

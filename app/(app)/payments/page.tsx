@@ -165,6 +165,7 @@ export default async function PaymentsPage() {
                       src={settings.payment_qr_url}
                       alt={copy.qrAlt}
                       triggerLabel={copy.qrButton}
+                      locale={locale}
                     />
                     <Image
                       src={settings.payment_qr_url}

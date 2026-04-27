@@ -153,6 +153,7 @@ export default async function ProfilePage({
               <input
                 id="profile-name"
                 name="name"
+                autoComplete="name"
                 required
                 defaultValue={profile.name}
                 className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
@@ -165,6 +166,7 @@ export default async function ProfilePage({
               <input
                 id="profile-address"
                 name="address"
+                autoComplete="street-address"
                 required
                 defaultValue={profile.address}
                 className="min-h-14 w-full rounded-2xl border border-line px-4 py-3 text-base text-slate-950 outline-none focus:border-primary"
@@ -177,6 +179,8 @@ export default async function ProfilePage({
               <input
                 id="profile-phone"
                 name="phone_number"
+                autoComplete="tel"
+                inputMode="tel"
                 required
                 defaultValue={profile.phone_number ? formatMalaysianPhoneNumber(profile.phone_number) : ""}
                 placeholder="012-345 6789"

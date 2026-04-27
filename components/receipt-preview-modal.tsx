@@ -3,23 +3,41 @@
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
 import { Expand, X } from "lucide-react";
+import type { Locale } from "@/lib/i18n";
+
+const modalCopy: Record<Locale, { title: string; description: string; close: string }> = {
+  ms: {
+    title: "Pratonton resit",
+    description: "Pratonton resit yang dibesarkan. Tekan Escape untuk tutup dialog ini.",
+    close: "Tutup",
+  },
+  en: {
+    title: "Receipt preview",
+    description: "Enlarged receipt preview. Press Escape to close this dialog.",
+    close: "Close",
+  },
+};
 
 export function ReceiptPreviewModal({
   src,
   alt,
   triggerLabel = "Lihat lebih besar",
   inline = false,
+  locale = "ms",
 }: {
   src: string;
   alt: string;
   triggerLabel?: string;
   inline?: boolean;
+  locale?: Locale;
 }) {
+  const copy = modalCopy[locale];
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const modalTitleId = useId();
+  const modalDescriptionId = useId();
 
   useEffect(() => {
     if (!open) {
@@ -98,27 +116,27 @@ export function ReceiptPreviewModal({
             role="dialog"
             aria-modal="true"
             aria-labelledby={modalTitleId}
-            id={modalTitleId}
+            aria-describedby={modalDescriptionId}
             className="relative w-full max-w-4xl overflow-hidden rounded-4xl bg-white shadow-soft"
             onClick={(event) => event.stopPropagation()}
           >
-            <p className="sr-only" id={`${modalTitleId}-description`}>
-              Pratonton resit yang dibesarkan. Tekan Escape untuk tutup dialog ini.
+            <p className="sr-only" id={modalDescriptionId}>
+              {copy.description}
             </p>
             <button
               ref={closeButtonRef}
               type="button"
               onClick={() => setOpen(false)}
               className="absolute right-4 top-4 z-10 rounded-full bg-slate-950 px-3 py-2 text-sm font-bold text-white"
-              aria-describedby={`${modalTitleId}-description`}
+              aria-describedby={modalDescriptionId}
             >
               <span className="flex items-center gap-2">
                 <X className="h-4 w-4" />
-                Tutup
+                {copy.close}
               </span>
             </button>
             <div className="max-h-[85vh] overflow-auto p-3 sm:p-4">
-              <h2 className="sr-only">Pratonton resit</h2>
+              <h2 id={modalTitleId} className="sr-only">{copy.title}</h2>
               <Image
                 src={src}
                 alt={alt}
