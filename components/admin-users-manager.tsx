@@ -20,12 +20,14 @@ import type { PaginationMeta } from "@/lib/types";
 export function AdminUsersManager({
   users,
   currentAdminId,
+  canDeleteUsers,
   filters,
   pagination,
   summary,
 }: {
   users: ManagedUser[];
   currentAdminId: string;
+  canDeleteUsers: boolean;
   filters: {
     query: string;
     roleFilter: "all" | "admin" | "user";
@@ -386,7 +388,7 @@ export function AdminUsersManager({
           <div className="rounded-3xl bg-white/80 px-4 py-4">
             <p className="text-base font-bold text-slate-950">Delete user</p>
             <p className="mt-2 text-sm leading-6 text-slate-700">
-              Requires typing DELETE plus house number because it removes the login account.
+              Requires the configured lead admin plus typing DELETE and the house number.
             </p>
           </div>
           <div className="rounded-3xl bg-white/80 px-4 py-4">
@@ -396,6 +398,11 @@ export function AdminUsersManager({
             </p>
           </div>
         </div>
+        {!canDeleteUsers ? (
+          <div className="mt-3 rounded-3xl bg-white/80 px-4 py-4 text-sm leading-6 text-amber-950">
+            Delete actions are locked for this admin session. Ask the configured lead admin to delete accounts.
+          </div>
+        ) : null}
       </Card>
 
       <div id="user-results-list" className="grid gap-4">
@@ -608,7 +615,7 @@ export function AdminUsersManager({
                         confirmMessage={`Delete ${user.house_number}? This removes the Supabase Auth login account and linked profile data. Do this only after backup or committee approval.`}
                         confirmLabel="Delete user"
                         requiredConfirmationText={`DELETE ${user.house_number}`}
-                        disabled={user.id === currentAdminId}
+                        disabled={user.id === currentAdminId || !canDeleteUsers}
                         variant="danger"
                         className="rounded-full bg-rose-700 px-5 py-3 text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
                       >

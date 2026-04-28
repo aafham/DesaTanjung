@@ -7,6 +7,7 @@ import { DataWarning } from "@/components/data-warning";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
+import { canManageDestructiveAdminActions } from "@/lib/admin-permissions";
 import { getAdminUserManagementData } from "@/lib/data";
 
 export default async function AdminUsersPage({
@@ -211,6 +212,7 @@ export default async function AdminUsersPage({
         <AdminUsersManager
           users={users}
           currentAdminId={profile.id}
+          canDeleteUsers={canManageDestructiveAdminActions(profile)}
           filters={filters}
           pagination={pagination}
           summary={summary}

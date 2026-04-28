@@ -124,7 +124,7 @@ Cadangan amalan selamat:
   - tambah user
   - edit user
   - reset password
-  - delete user
+  - delete user oleh lead admin yang dibenarkan
   - lihat last login / last logout
 - search ringkas merentas resident, payment, dan activity
 - halaman reports
@@ -424,6 +424,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] delete user perlukan admin taip `DELETE {nombor rumah}`
   - [x] server action validate confirmation text untuk reset password dan delete user
   - [x] delete user dilindungi supaya admin terakhir tidak boleh dipadam
+  - [x] delete user dihadkan kepada configured lead admin melalui `ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS`
   - [x] Users page ada account safety guide untuk action berisiko
   - [x] Health page ada emergency restore checklist untuk salah delete / salah update
 - [x] Full admin E2E mutation flow sudah dijalankan pada disposable environment:
@@ -447,7 +448,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] panduan rotate admin bila jawatankuasa bertukar
 - [ ] Security / permission refinement:
   - [ ] pecahkan role admin jika perlu, contoh `treasurer`, `viewer`, `super_admin`
-  - [ ] hadkan action berisiko seperti delete user kepada admin tertentu
+  - [x] hadkan action berisiko seperti delete user kepada admin tertentu
 - [ ] Monitoring production fasa seterusnya:
   - [ ] semak warning deployment / runtime selepas live digunakan komuniti sebenar
   - [ ] pertimbangkan external alerting jika mahu notifikasi WhatsApp/email untuk error kritikal
@@ -806,6 +807,7 @@ Buat fail `.env.local` dan isi nilai ini:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS=admin
 ```
 
 Nota:
@@ -815,6 +817,7 @@ Nota:
 - `SUPABASE_SERVICE_ROLE_KEY` ambil dari `Secret key`
 - `NEXT_PUBLIC_*` memang public dan boleh dilihat browser
 - `SUPABASE_SERVICE_ROLE_KEY` ialah server secret; jangan paste dalam chat, jangan commit, dan rotate jika terdedah
+- `ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS` optional; isi username/nombor rumah atau UUID admin yang boleh delete user, contoh `admin,admin2`
 
 ## Setup Supabase
 
@@ -936,6 +939,7 @@ Nota operasi admin:
 - untuk reset password, admin perlu taip nombor rumah / username sebelum confirm
 - untuk delete user, admin perlu taip `DELETE {nombor rumah}` sebelum confirm
 - sistem juga semak confirmation text di server action, bukan di browser sahaja
+- delete user hanya dibenarkan untuk admin dalam `ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS`; default ialah `admin`
 - admin terakhir tidak boleh dipadam; cipta admin baru dahulu jika jawatankuasa bertukar
 - sebelum delete akaun sebenar, export laporan/backup dahulu kerana login account akan dibuang
 
@@ -1133,6 +1137,7 @@ Isi nilai yang sama seperti `.env.local`:
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS=admin
 ```
 
 Security penting:
@@ -1140,6 +1145,7 @@ Security penting:
 - `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` boleh kekal sebagai regular env kerana ia public by design.
 - `SUPABASE_SERVICE_ROLE_KEY` mesti server-only, jangan ada prefix `NEXT_PUBLIC_`.
 - Di Vercel, mark `SUPABASE_SERVICE_ROLE_KEY` sebagai `Sensitive`.
+- `ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS` boleh regular server env; isi admin yang dibenarkan delete user, contoh `admin,admin2`.
 - Jika key pernah terlihat dalam screenshot, chat, terminal log, atau commit, rotate key baru di Supabase dahulu.
 - Selepas update env di Vercel, redeploy production supaya key baru digunakan.
 

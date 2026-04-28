@@ -15,6 +15,7 @@ import {
 } from "@/lib/utils";
 import { DEFAULT_ADMIN_PASSWORD, DEFAULT_USER_PASSWORD } from "@/lib/constants";
 import { localeCookieName, normalizeLocale } from "@/lib/i18n";
+import { canManageDestructiveAdminActions } from "@/lib/admin-permissions";
 
 type ActionErrorLike = {
   message?: string | null;
@@ -1239,6 +1240,13 @@ export async function resetManagedUserPasswordAction(formData: FormData) {
 export async function deleteManagedUserAction(formData: FormData) {
   const profile = await requireUserProfile();
   requireAdmin(profile);
+
+  if (!canManageDestructiveAdminActions(profile)) {
+    redirectWithError(
+      "/admin/users",
+      "Only the configured lead admin can delete user accounts. Ask the lead admin to complete this action.",
+    );
+  }
 
   const userId = String(formData.get("user_id") ?? "").trim();
   const houseNumber = String(formData.get("house_number") ?? "").trim();
