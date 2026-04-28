@@ -3,9 +3,36 @@
 import { LoaderCircle } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { PasswordInput } from "@/components/password-input";
+import type { Locale } from "@/lib/i18n";
 
-function SubmitButton() {
+const formCopy = {
+  ms: {
+    pending: "Sedang log masuk...",
+    submit: "Masuk portal",
+    loadingTitle: "Sedang log masuk",
+    loadingBody: "Sila tunggu seketika sementara sistem membuka portal anda.",
+    identifier: "Nombor rumah / Username",
+    identifierPlaceholder: "Contoh: A-12 atau admin",
+    password: "Kata laluan",
+    passwordPlaceholder: "Masukkan kata laluan",
+    submitHelp: "Tekan Enter selepas mengisi username dan kata laluan untuk masuk ke portal.",
+  },
+  en: {
+    pending: "Signing in...",
+    submit: "Enter portal",
+    loadingTitle: "Signing in",
+    loadingBody: "Please wait while the system opens your portal.",
+    identifier: "House number / Username",
+    identifierPlaceholder: "Example: A-12 or admin",
+    password: "Password",
+    passwordPlaceholder: "Enter password",
+    submitHelp: "Press Enter after entering your username and password to sign in.",
+  },
+} as const;
+
+function SubmitButton({ locale }: { locale: Locale }) {
   const { pending } = useFormStatus();
+  const copy = formCopy[locale];
 
   return (
     <button
@@ -14,13 +41,14 @@ function SubmitButton() {
       className="min-h-14 w-full rounded-full bg-teal-300 px-5 py-3 text-lg font-bold text-slate-950 transition hover:bg-teal-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-200/60 disabled:cursor-wait disabled:opacity-80"
       aria-describedby="login-submit-help"
     >
-      {pending ? "Sedang log masuk..." : "Masuk portal"}
+      {pending ? copy.pending : copy.submit}
     </button>
   );
 }
 
-function LoadingOverlay() {
+function LoadingOverlay({ locale }: { locale: Locale }) {
   const { pending } = useFormStatus();
+  const copy = formCopy[locale];
 
   if (!pending) {
     return null;
@@ -31,9 +59,9 @@ function LoadingOverlay() {
       <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/10 bg-white/5 px-6 py-6 text-center text-white shadow-soft">
         <LoaderCircle className="h-8 w-8 animate-spin text-teal-200" />
         <div>
-          <p className="text-lg font-bold">Sedang log masuk</p>
+          <p className="text-lg font-bold">{copy.loadingTitle}</p>
           <p className="mt-1 text-sm text-slate-200">
-            Sila tunggu seketika sementara sistem membuka portal anda.
+            {copy.loadingBody}
           </p>
         </div>
       </div>
@@ -44,19 +72,22 @@ function LoadingOverlay() {
 export function LoginForm({
   action,
   error,
+  locale = "en",
 }: {
   action: (formData: FormData) => void | Promise<void>;
   error?: string;
+  locale?: Locale;
 }) {
   const errorId = error ? "login-form-error" : undefined;
+  const copy = formCopy[locale];
 
   return (
     <form action={action} className="relative mt-8 space-y-5" aria-describedby="login-submit-help">
-      <LoadingOverlay />
+      <LoadingOverlay locale={locale} />
 
       <div>
         <label htmlFor="identifier" className="mb-2 block text-base font-bold text-white">
-          Nombor rumah / Username
+          {copy.identifier}
         </label>
         <input
           id="identifier"
@@ -64,7 +95,7 @@ export function LoginForm({
           required
           autoComplete="username"
           autoFocus
-          placeholder="Contoh: A-12 atau admin"
+          placeholder={copy.identifierPlaceholder}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
           className="min-h-14 w-full rounded-3xl border border-slate-500 bg-slate-900 px-4 py-3 text-lg font-semibold text-white outline-none ring-0 placeholder:text-slate-300 focus:border-teal-300 focus:ring-4 focus:ring-teal-300/20"
@@ -73,13 +104,13 @@ export function LoginForm({
 
       <div>
         <label htmlFor="password" className="mb-2 block text-base font-bold text-white">
-          Kata laluan
+          {copy.password}
         </label>
         <PasswordInput
           id="password"
           name="password"
           required
-          placeholder="Masukkan kata laluan"
+          placeholder={copy.passwordPlaceholder}
           autoComplete="current-password"
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
@@ -99,9 +130,9 @@ export function LoginForm({
         </p>
       ) : null}
 
-      <SubmitButton />
+      <SubmitButton locale={locale} />
       <p id="login-submit-help" className="sr-only">
-        Tekan Enter selepas mengisi username dan kata laluan untuk masuk ke portal.
+        {copy.submitHelp}
       </p>
     </form>
   );

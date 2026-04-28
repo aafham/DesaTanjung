@@ -38,7 +38,7 @@ export function getAuthEnv(): AuthEnv {
 
 export async function gotoLogin(page: Page) {
   await page.goto("/login");
-  await expect(page.getByRole("heading", { name: "Akses akaun anda" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Access your account|Akses akaun anda/ })).toBeVisible();
 }
 
 export async function loginWithCredentials(
@@ -47,7 +47,7 @@ export async function loginWithCredentials(
   password: string,
 ) {
   await gotoLogin(page);
-  await page.getByLabel("Nombor rumah / Username").fill(identifier);
-  await page.getByLabel("Kata laluan").fill(password);
-  await page.getByRole("button", { name: "Masuk portal" }).click();
+  await page.getByLabel(/House number \/ Username|Nombor rumah \/ Username/).fill(identifier);
+  await page.getByLabel(/Password|Kata laluan/).fill(password);
+  await page.getByRole("button", { name: /Enter portal|Masuk portal/ }).click();
 }

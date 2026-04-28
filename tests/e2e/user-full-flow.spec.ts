@@ -1,8 +1,17 @@
 import { expect, test } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
 import { getAuthEnv, loginWithCredentials } from "./helpers/auth";
 import { createTinyPng } from "./helpers/files";
+import { getCurrentMonthProofPathForHouse } from "./helpers/supabase-admin";
 
 const env = getAuthEnv();
+const PAYMENT_BUCKET = "payment-proofs";
+
+function identifierToEmail(rawIdentifier: string) {
+  const normalized = rawIdentifier.trim().toLowerCase();
+  const slug = normalized.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return normalized === "admin" ? "admin@desatanjung.local" : `${slug}@desatanjung.local`;
+}
 
 async function uploadReceipt(page: Parameters<typeof test>[0]["page"]) {
   await loginWithCredentials(
@@ -51,6 +60,58 @@ test.describe.serial("full resident user flow", () => {
     await expect(page.getByRole("heading", { name: "Resident details", exact: true })).toBeVisible();
     await expect(page.getByLabel("House number / Username")).toHaveValue(env.residentIdentifier!);
     await expect(page.getByText(env.privacyResidentIdentifier!, { exact: true })).toHaveCount(0);
+  });
+
+  test("resident cannot directly download another resident receipt object", async ({ browser }) => {
+    test.skip(
+      !env.residentIdentifier ||
+        !env.residentPassword ||
+        !env.privacyResidentIdentifier ||
+        !env.privacyResidentPassword ||
+        env.residentIdentifier === env.privacyResidentIdentifier,
+      "Set two different resident E2E accounts to check receipt storage isolation",
+    );
+
+    const ownerPage = await browser.newPage();
+    await loginWithCredentials(ownerPage, env.residentIdentifier!, env.residentPassword!);
+    await expect(ownerPage).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+    await ownerPage.goto("/payments");
+    await ownerPage
+      .getByTestId("payment-receipt-input")
+      .setInputFiles(createTinyPng("resident-storage-owner.png"));
+    await ownerPage.getByTestId("submit-receipt-button").click();
+    await expect(
+      ownerPage.getByText("Payment receipt uploaded successfully and is waiting for committee review."),
+    ).toBeVisible();
+    await ownerPage.close();
+
+    const ownerProofPath = await getCurrentMonthProofPathForHouse(env.residentIdentifier!);
+    expect(ownerProofPath).toBeTruthy();
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    expect(supabaseUrl).toBeTruthy();
+    expect(anonKey).toBeTruthy();
+
+    const otherResidentClient = createClient(supabaseUrl!, anonKey!, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+    const { error: signInError } = await otherResidentClient.auth.signInWithPassword({
+      email: identifierToEmail(env.privacyResidentIdentifier!),
+      password: env.privacyResidentPassword!,
+    });
+
+    expect(signInError).toBeNull();
+
+    const { data, error } = await otherResidentClient.storage
+      .from(PAYMENT_BUCKET)
+      .download(ownerProofPath!);
+
+    expect(data).toBeNull();
+    expect(error?.message).toBeTruthy();
   });
 
   test("resident can save profile details without breaking dashboard access", async ({ page }) => {

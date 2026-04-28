@@ -52,3 +52,30 @@ export async function resetCurrentMonthPaymentForHouse(houseNumber: string) {
     throw error;
   }
 }
+
+export async function getCurrentMonthProofPathForHouse(houseNumber: string) {
+  const supabase = getAdminClient();
+  const month = getMonthKey();
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("id")
+    .eq("house_number", houseNumber)
+    .single();
+
+  if (userError || !user) {
+    throw userError ?? new Error(`Unable to find E2E resident ${houseNumber}.`);
+  }
+
+  const { data: payment, error } = await supabase
+    .from("payments")
+    .select("proof_url")
+    .eq("user_id", user.id)
+    .eq("month", month)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return payment?.proof_url ?? null;
+}

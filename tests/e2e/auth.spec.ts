@@ -7,9 +7,9 @@ test.describe("authentication", () => {
   test("shows the public login page", async ({ page }) => {
     await gotoLogin(page);
 
-    await expect(page.getByText("Portal bayaran bulanan komuniti.")).toBeVisible();
-    await expect(page.getByText("Maklumat log masuk lalai")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Masuk portal" })).toBeVisible();
+    await expect(page.getByText(/Community monthly payment portal|Portal bayaran bulanan komuniti/)).toBeVisible();
+    await expect(page.getByText(/Default login details|Maklumat log masuk lalai/)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Enter portal|Masuk portal/ })).toBeVisible();
   });
 
   test("allows an admin to sign in and open the dashboard", async ({ page }) => {

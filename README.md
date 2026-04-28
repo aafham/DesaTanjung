@@ -42,6 +42,7 @@ Nota penting:
 - Flow admin mutation yang telah disahkan secara E2E: `approve`, `reject`, `cash paid`, `settings update`, dan `QR upload`.
 - Flow user yang telah disahkan secara E2E: resident login, first-login change password, admin-route guard, upload resit, profile update, notification selepas approve, dan notification selepas reject.
 - Privacy E2E user kini guna dua akaun resident berbeza untuk pastikan page penduduk tidak memaparkan konteks akaun lain.
+- Storage privacy E2E kini sahkan resident kedua tidak boleh download object resit resident lain secara direct dari Supabase Storage.
 - Next dev origin warning untuk Playwright/localhost sudah dikemaskan melalui `allowedDevOrigins` di `next.config.ts`.
 - Playwright config kini dijalankan secara serial untuk kurangkan flaky login pada environment Supabase remote.
 
@@ -249,6 +250,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] storage `payment-proofs` di-scope kepada folder `auth.uid()` atau admin
   - [x] E2E guard memastikan resident tidak boleh buka route admin utama
   - [x] E2E dua resident berbeza memastikan dashboard, payments, notifications, dan profile tidak bocor konteks resident lain
+  - [x] E2E direct storage negative test memastikan resident lain tidak boleh download object resit yang bukan miliknya
 - [x] Empty / error / loading state user diperkemas:
   - [x] notification empty state ada ikon, tajuk, penerangan, dan hint tindakan
   - [x] payment history empty state lebih jelas untuk penduduk baru
@@ -259,6 +261,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Final copy/language cleanup user:
   - [x] warning, toast, empty notification, empty payment history, dan empty activity log diseragamkan BM/English
   - [x] copy penduduk biasa dibuat lebih jelas tentang apa yang perlu dibuat bila data kosong atau gagal dimuat
+  - [x] login page kini ikut pilihan bahasa BM/English termasuk hero, form, loading overlay, dan default login info
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
@@ -282,7 +285,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Privacy / access-control user fasa seterusnya:
   - [ ] run semula `supabase/schema.sql` di Supabase live dan semak policy aktif selepas deploy besar
   - [ ] semak Storage object path sebenar selepas upload live supaya semua resit kekal dalam folder user sendiri
-  - [ ] tambah direct storage/object negative test jika Supabase test harness sudah ada token dua resident berbeza
+  - [x] tambah direct storage/object negative test dengan token dua resident berbeza
 
 ### Checklist admin
 
@@ -462,7 +465,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Toggle bahasa `BM / English` ditambah di bawah calendar untuk user dan admin
 - [x] Default bahasa ditetapkan kepada English, dengan BM sebagai pilihan
 - [x] First-time `Change password` ada language picker sebelum form password
-- [x] Copy resident-facing diseragamkan untuk `Dashboard`, `Payments`, `Notifications`, `Profile`, status badge, pagination, upload resit, timeline, dan history
+- [x] Copy resident-facing diseragamkan untuk `Login`, `Dashboard`, `Payments`, `Notifications`, `Profile`, status badge, pagination, upload resit, timeline, dan history
 - [x] Empty/error/loading state user diseragamkan untuk copy BM/English yang lebih mudah difahami
 - [x] Konsistensi font seluruh app
 - [x] Focus state global diperkemas
@@ -482,7 +485,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Contrast audit kecil pada komponen user yang masih berbaki
 - [x] Semakan visual/copy untuk empty state, error state, dan loading state pada page user
 - [ ] Screenshot audit UI untuk page user utama
-- [ ] Sambung sokongan dwi-bahasa penuh untuk page `Login`
+- [x] Sambung sokongan dwi-bahasa penuh untuk page `Login`
 
 #### UI interface admin
 
