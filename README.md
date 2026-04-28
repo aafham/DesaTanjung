@@ -580,7 +580,65 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [ ] search data
 - [ ] Kuatkan typing untuk query builder helper supaya tidak bergantung pada `any`
 
+### Checklist owner / perlu akses Supabase, Vercel, atau live site
+
+Bahagian ini memang perlu dibuat oleh owner project kerana perlukan akses dashboard Supabase, dashboard Vercel, data production, atau live browser session. Codex boleh sediakan code, SQL, SOP, dan arahan, tetapi tidak patut tanda siap sehingga owner sahkan di environment sebenar.
+
+#### Supabase owner tasks
+
+- [ ] Rotate `SUPABASE_SERVICE_ROLE_KEY` jika key pernah terdedah di chat, screenshot, terminal log, atau repo
+- [ ] Run semula [supabase/schema.sql](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\supabase\schema.sql) di Supabase SQL Editor selepas perubahan schema besar
+- [ ] Semak table `users`, `payments`, `notifications`, `payment_audit_logs`, dan `user_activity_logs` ada RLS policy aktif
+- [ ] Semak bucket `payment-proofs` wujud
+- [ ] Semak bucket `app-assets` wujud
+- [ ] Upload satu resit test di live/staging dan pastikan object path berada dalam folder user sendiri
+- [ ] Run [supabase/query-plan-checklist.sql](C:\Users\aafha\OneDrive\Documents\GitHub\DesaTanjung\supabase\query-plan-checklist.sql) bila payment/notification/log sebenar sudah banyak
+- [ ] Semak Supabase backup / Point-in-Time Recovery ikut plan Supabase yang digunakan sebelum portal dipakai ramai penduduk
+
+#### Vercel owner tasks
+
+- [ ] Pastikan `NEXT_PUBLIC_SUPABASE_URL` di Vercel sama dengan project Supabase live
+- [ ] Pastikan `NEXT_PUBLIC_SUPABASE_ANON_KEY` di Vercel sama dengan project Supabase live
+- [ ] Pastikan `SUPABASE_SERVICE_ROLE_KEY` di Vercel ialah server-only dan ditanda `Sensitive`
+- [ ] Selepas ubah environment variable, redeploy production supaya value baru digunakan
+- [ ] Semak Deployment Logs selepas deploy production
+- [ ] Semak Runtime Logs jika ada error semasa admin/user guna portal live
+
+#### Portal setup owner tasks
+
+- [ ] Isi monthly fee sebenar di `Admin > Settings`
+- [ ] Isi due day sebenar di `Admin > Settings`
+- [ ] Isi bank name, account name, dan account number sebenar
+- [ ] Upload QR bayaran final dan pastikan bukan placeholder
+- [ ] Cipta sekurang-kurangnya dua akaun admin berasingan jika lebih daripada seorang AJK akan guna sistem
+- [ ] Import/cipta akaun penduduk sebenar dengan nombor rumah, nama, alamat, dan nombor telefon jika ada
+
+#### Live smoke test owner tasks
+
+- [ ] Admin boleh login di production
+- [ ] Resident boleh login di production
+- [ ] Resident boleh pilih bahasa `BM / English`
+- [ ] Resident boleh tukar password first login
+- [ ] Resident boleh upload resit di production
+- [ ] Admin boleh approve dan reject resit di production
+- [ ] Admin boleh mark cash paid di production
+- [ ] Resident nampak notifikasi selepas approve / reject
+- [ ] Resident boleh update profile
+- [ ] Report bulanan boleh print / download snapshot
+- [ ] Export CSV `Residents` boleh dimuat turun
+- [ ] Resident tidak boleh buka route `/admin`
+
+#### Operasi selepas live
+
+- [ ] Jalankan backup/export bulanan selepas kutipan ditutup
+- [ ] Run prune activity 90 hari dari `Health` hanya selepas laporan/export bulanan disimpan
+- [ ] Run prune server action error 30 hari dari `Health` jika error monitor mula penuh
+- [ ] Semak Health page selepas deploy besar atau selepas update Supabase/Vercel
+- [ ] Rotate admin ikut SOP bila jawatankuasa bertukar
+
 ### Checklist go-live / live environment
+
+Nota: item di bawah kebanyakannya perlu disahkan oleh owner di Supabase, Vercel, atau production. Senarai penuh yang owner perlu buat sendiri ada di seksyen `Checklist owner / perlu akses Supabase, Vercel, atau live site`.
 
 #### Environment dan database
 
