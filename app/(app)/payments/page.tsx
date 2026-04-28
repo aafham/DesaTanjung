@@ -8,7 +8,7 @@ import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
 import { ResidentNotificationList } from "@/components/resident-notification-list";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getUserDashboardData } from "@/lib/data";
+import { getResidentPaymentPageData } from "@/lib/data";
 import { getLocale } from "@/lib/i18n";
 
 const paymentsCopy = {
@@ -100,7 +100,7 @@ export default async function PaymentsPage() {
   const locale = await getLocale();
   const copy = paymentsCopy[locale];
   const { currentMonthLabel, currentPayment, dueDateLabel, notifications, profile, settings, warnings } =
-    await getUserDashboardData();
+    await getResidentPaymentPageData();
   const usingPlaceholderQr = settings.payment_qr_url.includes("placehold.co");
   const statusHelperText = copy.statusHelper[currentPayment.display_status];
 
@@ -305,7 +305,7 @@ export default async function PaymentsPage() {
             {copy.allNotifications}
           </Link>
         </div>
-        <ResidentNotificationList notifications={notifications.slice(0, 4)} compact locale={locale} />
+        <ResidentNotificationList notifications={notifications} compact locale={locale} />
       </section>
     </div>
   );

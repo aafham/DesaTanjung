@@ -388,6 +388,69 @@ export async function getUserDashboardData(historyPage = 1, historyPageSize = 6)
   };
 }
 
+export async function getResidentPaymentPageData() {
+  const profile = await requireUserProfile();
+
+  if (profile.role === "admin") {
+    redirect("/admin");
+  }
+
+  if (profile.must_change_password) {
+    redirect("/change-password");
+  }
+
+  await ensureCurrentMonthPayment(profile.id);
+
+  const supabase = await createClient();
+  const settings = await getAppSettings();
+  const currentMonth = getMonthKey();
+  const warnings: string[] = [...getSystemHealthWarnings(settings)];
+
+  const [
+    { data: currentPayment, error: currentPaymentError },
+    { data: notifications, error: notificationsError },
+  ] = await Promise.all([
+    supabase
+      .from("payments")
+      .select(
+        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
+      )
+      .eq("user_id", profile.id)
+      .eq("month", currentMonth)
+      .single(),
+    supabase
+      .from("notifications")
+      .select("id, user_id, payment_id, message, is_read, scope, created_at")
+      .eq("user_id", profile.id)
+      .eq("scope", "resident")
+      .order("created_at", { ascending: false })
+      .limit(4),
+  ]);
+
+  if (currentPaymentError) {
+    warnings.push(createWarningMessage("Current payment", currentPaymentError.message));
+  }
+
+  if (notificationsError) {
+    warnings.push(createWarningMessage("Notifications", notificationsError.message));
+  }
+
+  return {
+    currentMonth,
+    currentMonthLabel: formatMonthLabel(currentMonth),
+    dueDateLabel: formatDateLabel(getDueDateForMonth(currentMonth, settings.due_day)),
+    currentPayment: enrichPaymentRecord(
+      (currentPayment as PaymentRecord | null) ?? null,
+      currentMonth,
+      settings.due_day,
+    ) as ResidentPaymentRecord,
+    notifications: (notifications as NotificationRecord[] | null) ?? [],
+    profile,
+    settings,
+    warnings,
+  };
+}
+
 export async function getAdminDashboardData(filterMonth?: string) {
   const profile = await requireUserProfile();
 
@@ -616,13 +679,15 @@ export async function getResidentNotificationsPage(userId: string, page = 1, pag
   };
 }
 
-export async function getPaymentAuditLogs(paymentId: string) {
+export async function getPaymentAuditLogs(paymentId: string, limit = 8) {
   const supabase = await createClient();
+  const safeLimit = Math.min(Math.max(1, limit), 24);
   const { data, error } = await supabase
     .from("payment_audit_logs")
     .select("id, payment_id, user_id, actor_id, action, message, created_at")
     .eq("payment_id", paymentId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(safeLimit);
 
   if (error) {
     return [];

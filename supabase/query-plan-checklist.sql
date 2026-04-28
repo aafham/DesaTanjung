@@ -40,7 +40,16 @@ where user_id = auth.uid()
 order by created_at desc
 limit 10 offset 0;
 
--- 5. Resident payment history
+-- 5. Resident payment page current month only
+-- Checks lightweight /payments data loader. Expected: exact user/month index lookup.
+explain analyze
+select id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason
+from public.payments
+where user_id = auth.uid()
+  and month = to_char(timezone('utc', now()), 'YYYY-MM')
+limit 1;
+
+-- 6. Resident payment history
 -- Checks the paged dashboard history query. Expected: index usage on payments.user_id/month.
 explain analyze
 select id, user_id, month, status, proof_url, updated_at
@@ -49,7 +58,16 @@ where user_id = auth.uid()
 order by month desc
 limit 6 offset 0;
 
--- 6. Resident dashboard latest user activity
+-- 7. Resident dashboard latest payment audit timeline
+-- Checks the latest payment timeline area. Expected: index usage on payment_audit_logs.user_id/created_at.
+explain analyze
+select id, payment_id, user_id, actor_id, action, message, created_at
+from public.payment_audit_logs
+where user_id = auth.uid()
+order by created_at desc
+limit 8;
+
+-- 8. Resident dashboard latest user activity
 -- Checks the latest payment timeline area. Expected: index usage on user_activity_logs.user_id/created_at.
 explain analyze
 select id, user_id, action, message, created_at
@@ -58,7 +76,7 @@ where user_id = auth.uid()
 order by created_at desc
 limit 8;
 
--- 7. Resident compact notifications on dashboard/payments
+-- 9. Resident compact notifications on dashboard/payments
 -- Checks the small inbox previews. Expected: same notification index, low rows returned.
 explain analyze
 select id, user_id, payment_id, message, is_read, scope, created_at
@@ -68,7 +86,7 @@ where user_id = auth.uid()
 order by created_at desc
 limit 4;
 
--- 8. Resident announcements feed
+-- 10. Resident announcements feed
 -- Checks notice feed query. Expected: index or small ordered scan by published_at.
 explain analyze
 select id, title, body, is_pinned, published_at
@@ -77,7 +95,7 @@ where is_published = true
 order by is_pinned desc, published_at desc
 limit 10;
 
--- 9. Production server action error monitor
+-- 11. Production server action error monitor
 explain analyze
 select id, actor_id, action, route, message, error_message, created_at
 from public.server_action_errors

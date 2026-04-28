@@ -241,6 +241,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Scalability user bila history makin panjang:
   - [x] payment history user guna `range` + `count` dari database
   - [x] notification inbox penuh guna `range` + `count` dari database
+  - [x] `/payments` guna data loader ringan khas dan tidak lagi load history/audit/announcements dashboard yang tidak diperlukan
+  - [x] helper audit log payment dihadkan secara default supaya komponen ringkas tidak tarik log terlalu panjang
   - [x] query plan helper dikembangkan untuk notification inbox, payment history, activity timeline, compact inbox preview, dan announcements feed
 - [x] Privacy / access-control user asas:
   - [x] resident dashboard, payment history, notification inbox, dan profile action di-scope kepada `profile.id`
@@ -280,6 +282,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] profile
 - [ ] Scalability user fasa seterusnya:
   - [x] sediakan query plan checklist untuk page user utama
+  - [x] asingkan data loader `/payments` daripada loader dashboard penuh supaya page bayaran kekal ringan
+  - [x] hadkan audit log helper kepada jumlah kecil untuk paparan ringkas
   - [ ] run `supabase/query-plan-checklist.sql` di Supabase SQL Editor selepas rekod payment/notification sebenar makin banyak
   - [ ] pertimbangkan archive view berasingan jika penduduk mahu lihat rekod bertahun-tahun dalam satu carian khas
 - [ ] Privacy / access-control user fasa seterusnya:
@@ -561,6 +565,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Playwright dipecahkan kepada projek `chromium` dan `mobile-smoke` supaya mutation test tidak digandakan pada viewport mobile
 - [x] Script `setup:e2e:residents` ditambah untuk cipta/reset akaun resident biasa dan payment resident disposable
 - [x] Script `setup:e2e:first-login` ditambah untuk cipta/reset akaun first-login disposable
+- [x] Script `verify:live-ready` ditambah untuk run lint, build, auth E2E, privacy E2E, dan storage privacy check secara berurutan sebelum deploy/live
 
 #### Masih boleh dibuat
 
@@ -576,6 +581,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 
 ### Checklist go-live / live environment
 
+#### Environment dan database
+
 - [ ] `NEXT_PUBLIC_SUPABASE_URL` betul
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` betul
 - [ ] `SUPABASE_SERVICE_ROLE_KEY` betul, server-only, dan ditanda `Sensitive` di Vercel
@@ -583,13 +590,34 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] `supabase/schema.sql` versi terbaru sudah dirun
 - [ ] bucket `payment-proofs` wujud
 - [ ] bucket `app-assets` wujud
+
+#### Setup portal sebelum buka kepada penduduk
+
 - [ ] monthly fee sudah diisi
+- [ ] due day sudah betul untuk bulan semasa
+- [ ] bank name, account name, dan account number sudah betul
 - [ ] QR bukan placeholder
+- [ ] sekurang-kurangnya dua akaun admin berasingan sudah tersedia jika lebih daripada seorang AJK akan guna
+- [ ] semua akaun penduduk sebenar sudah ada nombor rumah, nama, alamat, dan nombor telefon jika boleh
+
+#### Smoke test manual live
+
 - [ ] admin user boleh login
 - [ ] resident user boleh login
+- [ ] resident boleh tukar bahasa `BM / English`
 - [ ] upload resit berfungsi di live
 - [ ] admin approve / reject berfungsi di live
 - [ ] admin mark cash paid berfungsi di live
+- [ ] resident terima notifikasi selepas approve / reject
+- [ ] resident boleh update profile
+- [ ] report bulanan boleh print / download snapshot
+- [ ] export CSV `Residents` boleh dimuat turun
+- [ ] resident tidak boleh buka route `/admin`
+
+#### Command check sebelum deploy besar
+
+- [ ] run `npm run verify:live-ready` pada local/staging environment yang guna akaun disposable
+- [ ] run `npm run build` sekali lagi sebelum push jika `verify:live-ready` tidak dijalankan penuh
 
 ## Cara login
 
@@ -785,6 +813,21 @@ npm run lint
 npm run build
 ```
 
+## Live-ready verification
+
+Run ini sebelum deploy besar atau sebelum buka portal kepada penduduk sebenar.
+Ia menjalankan lint, build, auth E2E, privacy E2E dua resident, dan direct storage privacy check secara berurutan supaya Playwright tidak berebut port.
+
+```bash
+npm run verify:live-ready
+```
+
+Nota:
+
+- guna environment disposable/staging jika test upload resit tidak mahu kacau data sebenar
+- pastikan `npm run setup:e2e:residents` sudah dijalankan sebelum verify jika akaun E2E baru dibuat atau password berubah
+- script ini lebih berat daripada `npm run build`, jadi guna untuk semakan sebelum deploy penting, bukan setiap kali edit kecil
+
 ## Cara guna website
 
 ### Untuk user / penduduk
@@ -839,11 +882,32 @@ Nota operasi admin:
 ### SOP bulanan AJK
 
 1. Sebelum kutipan dibuka, semak `Settings` untuk QR, bank info, monthly fee, dan due day.
-2. Semak `Health` untuk missing phone, duplicate payment, dan readiness sistem.
+2. Semak `Health` untuk missing phone, duplicate payment, storage bucket, dan readiness sistem.
 3. Semasa kutipan berjalan, guna `Approvals` untuk approve/reject resit dan `Residents` untuk cash paid atau reminder.
-4. Selepas due date, export CSV dari `Residents`, print/download snapshot dari `Reports`, dan simpan backup laporan bulanan.
-5. Selepas laporan disimpan, run `Run 90-day prune` di `Health` jika mahu buang global activity log lama.
-6. Bila jawatankuasa bertukar, cipta akaun admin baru di `Users` dan elakkan berkongsi akaun lama.
+4. Selepas due date, export CSV dari `Residents` ikut bulan semasa dan simpan fail dengan nama seperti `residents-2026-04.csv`.
+5. Buka `Reports`, download snapshot atau print report, dan simpan bersama CSV bulanan.
+6. Simpan backup bulanan di tempat yang AJK seterusnya boleh akses, contohnya folder cloud rasmi komuniti.
+7. Selepas laporan disimpan, run `Run 90-day prune` di `Health` jika mahu buang global activity log lama.
+8. Bila jawatankuasa bertukar, cipta akaun admin baru di `Users` dan elakkan berkongsi akaun lama.
+
+### Backup / export SOP
+
+1. Sebelum buat perubahan besar pada data penduduk, export CSV dari `Residents`.
+2. Selepas kutipan bulan ditutup, simpan tiga benda: CSV `Residents`, snapshot/print `Reports`, dan catatan isu penting dari `Activity`.
+3. Jangan run prune activity sebelum CSV/report bulanan disimpan.
+4. Jangan delete akaun penduduk sebenar tanpa export dahulu; jika penduduk pindah, lebih selamat kemas kini status/nota operasi dahulu.
+5. Jika perlu semak bukti lama, guna `Resident detail` kerana payment history dan payment audit tidak dipadam oleh prune global activity.
+6. Cadangan nama folder backup: `Desa Tanjung/YYYY-MM`, contoh `Desa Tanjung/2026-04`.
+
+### Sebelum buka portal kepada penduduk sebenar
+
+1. Run `npm run verify:live-ready` pada local/staging dengan akaun disposable.
+2. Di production, admin login dan semak `Health` tidak ada launch blocker.
+3. Di production, semak `Settings`: QR final, yuran bulanan, due day, dan bank info.
+4. Cuba login satu akaun resident sebenar atau test resident production.
+5. Cuba upload satu resit kecil, approve/reject dari admin, dan pastikan resident nampak notifikasi.
+6. Download report snapshot dan CSV untuk pastikan export berfungsi.
+7. Pastikan sekurang-kurangnya seorang admin lain boleh login jika admin utama tidak tersedia.
 
 ### Emergency jika tersilap update / delete
 
@@ -906,6 +970,8 @@ Nota:
 - page `Notifications` guna server-side pagination, 10 rekod setiap page
 - dashboard user hanya paparkan ringkasan notifikasi terbaru supaya page utama kekal ringan
 - payment history user guna pagination server-side, 6 rekod setiap page
+- page `Payments` guna loader khas yang hanya ambil rekod bulan semasa dan 4 notifikasi terbaru
+- audit log ringkas dihadkan kepada rekod terbaru sahaja; history penuh masih boleh disemak melalui paparan detail/pagination yang disediakan
 
 ## Loading states yang ada
 
@@ -940,6 +1006,7 @@ npm run dev
 npm run build
 npm run start
 npm run lint
+npm run verify:live-ready
 npm run setup:e2e:residents
 npm run setup:e2e:first-login
 npm run test:e2e
