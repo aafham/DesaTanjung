@@ -78,7 +78,7 @@ export default async function ProfilePage({
 
   return (
     <div className="space-y-6">
-      <PageToast message={params.message} error={params.error} />
+      <PageToast message={params.message} error={params.error} locale={locale} />
       <section>
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.eyebrow}</p>
         <h2 className="mt-2 font-display text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">

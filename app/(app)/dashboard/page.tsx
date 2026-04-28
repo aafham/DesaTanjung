@@ -116,7 +116,7 @@ export default async function DashboardPage({
   return (
     <div className="space-y-6">
       <LiveRefresh />
-      <DataWarning warnings={warnings} />
+      <DataWarning warnings={warnings} locale={locale} />
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Card
           className="border-slate-900 p-5 text-white sm:p-6"

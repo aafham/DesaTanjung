@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BellRing, CheckCircle2, Clock3, Megaphone, ShieldAlert, Wallet } from "lucide-react";
+import { BellRing, CheckCircle2, Clock3, Inbox, Megaphone, ShieldAlert, Wallet } from "lucide-react";
 import {
   markResidentNotificationsReadAction,
   markSingleResidentNotificationReadAction,
@@ -35,6 +35,10 @@ const notificationCopy = {
     oldNote: "Notifikasi lama boleh dibuka melalui butang halaman seterusnya.",
     emptyAll: "Belum ada notifikasi penduduk. Status semakan resit dan peringatan bayaran akan muncul di sini.",
     emptyFilter: "Tiada notifikasi sepadan dengan tapisan semasa.",
+    emptyTitle: "Inbox masih kosong",
+    emptyFilterTitle: "Tiada padanan",
+    emptyHelp: "Bila resit diluluskan, ditolak, atau ada makluman penting, notifikasi akan muncul di sini.",
+    emptyFilterHelp: "Cuba pilih tapisan Semua untuk lihat notifikasi lain.",
     new: "Baharu",
     read: "Baca",
   },
@@ -57,6 +61,10 @@ const notificationCopy = {
     oldNote: "Older notifications can be opened using the next page button.",
     emptyAll: "No resident notifications yet. Receipt review status and payment reminders will appear here.",
     emptyFilter: "No notifications match the current filter.",
+    emptyTitle: "Inbox is empty",
+    emptyFilterTitle: "No matches",
+    emptyHelp: "When a receipt is approved, rejected, or an important update is posted, it will appear here.",
+    emptyFilterHelp: "Try choosing the All filter to see other notifications.",
     new: "New",
     read: "Read",
   },
@@ -286,10 +294,19 @@ export function ResidentNotificationList({
 
       <div className="mt-5 space-y-3">
         {filteredNotifications.length === 0 ? (
-          <div className="rounded-3xl bg-slate-50 px-4 py-6 text-base text-muted">
-            {notifications.length === 0
-              ? copy.emptyAll
-              : copy.emptyFilter}
+          <div className="rounded-4xl border border-dashed border-line bg-slate-50 px-5 py-8 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-primary">
+              <Inbox className="h-6 w-6" />
+            </div>
+            <p className="mt-4 font-display text-2xl font-bold text-slate-950">
+              {notifications.length === 0 ? copy.emptyTitle : copy.emptyFilterTitle}
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-base leading-7 text-muted">
+              {notifications.length === 0 ? copy.emptyAll : copy.emptyFilter}
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-slate-600">
+              {notifications.length === 0 ? copy.emptyHelp : copy.emptyFilterHelp}
+            </p>
           </div>
         ) : (
           paginatedNotifications.map((notification) => {

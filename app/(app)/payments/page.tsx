@@ -107,7 +107,7 @@ export default async function PaymentsPage() {
   return (
     <div className="space-y-6">
       <LiveRefresh />
-      <DataWarning warnings={warnings} />
+      <DataWarning warnings={warnings} locale={locale} />
       <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="space-y-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

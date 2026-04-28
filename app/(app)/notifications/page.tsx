@@ -32,7 +32,7 @@ export default async function ResidentNotificationsPage({
 
   return (
     <div className="space-y-6">
-      <DataWarning warnings={warnings} />
+      <DataWarning warnings={warnings} locale={locale} />
 
       <section>
         <p className="text-sm font-bold uppercase tracking-[0.14em] text-primary">{copy.eyebrow}</p>

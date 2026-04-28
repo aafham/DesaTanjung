@@ -7,6 +7,8 @@ export type AuthEnv = {
   residentPassword?: string;
   paymentResidentIdentifier?: string;
   paymentResidentPassword?: string;
+  privacyResidentIdentifier?: string;
+  privacyResidentPassword?: string;
   cashResidentHouseNumber?: string;
   allowSettingsMutation?: boolean;
   firstLoginIdentifier?: string;
@@ -22,6 +24,10 @@ export function getAuthEnv(): AuthEnv {
     residentPassword: process.env.E2E_RESIDENT_PASSWORD,
     paymentResidentIdentifier: process.env.E2E_PAYMENT_RESIDENT_IDENTIFIER,
     paymentResidentPassword: process.env.E2E_PAYMENT_RESIDENT_PASSWORD,
+    privacyResidentIdentifier:
+      process.env.E2E_PRIVACY_RESIDENT_IDENTIFIER ?? process.env.E2E_CASH_RESIDENT_HOUSE_NUMBER,
+    privacyResidentPassword:
+      process.env.E2E_PRIVACY_RESIDENT_PASSWORD ?? process.env.E2E_RESIDENT_PASSWORD,
     cashResidentHouseNumber: process.env.E2E_CASH_RESIDENT_HOUSE_NUMBER,
     allowSettingsMutation: process.env.E2E_ALLOW_SETTINGS_MUTATION === "true",
     firstLoginIdentifier: process.env.E2E_FIRST_LOGIN_IDENTIFIER,

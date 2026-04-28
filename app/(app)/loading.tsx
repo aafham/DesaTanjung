@@ -12,6 +12,9 @@ export default function Loading() {
         <p className="mt-3 text-base leading-8 text-slate-600">
           Please wait a moment while the system prepares the next screen.
         </p>
+        <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
+          Memuatkan maklumat terkini. Sila tunggu sebentar.
+        </p>
       </div>
     </div>
   );

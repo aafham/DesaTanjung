@@ -4,10 +4,13 @@ import type { PaginationMeta, ResidentPaymentRecord } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { ReceiptText } from "lucide-react";
 
 const historyCopy = {
   ms: {
     empty: "Belum ada rekod bayaran. Resit yang dimuat naik dan keputusan jawatankuasa akan muncul di sini.",
+    emptyTitle: "Belum ada sejarah bayaran",
+    emptyHelp: "Selepas anda muat naik resit atau jawatankuasa rekod bayaran tunai, rekod bulan tersebut akan muncul di sini.",
     showing: "Memaparkan",
     of: "daripada",
     records: "rekod bayaran.",
@@ -22,6 +25,8 @@ const historyCopy = {
   },
   en: {
     empty: "No payment records yet. Uploaded receipts and committee decisions will appear here.",
+    emptyTitle: "No payment history yet",
+    emptyHelp: "After you upload a receipt or the committee records a cash payment, that monthly record will appear here.",
     showing: "Showing",
     of: "of",
     records: "payment records.",
@@ -49,8 +54,15 @@ export function PaymentHistoryTable({
 
   if (history.length === 0) {
     return (
-      <div className="rounded-4xl border border-line bg-slate-50 px-5 py-8 text-base font-medium text-muted">
-        {copy.empty}
+      <div className="rounded-4xl border border-dashed border-line bg-slate-50 px-5 py-8 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-primary">
+          <ReceiptText className="h-6 w-6" />
+        </div>
+        <p className="mt-4 font-display text-2xl font-bold text-slate-950">{copy.emptyTitle}</p>
+        <p className="mx-auto mt-2 max-w-lg text-base leading-7 text-muted">{copy.empty}</p>
+        <p className="mx-auto mt-2 max-w-lg text-sm font-semibold leading-6 text-slate-600">
+          {copy.emptyHelp}
+        </p>
       </div>
     );
   }

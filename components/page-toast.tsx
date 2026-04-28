@@ -2,16 +2,35 @@
 
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, X } from "lucide-react";
+import type { Locale } from "@/lib/i18n";
+
+const toastCopy = {
+  ms: {
+    error: "Perlu tindakan",
+    success: "Berjaya",
+    dismissError: "Tutup notifikasi ralat",
+    dismissSuccess: "Tutup notifikasi berjaya",
+  },
+  en: {
+    error: "Action needed",
+    success: "Success",
+    dismissError: "Dismiss error notification",
+    dismissSuccess: "Dismiss success notification",
+  },
+} as const;
 
 export function PageToast({
   message,
   error,
+  locale = "en",
 }: {
   message?: string;
   error?: string;
+  locale?: Locale;
 }) {
   const content = error ?? message;
   const [visible, setVisible] = useState(Boolean(content));
+  const copy = toastCopy[locale];
 
   useEffect(() => {
     setVisible(Boolean(content));
@@ -49,7 +68,7 @@ export function PageToast({
         </div>
         <div className="flex-1">
           <p className="text-sm font-bold uppercase tracking-[0.12em]">
-            {isError ? "Action needed" : "Success"}
+            {isError ? copy.error : copy.success}
           </p>
           <p className="mt-1 text-base">{decodeURIComponent(content)}</p>
         </div>
@@ -57,7 +76,7 @@ export function PageToast({
           type="button"
           onClick={() => setVisible(false)}
           className="rounded-full p-1 text-current/70 transition hover:bg-black/5 hover:text-current"
-          aria-label={isError ? "Dismiss error notification" : "Dismiss success notification"}
+          aria-label={isError ? copy.dismissError : copy.dismissSuccess}
         >
           <X className="h-4 w-4" />
         </button>

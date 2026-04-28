@@ -38,6 +38,15 @@ function getPreparedAccounts() {
       name: "E2E Payment Resident",
       address: "Disposable E2E payment account",
     },
+    {
+      identifier: process.env.E2E_PRIVACY_RESIDENT_IDENTIFIER ?? process.env.E2E_CASH_RESIDENT_HOUSE_NUMBER,
+      password:
+        process.env.E2E_PRIVACY_RESIDENT_PASSWORD ??
+        process.env.E2E_RESIDENT_PASSWORD ??
+        "password",
+      name: "E2E Privacy Resident",
+      address: "Disposable E2E privacy account",
+    },
   ].filter((account) => account.identifier && account.password);
 
   const uniqueAccounts = new Map();

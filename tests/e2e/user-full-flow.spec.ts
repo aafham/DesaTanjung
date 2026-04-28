@@ -22,6 +22,37 @@ async function uploadReceipt(page: Parameters<typeof test>[0]["page"]) {
 }
 
 test.describe.serial("full resident user flow", () => {
+  test("resident pages only show the signed-in resident context", async ({ page }) => {
+    test.skip(
+      !env.residentIdentifier ||
+        !env.residentPassword ||
+        !env.privacyResidentIdentifier ||
+        !env.privacyResidentPassword ||
+        env.residentIdentifier === env.privacyResidentIdentifier,
+      "Set two different resident E2E accounts to check cross-resident privacy",
+    );
+
+    await loginWithCredentials(page, env.residentIdentifier!, env.residentPassword!);
+    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+
+    await expect(page.getByText(`Signed in as ${env.residentIdentifier!}`)).toBeVisible();
+    await expect(page.getByText(`Signed in as ${env.privacyResidentIdentifier!}`)).toHaveCount(0);
+    await expect(page.getByText(env.privacyResidentIdentifier!, { exact: true })).toHaveCount(0);
+
+    await page.goto("/payments");
+    await expect(page.getByText(`Payment guide for ${env.residentIdentifier!}`)).toBeVisible();
+    await expect(page.getByText(`Payment guide for ${env.privacyResidentIdentifier!}`)).toHaveCount(0);
+
+    await page.goto("/notifications");
+    await expect(page.getByRole("heading", { name: "Resident inbox", exact: true })).toBeVisible();
+    await expect(page.getByText(env.privacyResidentIdentifier!, { exact: true })).toHaveCount(0);
+
+    await page.goto("/profile");
+    await expect(page.getByRole("heading", { name: "Resident details", exact: true })).toBeVisible();
+    await expect(page.getByLabel("House number / Username")).toHaveValue(env.residentIdentifier!);
+    await expect(page.getByText(env.privacyResidentIdentifier!, { exact: true })).toHaveCount(0);
+  });
+
   test("resident can save profile details without breaking dashboard access", async ({ page }) => {
     test.skip(
       !env.residentIdentifier || !env.residentPassword,
@@ -32,7 +63,7 @@ test.describe.serial("full resident user flow", () => {
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
 
     await page.goto("/profile");
-    await expect(page.getByRole("heading", { name: "Resident details" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Resident details", exact: true })).toBeVisible();
 
     const name = await page.getByLabel("Owner name").inputValue();
     const address = await page.getByLabel("House address").inputValue();

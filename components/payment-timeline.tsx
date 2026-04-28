@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock3, UploadCloud, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, History, UploadCloud, XCircle } from "lucide-react";
 import type { PaginationMeta, PaymentAuditLog, ResidentPaymentRecord } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 import { CompactServerPaginationControls } from "@/components/ui/compact-server-pagination-controls";
@@ -24,6 +24,8 @@ const timelineCopy = {
     from: "daripada",
     records: "rekod aktiviti.",
     empty: "Belum ada aktiviti.",
+    emptyTitle: "Aktiviti belum bermula",
+    emptyHelp: "Log akan muncul selepas resit dimuat naik, bayaran disemak, atau jawatankuasa mengemas kini status.",
   },
   en: {
     record: "Transfer record",
@@ -44,6 +46,8 @@ const timelineCopy = {
     from: "of",
     records: "activity records.",
     empty: "No activity yet.",
+    emptyTitle: "Activity has not started",
+    emptyHelp: "Logs will appear after a receipt is uploaded, a payment is reviewed, or the committee updates the status.",
   },
 } as const;
 
@@ -140,7 +144,16 @@ export function PaymentTimeline({
         </div>
         <div className="mt-3 space-y-3">
           {auditLogs.length === 0 ? (
-            <p className="text-base font-medium text-muted">{copy.empty}</p>
+            <div className="rounded-3xl border border-dashed border-line bg-white px-4 py-6 text-center">
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-50 text-primary">
+                <History className="h-5 w-5" />
+              </div>
+              <p className="mt-3 text-lg font-bold text-slate-950">{copy.emptyTitle}</p>
+              <p className="mx-auto mt-1 max-w-md text-base leading-7 text-muted">{copy.empty}</p>
+              <p className="mx-auto mt-1 max-w-md text-sm font-semibold leading-6 text-slate-600">
+                {copy.emptyHelp}
+              </p>
+            </div>
           ) : (
             auditLogs.map((log) => (
               <div key={log.id} className="rounded-2xl bg-white px-4 py-3">

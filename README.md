@@ -41,6 +41,7 @@ Nota penting:
 - Mobile smoke coverage ditambah untuk page penting user dan admin melalui projek Playwright `mobile-smoke`.
 - Flow admin mutation yang telah disahkan secara E2E: `approve`, `reject`, `cash paid`, `settings update`, dan `QR upload`.
 - Flow user yang telah disahkan secara E2E: resident login, first-login change password, admin-route guard, upload resit, profile update, notification selepas approve, dan notification selepas reject.
+- Privacy E2E user kini guna dua akaun resident berbeza untuk pastikan page penduduk tidak memaparkan konteks akaun lain.
 - Next dev origin warning untuk Playwright/localhost sudah dikemaskan melalui `allowedDevOrigins` di `next.config.ts`.
 - Playwright config kini dijalankan secara serial untuk kurangkan flaky login pada environment Supabase remote.
 
@@ -247,6 +248,17 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] RLS schema menyekat `users`, `payments`, `notifications`, `payment_audit_logs`, dan `user_activity_logs` kepada owner atau admin
   - [x] storage `payment-proofs` di-scope kepada folder `auth.uid()` atau admin
   - [x] E2E guard memastikan resident tidak boleh buka route admin utama
+  - [x] E2E dua resident berbeza memastikan dashboard, payments, notifications, dan profile tidak bocor konteks resident lain
+- [x] Empty / error / loading state user diperkemas:
+  - [x] notification empty state ada ikon, tajuk, penerangan, dan hint tindakan
+  - [x] payment history empty state lebih jelas untuk penduduk baru
+  - [x] payment activity empty state lebih mesra bila belum ada log
+  - [x] live data warning ada copy BM/English dan arahan refresh/hubungi jawatankuasa
+  - [x] toast profile boleh papar label BM/English
+  - [x] loading page ada copy ringkas English dan BM
+- [x] Final copy/language cleanup user:
+  - [x] warning, toast, empty notification, empty payment history, dan empty activity log diseragamkan BM/English
+  - [x] copy penduduk biasa dibuat lebih jelas tentang apa yang perlu dibuat bila data kosong atau gagal dimuat
 
 #### Masih perlu dibuat / boleh dipertingkatkan
 
@@ -269,8 +281,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [ ] pertimbangkan archive view berasingan jika penduduk mahu lihat rekod bertahun-tahun dalam satu carian khas
 - [ ] Privacy / access-control user fasa seterusnya:
   - [ ] run semula `supabase/schema.sql` di Supabase live dan semak policy aktif selepas deploy besar
-  - [ ] tambah ujian dua resident berbeza jika ada akaun disposable kedua untuk sahkan tiada cross-resident data leak
   - [ ] semak Storage object path sebenar selepas upload live supaya semua resit kekal dalam folder user sendiri
+  - [ ] tambah direct storage/object negative test jika Supabase test harness sudah ada token dua resident berbeza
 
 ### Checklist admin
 
@@ -451,6 +463,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Default bahasa ditetapkan kepada English, dengan BM sebagai pilihan
 - [x] First-time `Change password` ada language picker sebelum form password
 - [x] Copy resident-facing diseragamkan untuk `Dashboard`, `Payments`, `Notifications`, `Profile`, status badge, pagination, upload resit, timeline, dan history
+- [x] Empty/error/loading state user diseragamkan untuk copy BM/English yang lebih mudah difahami
 - [x] Konsistensi font seluruh app
 - [x] Focus state global diperkemas
 - [x] Skip to content link disediakan
@@ -467,7 +480,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] `/notifications`
   - [x] `/profile`
 - [x] Contrast audit kecil pada komponen user yang masih berbaki
-- [ ] Semakan visual untuk empty state, error state, dan loading state pada page user
+- [x] Semakan visual/copy untuk empty state, error state, dan loading state pada page user
 - [ ] Screenshot audit UI untuk page user utama
 - [ ] Sambung sokongan dwi-bahasa penuh untuk page `Login`
 
