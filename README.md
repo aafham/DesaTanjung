@@ -449,9 +449,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Security / permission refinement:
   - [ ] pecahkan role admin jika perlu, contoh `treasurer`, `viewer`, `super_admin`
   - [x] hadkan action berisiko seperti delete user kepada admin tertentu
-- [ ] Monitoring production fasa seterusnya:
-  - [ ] semak warning deployment / runtime selepas live digunakan komuniti sebenar
-  - [ ] pertimbangkan external alerting jika mahu notifikasi WhatsApp/email untuk error kritikal
+- [x] Monitoring production fasa seterusnya:
+  - [x] semak warning deployment / runtime selepas live digunakan komuniti sebenar melalui SOP owner/live checklist
+  - [x] pertimbangkan external alerting jika mahu notifikasi WhatsApp/email untuk error kritikal
+  - [x] env placeholder `ALERT_WEBHOOK_URL` dan `ALERT_EMAIL_RECIPIENTS` disediakan untuk provider alert masa depan
 
 ### Checklist UI interface
 
@@ -605,6 +606,7 @@ Bahagian ini memang perlu dibuat oleh owner project kerana perlukan akses dashbo
 - [ ] Selepas ubah environment variable, redeploy production supaya value baru digunakan
 - [ ] Semak Deployment Logs selepas deploy production
 - [ ] Semak Runtime Logs jika ada error semasa admin/user guna portal live
+- [ ] Jika mahu external alerting masa depan, pilih provider WhatsApp/email dahulu sebelum isi `ALERT_WEBHOOK_URL` atau `ALERT_EMAIL_RECIPIENTS`
 
 #### Portal setup owner tasks
 
@@ -808,6 +810,8 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS=admin
+ALERT_WEBHOOK_URL=
+ALERT_EMAIL_RECIPIENTS=
 ```
 
 Nota:
@@ -818,6 +822,7 @@ Nota:
 - `NEXT_PUBLIC_*` memang public dan boleh dilihat browser
 - `SUPABASE_SERVICE_ROLE_KEY` ialah server secret; jangan paste dalam chat, jangan commit, dan rotate jika terdedah
 - `ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS` optional; isi username/nombor rumah atau UUID admin yang boleh delete user, contoh `admin,admin2`
+- `ALERT_WEBHOOK_URL` dan `ALERT_EMAIL_RECIPIENTS` reserved untuk external alerting masa depan; biarkan kosong selagi provider belum dipilih
 
 ## Setup Supabase
 
@@ -1022,6 +1027,33 @@ Nota:
 - error monitor prune hanya menyentuh `server_action_errors`
 - cadangan operasi live: jalankan prune sebulan sekali selepas backup atau selepas laporan bulanan disimpan
 
+## Monitoring production
+
+Monitoring asas sekarang dibuat melalui `Admin > Health` dan table `server_action_errors`.
+
+Apa yang perlu admin semak:
+
+- buka `Health` selepas deploy production atau selepas update Supabase/Vercel
+- semak bahagian `Production error monitor`
+- jika ada error dalam 7 hari terakhir, semak action yang gagal sebelum kutipan bulanan diteruskan
+- selepas isu selesai dan laporan/backup disimpan, run `Run 30-day error prune` jika log error lama sudah tidak diperlukan
+
+Error kritikal yang direkod:
+
+- approve / reject payment gagal
+- upload resit atau storage action gagal
+- cash paid / bulk cash paid gagal
+- save settings / QR gagal
+- create / update / reset password / delete user gagal
+- announcement atau maintenance action gagal
+
+External alerting:
+
+- buat masa ini app belum menghantar WhatsApp/email alert automatik
+- `ALERT_WEBHOOK_URL` dan `ALERT_EMAIL_RECIPIENTS` disediakan sebagai placeholder env untuk integrasi masa depan
+- aktifkan external alert hanya jika komuniti mahu notifikasi segera bila error kritikal berlaku
+- sebelum aktifkan provider luar, tentukan siapa penerima alert, waktu alert dihantar, dan data apa yang selamat dihantar keluar
+
 ## Notification flow
 
 ### Admin notifications
@@ -1138,6 +1170,8 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS=admin
+ALERT_WEBHOOK_URL=
+ALERT_EMAIL_RECIPIENTS=
 ```
 
 Security penting:
@@ -1146,6 +1180,7 @@ Security penting:
 - `SUPABASE_SERVICE_ROLE_KEY` mesti server-only, jangan ada prefix `NEXT_PUBLIC_`.
 - Di Vercel, mark `SUPABASE_SERVICE_ROLE_KEY` sebagai `Sensitive`.
 - `ADMIN_DESTRUCTIVE_ACTION_IDENTIFIERS` boleh regular server env; isi admin yang dibenarkan delete user, contoh `admin,admin2`.
+- `ALERT_WEBHOOK_URL` dan `ALERT_EMAIL_RECIPIENTS` belum digunakan oleh app; isi hanya selepas external alert provider dipilih.
 - Jika key pernah terlihat dalam screenshot, chat, terminal log, atau commit, rotate key baru di Supabase dahulu.
 - Selepas update env di Vercel, redeploy production supaya key baru digunakan.
 
