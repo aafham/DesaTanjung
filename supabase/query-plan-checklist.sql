@@ -1,6 +1,28 @@
 -- Desa Tanjung query plan checklist
 -- Run this in Supabase SQL Editor after real data grows.
 -- Goal: make sure common admin/user pages use indexes instead of slow full scans.
+--
+-- Supabase SQL Editor does not run as a logged-in app user, so auth.uid()
+-- is not reliable here. This helper picks one resident automatically.
+-- To test a specific resident, replace the update value below with a real
+-- public.users.id UUID and uncomment the update statement.
+
+drop table if exists pg_temp.query_plan_params;
+
+create temp table query_plan_params as
+select
+  id as resident_id,
+  to_char(timezone('utc', now()), 'YYYY-MM') as month_key
+from public.users
+where role = 'user'
+order by house_number asc
+limit 1;
+
+-- update query_plan_params
+-- set resident_id = 'PASTE-RESIDENT-UUID-HERE'::uuid;
+
+select 'Using resident_id for checklist' as note, resident_id, month_key
+from query_plan_params;
 
 -- 1. Admin residents default page
 explain analyze
@@ -31,11 +53,10 @@ order by l.created_at desc
 limit 10 offset 0;
 
 -- 4. Resident notification inbox
--- Replace auth.uid() with a real resident UUID if running outside an authenticated SQL session.
 explain analyze
 select id, user_id, payment_id, message, is_read, scope, created_at
 from public.notifications
-where user_id = auth.uid()
+where user_id = (select resident_id from query_plan_params)
   and scope = 'resident'
 order by created_at desc
 limit 10 offset 0;
@@ -45,8 +66,8 @@ limit 10 offset 0;
 explain analyze
 select id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason
 from public.payments
-where user_id = auth.uid()
-  and month = to_char(timezone('utc', now()), 'YYYY-MM')
+where user_id = (select resident_id from query_plan_params)
+  and month = (select month_key from query_plan_params)
 limit 1;
 
 -- 6. Resident payment history
@@ -54,7 +75,7 @@ limit 1;
 explain analyze
 select id, user_id, month, status, proof_url, updated_at
 from public.payments
-where user_id = auth.uid()
+where user_id = (select resident_id from query_plan_params)
 order by month desc
 limit 6 offset 0;
 
@@ -63,7 +84,7 @@ limit 6 offset 0;
 explain analyze
 select id, payment_id, user_id, actor_id, action, message, created_at
 from public.payment_audit_logs
-where user_id = auth.uid()
+where user_id = (select resident_id from query_plan_params)
 order by created_at desc
 limit 8;
 
@@ -72,7 +93,7 @@ limit 8;
 explain analyze
 select id, user_id, action, message, created_at
 from public.user_activity_logs
-where user_id = auth.uid()
+where user_id = (select resident_id from query_plan_params)
 order by created_at desc
 limit 8;
 
@@ -81,7 +102,7 @@ limit 8;
 explain analyze
 select id, user_id, payment_id, message, is_read, scope, created_at
 from public.notifications
-where user_id = auth.uid()
+where user_id = (select resident_id from query_plan_params)
   and scope = 'resident'
 order by created_at desc
 limit 4;
@@ -91,7 +112,6 @@ limit 4;
 explain analyze
 select id, title, body, is_pinned, published_at
 from public.announcements
-where is_published = true
 order by is_pinned desc, published_at desc
 limit 10;
 

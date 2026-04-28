@@ -282,6 +282,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
   - [x] profile
 - [ ] Scalability user fasa seterusnya:
   - [x] sediakan query plan checklist untuk page user utama
+  - [x] query plan checklist kini guna resident sample/temp param supaya mudah run dalam Supabase SQL Editor tanpa `auth.uid()`
   - [x] asingkan data loader `/payments` daripada loader dashboard penuh supaya page bayaran kekal ringan
   - [x] hadkan audit log helper kepada jumlah kecil untuk paparan ringkas
   - [ ] run `supabase/query-plan-checklist.sql` di Supabase SQL Editor selepas rekod payment/notification sebenar makin banyak
@@ -442,8 +443,8 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Performance / scalability admin fasa seterusnya:
   - [ ] run `supabase/query-plan-checklist.sql` di Supabase SQL Editor selepas data sebenar sudah banyak
   - [ ] enable PostgREST/Supabase explain plan jika mahu semak plan terus dari client
-- [ ] Operational readiness admin:
-  - [ ] panduan rotate admin bila jawatankuasa bertukar
+- [x] Operational readiness admin:
+  - [x] panduan rotate admin bila jawatankuasa bertukar
 - [ ] Security / permission refinement:
   - [ ] pecahkan role admin jika perlu, contoh `treasurer`, `viewer`, `super_admin`
   - [ ] hadkan action berisiko seperti delete user kepada admin tertentu
@@ -879,6 +880,17 @@ Nota operasi admin:
 - admin terakhir tidak boleh dipadam; cipta admin baru dahulu jika jawatankuasa bertukar
 - sebelum delete akaun sebenar, export laporan/backup dahulu kerana login account akan dibuang
 
+### SOP tukar jawatankuasa / rotate admin
+
+1. Sebelum akses diserah kepada AJK baru, export CSV `Residents` dan simpan snapshot `Reports` bulan terakhir.
+2. Di `Users`, cipta akaun admin baru untuk setiap AJK yang perlu akses.
+3. Minta AJK baru login dan tukar password sendiri supaya audit log selepas itu jelas milik admin tersebut.
+4. Semak `Activity` untuk pastikan akaun admin baru sudah login sekurang-kurangnya sekali.
+5. Jika AJK lama tidak lagi perlu akses, reset password atau delete akaun admin lama selepas backup disimpan.
+6. Jangan delete admin terakhir; pastikan ada sekurang-kurangnya satu admin lain yang sudah boleh login dahulu.
+7. Jika komuniti mahu simpan akaun lama untuk rujukan audit, lebih selamat reset password dan simpan akses kepada pengerusi/bendahari sahaja.
+8. Selepas rotate selesai, semak `Health`, `Settings`, dan `Activity` untuk pastikan portal masih ready dan perubahan admin direkod.
+
 ### SOP bulanan AJK
 
 1. Sebelum kutipan dibuka, semak `Settings` untuk QR, bank info, monthly fee, dan due day.
@@ -972,6 +984,7 @@ Nota:
 - payment history user guna pagination server-side, 6 rekod setiap page
 - page `Payments` guna loader khas yang hanya ambil rekod bulan semasa dan 4 notifikasi terbaru
 - audit log ringkas dihadkan kepada rekod terbaru sahaja; history penuh masih boleh disemak melalui paparan detail/pagination yang disediakan
+- `supabase/query-plan-checklist.sql` boleh run dari Supabase SQL Editor kerana ia pilih satu resident sample secara automatik; jika mahu resident tertentu, paste UUID pada statement `update query_plan_params`
 
 ## Loading states yang ada
 
