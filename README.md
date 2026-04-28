@@ -562,6 +562,7 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] server action `createCurrentMonthRecordAction` dibuang kerana tiada caller aktif
 - [x] README disusun semula ikut fungsi sebenar `User` dan `Admin`
 - [x] Checklist lama yang bercampur-campur diringkaskan supaya senang audit progress
+- [x] Checklist owner berasingan ditambah untuk item yang hanya boleh dibuat dengan akses Supabase, Vercel, atau live site
 - [x] ESLint diarah ignore output generated seperti `.next`, `playwright-report`, dan `test-results`
 - [x] Playwright dipecahkan kepada projek `chromium` dan `mobile-smoke` supaya mutation test tidak digandakan pada viewport mobile
 - [x] Script `setup:e2e:residents` ditambah untuk cipta/reset akaun resident biasa dan payment resident disposable
