@@ -8,7 +8,7 @@ import { ReceiptPreviewModal } from "@/components/receipt-preview-modal";
 import { ResidentNotificationList } from "@/components/resident-notification-list";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getResidentPaymentPageData } from "@/lib/data";
+import { getResidentPaymentPageData } from "@/lib/user-data";
 import { getLocale } from "@/lib/i18n";
 
 const paymentsCopy = {

@@ -1,7 +1,7 @@
 import { AnnouncementFeed } from "@/components/announcement-feed";
 import { DataWarning } from "@/components/data-warning";
 import { ResidentNotificationList } from "@/components/resident-notification-list";
-import { getResidentNotificationsPageData } from "@/lib/data";
+import { getResidentNotificationsPageData } from "@/lib/user-data";
 import { getLocale } from "@/lib/i18n";
 
 const notificationPageCopy = {

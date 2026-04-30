@@ -30,6 +30,16 @@ import {
   getMonthKey,
 } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
+import {
+  buildResidentSearchClause,
+  buildUserSearchClause,
+  createPaginationMeta,
+  createWarningMessage,
+  enrichPaymentRecord,
+  escapeLikeTerm,
+  getDisplayStatus,
+  getSystemHealthWarnings,
+} from "@/lib/data-helpers";
 
 type PendingApprovalPayment = ResidentPaymentRecord & {
   status: "pending" | "rejected";
@@ -68,114 +78,6 @@ type AdminResidentPaymentRow = {
   reviewed_count: number;
   follow_up_count: number;
 };
-
-function createWarningMessage(scope: string, message: string) {
-  return `${scope}: ${message}`;
-}
-
-function getSystemHealthWarnings(settings: AppSettings) {
-  const warnings: string[] = [];
-
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    warnings.push("System health: NEXT_PUBLIC_SUPABASE_URL is missing.");
-  }
-
-  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    warnings.push("System health: NEXT_PUBLIC_SUPABASE_ANON_KEY is missing.");
-  }
-
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    warnings.push("System health: SUPABASE_SERVICE_ROLE_KEY is missing on the server.");
-  }
-
-  if (!settings.monthly_fee || settings.monthly_fee <= 0) {
-    warnings.push("System health: Monthly fee has not been configured in Settings.");
-  }
-
-  if (settings.payment_qr_url.includes("placehold.co")) {
-    warnings.push("System health: Payment QR is still using the placeholder image.");
-  }
-
-  return warnings;
-}
-
-function getDisplayStatus(
-  status: PaymentRecord["status"] | null | undefined,
-  month: string,
-  dueDay: number,
-): DisplayPaymentStatus {
-  const resolvedStatus = status ?? "unpaid";
-
-  if (resolvedStatus === "paid" || resolvedStatus === "pending" || resolvedStatus === "rejected") {
-    return resolvedStatus;
-  }
-
-  return new Date() > getDueDateForMonth(month, dueDay) ? "overdue" : resolvedStatus;
-}
-
-function enrichPaymentRecord(
-  payment: PaymentRecord | null,
-  month: string,
-  dueDay: number,
-): ResidentPaymentRecord | null {
-  if (!payment) {
-    const displayStatus = getDisplayStatus("unpaid", month, dueDay);
-
-    return {
-      id: `virtual-${month}`,
-      user_id: "",
-      month,
-      status: "unpaid",
-      proof_url: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      reviewed_at: null,
-      payment_method: "online",
-      notes: null,
-      reject_reason: null,
-      display_status: displayStatus,
-      is_overdue: displayStatus === "overdue",
-    };
-  }
-
-  const displayStatus = getDisplayStatus(payment.status, payment.month, dueDay);
-
-  return {
-    ...payment,
-    display_status: displayStatus,
-    is_overdue: displayStatus === "overdue",
-    signed_proof_url: null,
-  };
-}
-
-function createPaginationMeta(
-  currentPage: number,
-  pageSize: number,
-  totalItems: number,
-): PaginationMeta {
-  return {
-    currentPage,
-    pageSize,
-    totalItems,
-    totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
-  };
-}
-
-function escapeLikeTerm(value: string) {
-  return value.replaceAll(",", " ").replaceAll("%", "");
-}
-
-function buildUserSearchClause(query: string) {
-  const likeQuery = `%${escapeLikeTerm(query)}%`;
-
-  return `house_number.ilike.${likeQuery},name.ilike.${likeQuery},address.ilike.${likeQuery},phone_number.ilike.${likeQuery},email.ilike.${likeQuery}`;
-}
-
-function buildResidentSearchClause(query: string) {
-  const likeQuery = `%${escapeLikeTerm(query)}%`;
-
-  return `house_number.ilike.${likeQuery},name.ilike.${likeQuery},address.ilike.${likeQuery},phone_number.ilike.${likeQuery}`;
-}
 
 export const getCurrentUserProfile = cache(async () => {
   const supabase = await createClient();
@@ -255,200 +157,6 @@ export async function ensureCurrentMonthPayment(userId: string) {
       payment_method: "online",
     });
   }
-}
-
-export async function getUserDashboardData(historyPage = 1, historyPageSize = 6) {
-  const profile = await requireUserProfile();
-
-  if (profile.role === "admin") {
-    redirect("/admin");
-  }
-
-  if (profile.must_change_password) {
-    redirect("/change-password");
-  }
-
-  await ensureCurrentMonthPayment(profile.id);
-
-  const supabase = await createClient();
-  const settings = await getAppSettings();
-  const currentMonth = getMonthKey();
-  const warnings: string[] = [...getSystemHealthWarnings(settings)];
-  const { data: currentPayment, error: currentPaymentError } = await supabase
-    .from("payments")
-    .select(
-      "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
-    )
-    .eq("user_id", profile.id)
-    .eq("month", currentMonth)
-    .single();
-  if (currentPaymentError) {
-    warnings.push(createWarningMessage("Current payment", currentPaymentError.message));
-  }
-
-  const safeHistoryPage = Math.max(1, historyPage);
-  const safeHistoryPageSize = Math.min(Math.max(1, historyPageSize), 12);
-  const historyFrom = (safeHistoryPage - 1) * safeHistoryPageSize;
-  const historyTo = historyFrom + safeHistoryPageSize - 1;
-  let { data: history, error: historyError, count: historyCount } = await supabase
-    .from("payments")
-    .select(
-      "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
-      { count: "exact" },
-    )
-    .eq("user_id", profile.id)
-    .order("month", { ascending: false })
-    .range(historyFrom, historyTo);
-  let resolvedHistoryPage = safeHistoryPage;
-  const historyTotalPages = Math.max(1, Math.ceil((historyCount ?? 0) / safeHistoryPageSize));
-
-  if (!historyError && (historyCount ?? 0) > 0 && safeHistoryPage > historyTotalPages) {
-    resolvedHistoryPage = historyTotalPages;
-    const correctedFrom = (resolvedHistoryPage - 1) * safeHistoryPageSize;
-    const correctedTo = correctedFrom + safeHistoryPageSize - 1;
-    const correctedHistory = await supabase
-      .from("payments")
-      .select(
-        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
-        { count: "exact" },
-      )
-      .eq("user_id", profile.id)
-      .order("month", { ascending: false })
-      .range(correctedFrom, correctedTo);
-
-    history = correctedHistory.data;
-    historyError = correctedHistory.error;
-    historyCount = correctedHistory.count;
-  }
-  if (historyError) {
-    warnings.push(createWarningMessage("Payment history", historyError.message));
-  }
-
-  const { data: notifications, error: notificationsError } = await supabase
-    .from("notifications")
-    .select("id, user_id, payment_id, message, is_read, scope, created_at")
-    .eq("user_id", profile.id)
-    .eq("scope", "resident")
-    .order("created_at", { ascending: false })
-    .limit(8);
-  if (notificationsError) {
-    warnings.push(createWarningMessage("Notifications", notificationsError.message));
-  }
-
-  const signedProof = currentPayment?.proof_url
-    ? await getSignedReceiptUrl(currentPayment.proof_url)
-    : null;
-  const resolvedCurrentPayment = enrichPaymentRecord(
-    (currentPayment as PaymentRecord | null) ?? null,
-    currentMonth,
-    settings.due_day,
-  ) as ResidentPaymentRecord;
-
-  const { data: auditLogs, error: auditError } = await supabase
-    .from("payment_audit_logs")
-    .select("id, payment_id, user_id, actor_id, action, message, created_at")
-    .eq("user_id", profile.id)
-    .order("created_at", { ascending: false })
-    .limit(8);
-  if (auditError) {
-    warnings.push(createWarningMessage("Activity log", auditError.message));
-  }
-
-  const announcements = await getAnnouncements({
-    audience: "residents",
-    limit: 4,
-  });
-
-  return {
-    currentMonth,
-    currentMonthLabel: formatMonthLabel(currentMonth),
-    dueDateLabel: formatDateLabel(getDueDateForMonth(currentMonth, settings.due_day)),
-    currentPayment: resolvedCurrentPayment,
-    currentProofUrl: signedProof,
-    history: await Promise.all(
-      (((history as PaymentRecord[] | null) ?? []).map(async (payment) => ({
-        ...(enrichPaymentRecord(payment, payment.month, settings.due_day) as ResidentPaymentRecord),
-        signed_proof_url: payment.proof_url
-          ? await getSignedReceiptUrl(payment.proof_url)
-          : null,
-      }))),
-    ),
-    historyPagination: {
-      currentPage: resolvedHistoryPage,
-      pageSize: safeHistoryPageSize,
-      totalItems: historyCount ?? 0,
-      totalPages: Math.max(1, Math.ceil((historyCount ?? 0) / safeHistoryPageSize)),
-    },
-    notifications: (notifications as NotificationRecord[] | null) ?? [],
-    auditLogs: (auditLogs as PaymentAuditLog[] | null) ?? [],
-    announcements,
-    settings,
-    profile,
-    warnings,
-  };
-}
-
-export async function getResidentPaymentPageData() {
-  const profile = await requireUserProfile();
-
-  if (profile.role === "admin") {
-    redirect("/admin");
-  }
-
-  if (profile.must_change_password) {
-    redirect("/change-password");
-  }
-
-  await ensureCurrentMonthPayment(profile.id);
-
-  const supabase = await createClient();
-  const settings = await getAppSettings();
-  const currentMonth = getMonthKey();
-  const warnings: string[] = [...getSystemHealthWarnings(settings)];
-
-  const [
-    { data: currentPayment, error: currentPaymentError },
-    { data: notifications, error: notificationsError },
-  ] = await Promise.all([
-    supabase
-      .from("payments")
-      .select(
-        "id, user_id, month, status, proof_url, created_at, updated_at, reviewed_at, payment_method, notes, reject_reason",
-      )
-      .eq("user_id", profile.id)
-      .eq("month", currentMonth)
-      .single(),
-    supabase
-      .from("notifications")
-      .select("id, user_id, payment_id, message, is_read, scope, created_at")
-      .eq("user_id", profile.id)
-      .eq("scope", "resident")
-      .order("created_at", { ascending: false })
-      .limit(4),
-  ]);
-
-  if (currentPaymentError) {
-    warnings.push(createWarningMessage("Current payment", currentPaymentError.message));
-  }
-
-  if (notificationsError) {
-    warnings.push(createWarningMessage("Notifications", notificationsError.message));
-  }
-
-  return {
-    currentMonth,
-    currentMonthLabel: formatMonthLabel(currentMonth),
-    dueDateLabel: formatDateLabel(getDueDateForMonth(currentMonth, settings.due_day)),
-    currentPayment: enrichPaymentRecord(
-      (currentPayment as PaymentRecord | null) ?? null,
-      currentMonth,
-      settings.due_day,
-    ) as ResidentPaymentRecord,
-    notifications: (notifications as NotificationRecord[] | null) ?? [],
-    profile,
-    settings,
-    warnings,
-  };
 }
 
 export async function getAdminDashboardData(filterMonth?: string) {
@@ -602,81 +310,6 @@ export async function getAnnouncements({
   }
 
   return (data as ManagedAnnouncement[] | null) ?? [];
-}
-
-export async function getResidentNotifications(userId: string, limit = 8) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("notifications")
-    .select("id, user_id, payment_id, message, is_read, scope, created_at")
-    .eq("user_id", userId)
-    .eq("scope", "resident")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    return [];
-  }
-
-  return (data as NotificationRecord[] | null) ?? [];
-}
-
-export async function getResidentNotificationsPage(userId: string, page = 1, pageSize = 10) {
-  const supabase = await createClient();
-  const safePage = Math.max(1, page);
-  const safePageSize = Math.min(Math.max(1, pageSize), 20);
-  const from = (safePage - 1) * safePageSize;
-  const to = from + safePageSize - 1;
-  let { data, error, count } = await supabase
-    .from("notifications")
-    .select("id, user_id, payment_id, message, is_read, scope, created_at", { count: "exact" })
-    .eq("user_id", userId)
-    .eq("scope", "resident")
-    .order("created_at", { ascending: false })
-    .range(from, to);
-  let resolvedPage = safePage;
-  const totalPages = Math.max(1, Math.ceil((count ?? 0) / safePageSize));
-
-  if (!error && (count ?? 0) > 0 && safePage > totalPages) {
-    resolvedPage = totalPages;
-    const correctedFrom = (resolvedPage - 1) * safePageSize;
-    const correctedTo = correctedFrom + safePageSize - 1;
-    const correctedPage = await supabase
-      .from("notifications")
-      .select("id, user_id, payment_id, message, is_read, scope, created_at", { count: "exact" })
-      .eq("user_id", userId)
-      .eq("scope", "resident")
-      .order("created_at", { ascending: false })
-      .range(correctedFrom, correctedTo);
-
-    data = correctedPage.data;
-    error = correctedPage.error;
-    count = correctedPage.count;
-  }
-
-  if (error) {
-    return {
-      notifications: [],
-      pagination: {
-        currentPage: resolvedPage,
-        pageSize: safePageSize,
-        totalItems: 0,
-        totalPages: 1,
-      },
-      warning: createWarningMessage("Notifications", error.message),
-    };
-  }
-
-  return {
-    notifications: (data as NotificationRecord[] | null) ?? [],
-    pagination: {
-      currentPage: resolvedPage,
-      pageSize: safePageSize,
-      totalItems: count ?? 0,
-      totalPages: Math.max(1, Math.ceil((count ?? 0) / safePageSize)),
-    },
-    warning: null,
-  };
 }
 
 export async function getPaymentAuditLogs(paymentId: string, limit = 8) {
@@ -1066,44 +699,40 @@ export async function getAdminUserManagementData({
   const normalizedQuery = query.trim();
   const userSearchClause = normalizedQuery ? buildUserSearchClause(query) : null;
 
-  const applyUserDirectoryFilters = (queryBuilder: any) => {
-    let scopedQuery = queryBuilder;
+  let usersCountQuery = supabase.from("users").select("id", { count: "exact", head: true });
+  let usersPageQuery = supabase
+    .from("users")
+    .select(
+      "id, house_number, email, name, address, phone_number, role, must_change_password, created_at, last_login_at, last_logout_at",
+    )
+    .order("role", { ascending: false })
+    .order("house_number", { ascending: true })
+    .range(from, to);
 
-    if (roleFilter !== "all") {
-      scopedQuery = scopedQuery.eq("role", roleFilter);
-    }
+  if (roleFilter !== "all") {
+    usersCountQuery = usersCountQuery.eq("role", roleFilter);
+    usersPageQuery = usersPageQuery.eq("role", roleFilter);
+  }
 
-    if (followUpFilter === "missing-phone") {
-      scopedQuery = scopedQuery.is("phone_number", null);
-    } else if (followUpFilter === "never-logged-in") {
-      scopedQuery = scopedQuery.is("last_login_at", null);
-    } else if (followUpFilter === "inactive") {
-      scopedQuery = scopedQuery.not("last_login_at", "is", null).lte("last_login_at", inactivityCutoff.toISOString());
-    }
+  if (followUpFilter === "missing-phone") {
+    usersCountQuery = usersCountQuery.is("phone_number", null);
+    usersPageQuery = usersPageQuery.is("phone_number", null);
+  } else if (followUpFilter === "never-logged-in") {
+    usersCountQuery = usersCountQuery.is("last_login_at", null);
+    usersPageQuery = usersPageQuery.is("last_login_at", null);
+  } else if (followUpFilter === "inactive") {
+    const cutoff = inactivityCutoff.toISOString();
+    usersCountQuery = usersCountQuery.not("last_login_at", "is", null).lte("last_login_at", cutoff);
+    usersPageQuery = usersPageQuery.not("last_login_at", "is", null).lte("last_login_at", cutoff);
+  }
 
-    if (userSearchClause) {
-      scopedQuery = scopedQuery.or(userSearchClause);
-    }
-
-    return scopedQuery;
-  };
+  if (userSearchClause) {
+    usersCountQuery = usersCountQuery.or(userSearchClause);
+    usersPageQuery = usersPageQuery.or(userSearchClause);
+  }
 
   const [{ count: filteredCount, error: usersCountError }, { data: users, error: usersError }] =
-    await Promise.all([
-      applyUserDirectoryFilters(
-        supabase.from("users").select("id", { count: "exact", head: true }),
-      ),
-      applyUserDirectoryFilters(
-        supabase
-          .from("users")
-          .select(
-            "id, house_number, email, name, address, phone_number, role, must_change_password, created_at, last_login_at, last_logout_at",
-          )
-          .order("role", { ascending: false })
-          .order("house_number", { ascending: true })
-          .range(from, to),
-      ),
-    ]);
+    await Promise.all([usersCountQuery, usersPageQuery]);
 
   const pagination = createPaginationMeta(safePage, safePageSize, filteredCount ?? 0);
   const pagedUsers = (users as ManagedUser[] | null) ?? [];
@@ -1227,43 +856,43 @@ export async function getAdminActivityLogData({
         ).data?.map((user) => user.id) ?? []
       : [];
 
-  const applyActivityFilters = (queryBuilder: any) => {
-    let scopedQuery = queryBuilder.gte("created_at", recentCutoff.toISOString());
+  const recentCutoffIso = recentCutoff.toISOString();
+  let activityCountQuery = supabase
+    .from("user_activity_logs")
+    .select("id, users!inner(role)", { count: "exact", head: true })
+    .gte("created_at", recentCutoffIso);
+  let activityPageQuery = supabase
+    .from("user_activity_logs")
+    .select("id, user_id, action, message, created_at, users!inner(house_number, name, role)")
+    .order("created_at", { ascending: false })
+    .range(from, to)
+    .gte("created_at", recentCutoffIso);
 
-    if (actionFilter !== "all") {
-      scopedQuery = scopedQuery.eq("action", actionFilter);
+  if (actionFilter !== "all") {
+    activityCountQuery = activityCountQuery.eq("action", actionFilter);
+    activityPageQuery = activityPageQuery.eq("action", actionFilter);
+  }
+
+  if (roleFilter !== "all") {
+    activityCountQuery = activityCountQuery.eq("users.role", roleFilter);
+    activityPageQuery = activityPageQuery.eq("users.role", roleFilter);
+  }
+
+  if (normalizedQuery) {
+    const orParts = [`message.ilike.${likeQuery}`, `action.ilike.${likeQuery}`];
+
+    if (matchedUserIds.length > 0) {
+      orParts.push(`user_id.in.(${matchedUserIds.join(",")})`);
     }
 
-    if (roleFilter !== "all") {
-      scopedQuery = scopedQuery.eq("users.role", roleFilter);
-    }
-
-    if (normalizedQuery) {
-      const orParts = [`message.ilike.${likeQuery}`, `action.ilike.${likeQuery}`];
-
-      if (matchedUserIds.length > 0) {
-        orParts.push(`user_id.in.(${matchedUserIds.join(",")})`);
-      }
-
-      scopedQuery = scopedQuery.or(orParts.join(","));
-    }
-
-    return scopedQuery;
-  };
+    const activitySearchClause = orParts.join(",");
+    activityCountQuery = activityCountQuery.or(activitySearchClause);
+    activityPageQuery = activityPageQuery.or(activitySearchClause);
+  }
 
   const [{ count: filteredCount, error: filteredCountError }, { data, error }] = await Promise.all([
-    applyActivityFilters(
-      supabase
-        .from("user_activity_logs")
-        .select("id, users!inner(role)", { count: "exact", head: true }),
-    ),
-    applyActivityFilters(
-      supabase
-        .from("user_activity_logs")
-        .select("id, user_id, action, message, created_at, users!inner(house_number, name, role)")
-        .order("created_at", { ascending: false })
-        .range(from, to),
-    ),
+    activityCountQuery,
+    activityPageQuery,
   ]);
   const paginatedActivityLogs = (data as UserActivityWithUser[] | null) ?? [];
   const pagination = createPaginationMeta(safePage, safePageSize, filteredCount ?? 0);
@@ -1655,35 +1284,6 @@ export async function getAdminHealthData() {
     recentServerActionErrors,
     serverActionErrorCount: serverActionErrorCount ?? 0,
     warnings: [...warnings, ...queryWarnings],
-  };
-}
-
-export async function getResidentNotificationsPageData(page = 1) {
-  const profile = await requireUserProfile();
-
-  if (profile.role === "admin") {
-    redirect("/admin");
-  }
-
-  if (profile.must_change_password) {
-    redirect("/change-password");
-  }
-
-  const [notificationPage, announcements, settings] = await Promise.all([
-    getResidentNotificationsPage(profile.id, page, 10),
-    getAnnouncements({ audience: "residents", limit: 6 }),
-    getAppSettings(),
-  ]);
-
-  return {
-    profile,
-    notifications: notificationPage.notifications,
-    notificationPagination: notificationPage.pagination,
-    announcements,
-    warnings: [
-      ...getSystemHealthWarnings(settings),
-      ...(notificationPage.warning ? [notificationPage.warning] : []),
-    ],
   };
 }
 

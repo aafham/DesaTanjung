@@ -570,18 +570,22 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Script `setup:e2e:residents` ditambah untuk cipta/reset akaun resident biasa dan payment resident disposable
 - [x] Script `setup:e2e:first-login` ditambah untuk cipta/reset akaun first-login disposable
 - [x] Script `verify:live-ready` ditambah untuk run lint, build, auth E2E, privacy E2E, dan storage privacy check secara berurutan sebelum deploy/live
+- [x] Query helper filter admin users/activity dikemaskan supaya tidak lagi bergantung pada `any`
+- [x] Helper umum `lib/data.ts` dipindahkan ke `lib/data-helpers.ts` sebagai langkah pertama pecahan data layer
+- [x] Resident user data dipindahkan ke `lib/user-data.ts` supaya loader dashboard, payments, notifications, dan profile tidak lagi bercampur dalam `lib/data.ts`
 
 #### Masih boleh dibuat
 
 - [ ] Semakan berkala untuk dead code bila feature lama diubah atau dibuang
 - [ ] Semakan semula struktur test/helper jika suite E2E terus bertambah melebihi smoke + mutation flow semasa
 - [ ] Pecahkan `lib/data.ts` kepada modul lebih kecil jika data layer terus membesar:
-  - [ ] user data
+  - [x] shared data helpers
+  - [x] user data
   - [ ] admin dashboard data
   - [ ] reports data
   - [ ] health data
   - [ ] search data
-- [ ] Kuatkan typing untuk query builder helper supaya tidak bergantung pada `any`
+- [x] Kuatkan typing untuk query builder helper supaya tidak bergantung pada `any`
 
 ### Checklist owner / perlu akses Supabase, Vercel, atau live site
 

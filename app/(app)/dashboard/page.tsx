@@ -8,7 +8,7 @@ import { PaymentTimeline } from "@/components/payment-timeline";
 import { ResidentNotificationList } from "@/components/resident-notification-list";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getUserDashboardData } from "@/lib/data";
+import { getUserDashboardData } from "@/lib/user-data";
 import { getLocale } from "@/lib/i18n";
 import { formatMalaysianPhoneNumber } from "@/lib/utils";
 

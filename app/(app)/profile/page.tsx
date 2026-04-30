@@ -5,7 +5,8 @@ import { Card } from "@/components/ui/card";
 import { ResidentNotificationList } from "@/components/resident-notification-list";
 import { FormSubmitButton } from "@/components/form-submit-button";
 import { PageToast } from "@/components/page-toast";
-import { getResidentNotifications, requireUserProfile } from "@/lib/data";
+import { requireUserProfile } from "@/lib/data";
+import { getResidentNotifications } from "@/lib/user-data";
 import { updateProfileAction } from "@/lib/actions";
 import { getLocale } from "@/lib/i18n";
 
