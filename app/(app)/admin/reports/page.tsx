@@ -6,7 +6,7 @@ import { PageToast } from "@/components/page-toast";
 import { PrintPageButton } from "@/components/print-page-button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getAdminReportData } from "@/lib/data";
+import { getAdminReportData } from "@/lib/admin-report-data";
 import { getLocale } from "@/lib/i18n";
 import { formatTimestamp } from "@/lib/utils";
 

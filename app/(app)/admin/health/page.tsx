@@ -6,7 +6,7 @@ import { DataWarning } from "@/components/data-warning";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { pruneActivityLogsAction, pruneServerActionErrorsAction } from "@/lib/actions";
-import { getAdminHealthData } from "@/lib/data";
+import { getAdminHealthData } from "@/lib/admin-health-data";
 import { formatMonthLabel, formatTimestamp } from "@/lib/utils";
 
 const statusPresentation = {

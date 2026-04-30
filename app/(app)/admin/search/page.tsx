@@ -2,7 +2,7 @@ import { AdminGlobalSearch } from "@/components/admin-global-search";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { DataWarning } from "@/components/data-warning";
 import { PageToast } from "@/components/page-toast";
-import { getAdminSearchData } from "@/lib/data";
+import { getAdminSearchData } from "@/lib/admin-search-data";
 
 export default async function AdminSearchPage({
   searchParams,

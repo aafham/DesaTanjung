@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { getAuthEnv, loginWithCredentials } from "./helpers/auth";
 
 const env = getAuthEnv();
 
-async function expectNoHorizontalOverflow(page: Parameters<typeof test>[0]["page"]) {
+async function expectNoHorizontalOverflow(page: Page) {
   const hasOverflow = await page.evaluate(() => {
     const documentElement = document.documentElement;
     return documentElement.scrollWidth > documentElement.clientWidth + 2;

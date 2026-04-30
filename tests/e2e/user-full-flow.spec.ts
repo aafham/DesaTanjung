@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { getAuthEnv, loginWithCredentials } from "./helpers/auth";
 import { createTinyPng } from "./helpers/files";
@@ -13,7 +14,7 @@ function identifierToEmail(rawIdentifier: string) {
   return normalized === "admin" ? "admin@desatanjung.local" : `${slug}@desatanjung.local`;
 }
 
-async function uploadReceipt(page: Parameters<typeof test>[0]["page"]) {
+async function uploadReceipt(page: Page) {
   await loginWithCredentials(
     page,
     env.paymentResidentIdentifier!,

@@ -7,7 +7,7 @@ import { LiveRefresh } from "@/components/live-refresh";
 import { MonthFilter } from "@/components/month-filter";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
-import { getAdminDashboardData } from "@/lib/data";
+import { getAdminDashboardData } from "@/lib/admin-dashboard-data";
 
 export default async function AdminApprovalsPage({
   searchParams,

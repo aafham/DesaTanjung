@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import { getAuthEnv, loginWithCredentials } from "./helpers/auth";
 import { createTinyPng } from "./helpers/files";
 import { resetCurrentMonthPaymentForHouse } from "./helpers/supabase-admin";
 
 const env = getAuthEnv();
 
-async function uploadReceipt(page: Parameters<typeof test>[0]["page"], identifier: string, password: string) {
+async function uploadReceipt(page: Page, identifier: string, password: string) {
   await loginWithCredentials(page, identifier, password);
   await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
 

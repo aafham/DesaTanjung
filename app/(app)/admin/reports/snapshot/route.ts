@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminReportData } from "@/lib/data";
+import { getAdminReportData } from "@/lib/admin-report-data";
 import { formatTimestamp } from "@/lib/utils";
 
 function escapeHtml(value: string) {

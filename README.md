@@ -573,6 +573,12 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Query helper filter admin users/activity dikemaskan supaya tidak lagi bergantung pada `any`
 - [x] Helper umum `lib/data.ts` dipindahkan ke `lib/data-helpers.ts` sebagai langkah pertama pecahan data layer
 - [x] Resident user data dipindahkan ke `lib/user-data.ts` supaya loader dashboard, payments, notifications, dan profile tidak lagi bercampur dalam `lib/data.ts`
+- [x] Admin reports data dipindahkan ke `lib/admin-report-data.ts` termasuk snapshot route supaya laporan bulanan lebih mudah dijaga
+- [x] Admin health data dipindahkan ke `lib/admin-health-data.ts` supaya readiness checks, duplicate scan, dan error monitor tidak memenuhi `lib/data.ts`
+- [x] Admin search data dipindahkan ke `lib/admin-search-data.ts` supaya global search, payment search, dan activity search lebih mudah dipantau
+- [x] Admin dashboard data dipindahkan ke `lib/admin-dashboard-data.ts` dan onboarding count kini membaca `last_login_at` dengan betul
+- [x] Semakan dead code/import selepas pecahan data layer dibuat dan type lama yang tidak perlu dibersihkan
+- [x] Type helper Playwright E2E dikemas supaya `npx tsc --noEmit` lulus tanpa error test
 
 #### Masih boleh dibuat
 
@@ -581,10 +587,10 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [ ] Pecahkan `lib/data.ts` kepada modul lebih kecil jika data layer terus membesar:
   - [x] shared data helpers
   - [x] user data
-  - [ ] admin dashboard data
-  - [ ] reports data
-  - [ ] health data
-  - [ ] search data
+  - [x] admin dashboard data
+  - [x] reports data
+  - [x] health data
+  - [x] search data
 - [x] Kuatkan typing untuk query builder helper supaya tidak bergantung pada `any`
 
 ### Checklist owner / perlu akses Supabase, Vercel, atau live site

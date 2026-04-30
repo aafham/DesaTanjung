@@ -21,7 +21,7 @@ import { MonthFilter } from "@/components/month-filter";
 import { PageToast } from "@/components/page-toast";
 import { Card } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getAdminDashboardData } from "@/lib/data";
+import { getAdminDashboardData } from "@/lib/admin-dashboard-data";
 import { formatTimestamp } from "@/lib/utils";
 
 export default async function AdminDashboardPage({
