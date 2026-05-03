@@ -151,7 +151,7 @@ export function AppShell({
         }`}
       >
         <aside
-          className={`shrink-0 rounded-4xl border border-line bg-surface/95 p-5 shadow-soft backdrop-blur lg:sticky lg:top-8 lg:w-80 ${
+          className={`min-w-0 shrink-0 rounded-4xl border border-line bg-surface/95 p-5 shadow-soft backdrop-blur lg:sticky lg:top-8 lg:w-80 ${
             printOnlyReportRoute ? "print:hidden" : ""
           }`}
         >
@@ -245,7 +245,7 @@ export function AppShell({
           </div>
         </aside>
 
-        <div className={`relative flex-1 ${printOnlyReportRoute ? "print:w-full" : ""}`}>
+        <div className={`relative min-w-0 w-full max-w-full flex-1 ${printOnlyReportRoute ? "print:w-full" : ""}`}>
           {loadingHref ? (
             <div className="pointer-events-none absolute inset-0 z-20 rounded-4xl bg-white/72 backdrop-blur-[2px] print:hidden">
               <div className="flex h-full min-h-[60vh] items-center justify-center p-4">
@@ -266,7 +266,11 @@ export function AppShell({
               </div>
             </div>
           ) : null}
-          <main id="main-content" aria-busy={loadingHref ? "true" : "false"}>
+          <main
+            id="main-content"
+            aria-busy={loadingHref ? "true" : "false"}
+            className="min-w-0 max-w-full overflow-x-clip"
+          >
             {children}
           </main>
         </div>

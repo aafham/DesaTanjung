@@ -19,7 +19,7 @@ export function AdminPageHeader({
         <p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">
           {eyebrow}
         </p>
-        <h2 className="mt-2 font-display text-[2.65rem] font-bold leading-[1.05] text-slate-950">
+        <h2 className="mt-2 break-words font-display text-3xl font-bold leading-tight text-slate-950 sm:text-[2.65rem] sm:leading-[1.05]">
           {title}
         </h2>
         {description ? (

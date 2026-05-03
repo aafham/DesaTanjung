@@ -106,7 +106,6 @@ export function AdminSettingsForm({
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <form
           action={action}
-          encType="multipart/form-data"
           className="grid gap-5 rounded-4xl border border-line bg-white p-6 shadow-soft md:grid-cols-2"
         >
         <div>

@@ -17,8 +17,8 @@ Matlamat utama portal ini:
 
 ## Tech stack
 
-- `Next.js 15`
-- `React 19`
+- `Next.js 15.5`
+- `React 19.2`
 - `Tailwind CSS`
 - `Supabase Auth`
 - `Supabase Postgres`
@@ -39,6 +39,7 @@ Nota penting:
 - Resident E2E biasa boleh disediakan/reset dengan `npm run setup:e2e:residents` supaya login smoke dan upload flow guna password yang sah.
 - First-login resident kini boleh disediakan/reset dengan `npm run setup:e2e:first-login` sebelum full suite dijalankan.
 - Mobile smoke coverage ditambah untuk page penting user dan admin melalui projek Playwright `mobile-smoke`.
+- Mobile smoke admin kini meliputi `/admin`, `/admin/approvals`, `/admin/residents`, `/admin/users`, `/admin/search`, `/admin/settings`, `/admin/reports`, `/admin/activity`, dan `/admin/health` dengan semakan overflow mobile.
 - Flow admin mutation yang telah disahkan secara E2E: `approve`, `reject`, `cash paid`, `settings update`, dan `QR upload`.
 - Flow user yang telah disahkan secara E2E: resident login, first-login change password, admin-route guard, upload resit, profile update, notification selepas approve, dan notification selepas reject.
 - Privacy E2E user kini guna dua akaun resident berbeza untuk pastikan page penduduk tidak memaparkan konteks akaun lain.
@@ -539,19 +540,19 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 
 - [ ] Audit mobile UI admin penuh secara visual untuk:
   - [x] `/admin` smoke-tested
-  - [ ] `/admin/approvals`
+  - [x] `/admin/approvals` smoke-tested
   - [x] `/admin/residents` smoke-tested
-  - [ ] `/admin/users`
-  - [ ] `/admin/search`
-  - [ ] `/admin/settings`
-  - [ ] `/admin/reports`
+  - [x] `/admin/users` smoke-tested
+  - [x] `/admin/search` smoke-tested
+  - [x] `/admin/settings` smoke-tested
+  - [x] `/admin/reports` smoke-tested
   - [x] `/admin/activity` smoke-tested
   - [x] `/admin/health` smoke-tested
 - [ ] Semakan visual state admin:
-  - [ ] empty state
-  - [ ] success state
-  - [ ] error state
-  - [ ] loading state
+  - [ ] empty state selepas data live/staging pelbagai keadaan dimasukkan
+  - [x] success state melalui `PageToast`
+  - [x] error state melalui admin route error boundary
+  - [x] loading state melalui admin route loading screen
 - [ ] Screenshot audit akhir untuk desktop dan mobile selepas data sebenar dimasukkan
 - [ ] Semak semula sama ada `Search` masih perlu kekal di sidebar selepas admin sebenar guna sistem beberapa minggu
 
@@ -579,11 +580,13 @@ Checklist ini disusun semula berdasarkan route, komponen, action, data layer, da
 - [x] Admin dashboard data dipindahkan ke `lib/admin-dashboard-data.ts` dan onboarding count kini membaca `last_login_at` dengan betul
 - [x] Semakan dead code/import selepas pecahan data layer dibuat dan type lama yang tidak perlu dibersihkan
 - [x] Type helper Playwright E2E dikemas supaya `npx tsc --noEmit` lulus tanpa error test
+- [x] Dependency security dikemaskini: `next`, `react`, `react-dom`, `eslint-config-next`, dan type React dinaikkan kepada versi lockfile semasa; `postcss` dioverride ke `8.5.10` supaya `npm audit --omit=dev` bersih
 
 #### Masih boleh dibuat
 
 - [ ] Semakan berkala untuk dead code bila feature lama diubah atau dibuang
 - [ ] Semakan semula struktur test/helper jika suite E2E terus bertambah melebihi smoke + mutation flow semasa
+- [x] Mobile smoke admin diperluas kepada route admin utama yang belum diliputi dan setiap route disemak untuk horizontal overflow
 - [ ] Pecahkan `lib/data.ts` kepada modul lebih kecil jika data layer terus membesar:
   - [x] shared data helpers
   - [x] user data
